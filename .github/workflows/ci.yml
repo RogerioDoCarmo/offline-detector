@@ -21,8 +21,13 @@ jobs:
     name: Build, lint, typecheck and test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # SonarCloud needs full history to attribute new code correctly.
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -36,6 +41,17 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint:md
       - run: pnpm test:ci
+      # Non-blocking and skipped, not failed, when there is nothing to scan with: secrets are
+      # unreadable from fork and Dependabot PRs, and the SonarCloud project may not exist yet.
+      # A third-party outage must not turn this required check red. Pinned by major on purpose
+      # (v8.0.x to v8.1.x failed GPG verification on long temp paths; the floating tag has the fix).
+      - name: SonarCloud
+        continue-on-error: true
+        if: >-
+          github.actor != 'dependabot[bot]' &&
+          github.event.pull_request.head.repo.fork != true &&
+          env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v8
       - uses: actions/upload-artifact@v4
         if: always()
         with:
