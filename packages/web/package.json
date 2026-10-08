@@ -36,5 +36,13 @@
   "scripts": {
     "build": "rslib build",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rogeriodocarmo/offline-detector-core": "workspace:*",
+    "@rogeriodocarmo/offline-detector-react": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   }
 }

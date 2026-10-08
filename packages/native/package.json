@@ -36,5 +36,19 @@
   "scripts": {
     "build": "rslib build",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rogeriodocarmo/offline-detector-core": "workspace:*",
+    "@rogeriodocarmo/offline-detector-react": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.73.0",
+    "@react-native-community/netinfo": ">=11.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@react-native-community/netinfo": {
+      "optional": true
+    }
   }
 }
