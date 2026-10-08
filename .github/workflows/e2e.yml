@@ -1,0 +1,76 @@
+name: E2E
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Nightly full matrix, 02:00 UTC.
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: E2E (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # Pull requests run chromium only; everything else runs the five-project matrix. Each
+      # project installs only the browser it needs: the mobile ones reuse chromium and webkit.
+      matrix: ${{ fromJSON(github.event_name == 'pull_request' && '{"include":[{"project":"chromium","browser":"chromium"}]}' || '{"include":[{"project":"chromium","browser":"chromium"},{"project":"firefox","browser":"firefox"},{"project":"webkit","browser":"webkit"},{"project":"mobile-chrome","browser":"chromium"},{"project":"mobile-safari","browser":"webkit"}]}') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install the browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      # The browser binaries are cached, the system libraries they need are not.
+      - name: Install the browser's system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps ${{ matrix.browser }}
+
+      - run: pnpm exec playwright test --project=${{ matrix.project }}
+
+      - name: Upload the Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload traces, screenshots and videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results-${{ matrix.project }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

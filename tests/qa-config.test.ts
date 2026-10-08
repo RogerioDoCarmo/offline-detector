@@ -161,3 +161,154 @@ describe('stryker', () => {
     });
   });
 });
+
+type PwConfig = {
+  projects: Array<{ name: string }>;
+  retries: number;
+  workers?: number;
+  forbidOnly: boolean;
+  reporter: string[][];
+  use: Record<string, unknown>;
+  webServer: { reuseExistingServer: boolean };
+};
+
+describe('playwright config', () => {
+  const load = (ci: boolean) => {
+    const saved = { CI: process.env.CI, URL: process.env.PLAYWRIGHT_BASE_URL };
+    if (ci) process.env.CI = '1';
+    else delete process.env.CI;
+    delete process.env.PLAYWRIGHT_BASE_URL;
+    try {
+      let config = {} as PwConfig;
+      jest.isolateModules(() => {
+        // Playwright refuses to be required from inside another runner, and only `defineConfig`
+        // (an identity function) and `devices` (device presets) matter for these assertions.
+        jest.doMock('@playwright/test', () => ({
+          defineConfig: (c: unknown) => c,
+          devices: new Proxy({}, { get: (_t, name) => ({ preset: name }) }),
+        }));
+        const loaded = jest.requireActual('../playwright.config') as {
+          default: PwConfig;
+        };
+        config = loaded.default;
+      });
+      return config;
+    } finally {
+      if (saved.CI === undefined) delete process.env.CI;
+      else process.env.CI = saved.CI;
+      if (saved.URL !== undefined) process.env.PLAYWRIGHT_BASE_URL = saved.URL;
+    }
+  };
+
+  it('runs the five browser projects', () => {
+    expect(load(false).projects.map((p) => p.name)).toEqual([
+      'chromium',
+      'firefox',
+      'webkit',
+      'mobile-chrome',
+      'mobile-safari',
+    ]);
+  });
+
+  it('retries and parallelises only on CI, and forbids test.only there', () => {
+    expect(load(true)).toMatchObject({ retries: 1, workers: 4, forbidOnly: true });
+    expect(load(false)).toMatchObject({ retries: 0, forbidOnly: false });
+    expect(load(false).workers).toBeUndefined();
+  });
+
+  it('reports to GitHub on CI only', () => {
+    const names = (c: PwConfig) => c.reporter.map((r) => r[0]);
+    expect(names(load(true))).toEqual(['list', 'html', 'github']);
+    expect(names(load(false))).toEqual(['list', 'html']);
+  });
+
+  it('keeps evidence of failures only', () => {
+    expect(load(false).use).toMatchObject({
+      trace: 'on-first-retry',
+      screenshot: 'only-on-failure',
+      video: 'retain-on-failure',
+      baseURL: 'http://127.0.0.1:4173',
+    });
+  });
+
+  it('serves the fixture site with a dependency-free node script', () => {
+    expect(load(false).webServer).toMatchObject({
+      command: 'node e2e/fixtures/serve.mjs',
+      url: 'http://127.0.0.1:4173',
+      reuseExistingServer: true,
+    });
+    expect(load(true).webServer.reuseExistingServer).toBe(false);
+  });
+
+  it('exposes the e2e scripts', () => {
+    expect(pkg().scripts['test:e2e']).toBe('playwright test');
+    expect(pkg().scripts['test:e2e:chromium']).toBe('playwright test --project=chromium');
+  });
+});
+
+describe('e2e workflow', () => {
+  const e2e = () => parse(read('.github/workflows/e2e.yml'));
+  // The matrix is `fromJSON(<PR event> && '<chromium only>' || '<full matrix>')`.
+  const matrixes = () => {
+    type Matrix = { include: Array<Record<string, string>> };
+    const parts = /&& '(\{.*?\})' \|\| '(\{.*?\})'/.exec(e2e().jobs.e2e.strategy.matrix);
+    return {
+      pr: JSON.parse(parts?.[1] ?? '{}') as Matrix,
+      full: JSON.parse(parts?.[2] ?? '{}') as Matrix,
+    };
+  };
+
+  it('runs on PRs, pushes to main and develop, a 02:00 UTC cron and by hand', () => {
+    expect(e2e().on.pull_request.branches).toEqual(['main', 'develop']);
+    expect(e2e().on.push.branches).toEqual(['main', 'develop']);
+    expect(e2e().on.schedule).toEqual([{ cron: '0 2 * * *' }]);
+    expect(e2e().on).toHaveProperty('workflow_dispatch');
+  });
+
+  it('disables Turborepo telemetry and reads the repository only', () => {
+    expect(e2e().env).toEqual({ TURBO_TELEMETRY_DISABLED: '1' });
+    expect(e2e().permissions).toEqual({ contents: 'read' });
+  });
+
+  it('runs chromium only on PRs and the whole matrix elsewhere', () => {
+    const expression: string = e2e().jobs.e2e.strategy.matrix;
+    expect(expression).toContain("github.event_name == 'pull_request'");
+    expect(matrixes().pr.include).toEqual([{ project: 'chromium', browser: 'chromium' }]);
+    expect(matrixes().full.include).toEqual([
+      { project: 'chromium', browser: 'chromium' },
+      { project: 'firefox', browser: 'firefox' },
+      { project: 'webkit', browser: 'webkit' },
+      { project: 'mobile-chrome', browser: 'chromium' },
+      { project: 'mobile-safari', browser: 'webkit' },
+    ]);
+  });
+
+  it('installs only the browser the project needs, with a cache', () => {
+    const steps = e2e().jobs.e2e.steps;
+    const cache = steps.find((s: { uses?: string }) =>
+      s.uses?.startsWith('actions/cache'),
+    );
+    expect(cache.with.path).toBe('~/.cache/ms-playwright');
+    expect(cache.with.key).toBe(
+      "playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}",
+    );
+    const runs = steps.map((s: { run?: string }) => s.run).filter(Boolean);
+    expect(runs).toContain(
+      'pnpm exec playwright install --with-deps ${{ matrix.browser }}',
+    );
+    expect(runs).toContain('pnpm exec playwright install-deps ${{ matrix.browser }}');
+    expect(runs).toContain('pnpm exec playwright test --project=${{ matrix.project }}');
+  });
+
+  it('uploads the report always and traces on failure', () => {
+    const uploads = e2e().jobs.e2e.steps.filter((s: { uses?: string }) =>
+      s.uses?.startsWith('actions/upload-artifact'),
+    );
+    expect(uploads.map((u: { with: { path: string } }) => u.with.path)).toEqual([
+      'playwright-report/',
+      'test-results/',
+    ]);
+    expect(uploads[0].if).toBe('always()');
+    expect(uploads[1].if).toBe('failure()');
+  });
+});
