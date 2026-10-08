@@ -9,6 +9,9 @@ module.exports = {
   displayName: 'native',
   rootDir: __dirname,
   roots: [join(__dirname, 'src')],
+  collectCoverageFrom: [...base.collectCoverageFrom, '!**/__test-utils__/**'],
+  // The first test to touch Animated pays for loading react-native's Animated modules.
+  testTimeout: 20000,
   haste: rnPreset.haste,
   moduleNameMapper: rnPreset.moduleNameMapper,
   resolver: rnPreset.resolver,
