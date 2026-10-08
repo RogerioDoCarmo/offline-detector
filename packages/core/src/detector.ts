@@ -30,14 +30,17 @@ function sameState(a: OfflineState, b: OfflineState): boolean {
   );
 }
 
-function resolveFetch(options: OfflineDetectorOptions, probing: boolean): ProbeFetch {
+/** `undefined` in interface-only mode, which never probes and so never needs a fetch. */
+function resolveFetch(
+  options: OfflineDetectorOptions,
+  interfaceOnly: boolean,
+): ProbeFetch | undefined {
+  if (interfaceOnly) return undefined;
   if (options.fetch) return options.fetch;
   if (typeof globalThis.fetch === 'function') {
     return (url, init) => globalThis.fetch(url, init);
   }
-  if (probing)
-    throw new TypeError('offline-detector: no fetch available; pass options.fetch');
-  return () => Promise.reject(new Error('unreachable: interface-only mode never probes'));
+  throw new TypeError('offline-detector: no fetch available; pass options.fetch');
 }
 
 export function createOfflineDetector(options: OfflineDetectorOptions): OfflineDetector {
@@ -52,7 +55,7 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
   if (!interfaceOnly && urls.length === 0) {
     throw new RangeError('offline-detector: probe.urls must contain at least one URL');
   }
-  const fetchFn = resolveFetch(options, !interfaceOnly);
+  const fetchFn = resolveFetch(options, interfaceOnly);
   const now = options.now ?? Date.now;
   const setTimer: SetTimeoutFn = options.setTimeout ?? ((cb, ms) => setTimeout(cb, ms));
   const clearTimer: ClearTimeoutFn =
@@ -69,7 +72,7 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
   const listeners: Set<StateListener> = new Set();
   // Bumped whenever an interface event or stop() overtakes whatever check is in flight.
   let epoch = 0;
-  let inflight: { epoch: number; promise: Promise<OfflineState> } | null = null;
+  let inflight: Promise<OfflineState> | null = null;
   let started = false;
   let failures = 0;
   let scheduled: { handle: TimerHandle } | null = null;
@@ -126,7 +129,7 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
       schedule();
       return state;
     }
-    if (interfaceOnly) {
+    if (!fetchFn) {
       applyResult('online', null);
       schedule();
       return state;
@@ -146,11 +149,11 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
   }
 
   function checkNow(): Promise<OfflineState> {
-    if (inflight && inflight.epoch === epoch) return inflight.promise;
+    if (inflight) return inflight;
     const promise: Promise<OfflineState> = runCheck().finally(() => {
-      if (inflight?.promise === promise) inflight = null;
+      if (inflight === promise) inflight = null;
     });
-    inflight = { epoch, promise };
+    inflight = promise;
     return promise;
   }
 

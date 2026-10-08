@@ -1,4 +1,5 @@
-import { flush, make } from './testing/helpers';
+import { createAdapter, createFetch, flush, make } from './testing/helpers';
+import { createOfflineDetector } from './detector';
 
 /** Delays of the scheduler's own timers (probe timeouts are 5000 ms in `make`). */
 const scheduled = (delays: number[]) => delays.filter((d) => d !== 5000);
@@ -96,6 +97,29 @@ describe('start: backoff while offline', () => {
     expect(scheduled(clock.delays)).toEqual([1000, 2000]);
     expect(fetch.calls).toEqual([]);
     detector.stop();
+  });
+});
+
+describe('default timers', () => {
+  it('schedules with the real setTimeout and stop() cancels it', async () => {
+    const spy = jest.spyOn(globalThis, 'setTimeout');
+    const clearSpy = jest.spyOn(globalThis, 'clearTimeout');
+    try {
+      const detector = createOfflineDetector({
+        adapter: createAdapter().adapter,
+        probe: { urls: ['https://a.test'], intervalMs: 30000 },
+        fetch: createFetch(() => 'ok'),
+      });
+      detector.start();
+      await flush();
+      const intervalCalls = spy.mock.calls.filter(([, ms]) => ms === 30000);
+      expect(intervalCalls).toHaveLength(1);
+      detector.stop();
+      expect(clearSpy).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+      clearSpy.mockRestore();
+    }
   });
 });
 
