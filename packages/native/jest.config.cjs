@@ -9,7 +9,7 @@ module.exports = {
   displayName: 'native',
   rootDir: __dirname,
   roots: [join(__dirname, 'src')],
-  collectCoverageFrom: [...base.collectCoverageFrom, '!**/__test-utils__/**'],
+
   // The first test to touch Animated pays for loading react-native's Animated modules.
   setupFilesAfterEnv: [join(__dirname, 'jest.setup.cjs')],
   haste: rnPreset.haste,

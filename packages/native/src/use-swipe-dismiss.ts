@@ -31,7 +31,13 @@ export interface UseSwipeDismissOptions {
  * native driver. Spread `panHandlers` and `style` on an `Animated.View` and pass `onLayout` so the
  * 30% rule knows the width.
  */
-export function useSwipeDismiss(options: UseSwipeDismissOptions) {
+export interface SwipeDismissResult {
+  panHandlers: ReturnType<typeof PanResponder.create>['panHandlers'];
+  onLayout: (event: LayoutChangeEvent) => void;
+  style: { opacity: Animated.Value; transform: [{ translateX: Animated.Value }] };
+}
+
+export function useSwipeDismiss(options: UseSwipeDismissOptions): SwipeDismissResult {
   const translateX = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
   const width = useRef(0);
@@ -129,6 +135,6 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions) {
   return {
     panHandlers: responder.current.panHandlers,
     onLayout,
-    style: { opacity, transform: [{ translateX }] },
+    style: { opacity, transform: [{ translateX }] as [{ translateX: Animated.Value }] },
   };
 }

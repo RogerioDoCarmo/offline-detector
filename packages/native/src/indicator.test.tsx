@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { GestureResponderEvent, PanResponderGestureState } from 'react-native';
 import { Animated, I18nManager, PanResponder } from 'react-native';
-import { flatStyle, mockTiming } from './__test-utils__/animated';
-import { EN } from './__test-utils__/fixtures';
+import { flatStyle, mockTiming } from '../test-utils/animated';
+import { EN } from '../test-utils/fixtures';
 import { DOT_LABEL_MS, Indicator, type IndicatorProps } from './indicator';
 import { darkTheme } from './theme';
 

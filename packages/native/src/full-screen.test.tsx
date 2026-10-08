@@ -6,8 +6,8 @@ import {
   Text,
   findNodeHandle,
 } from 'react-native';
-import { flatStyle, mockTiming } from './__test-utils__/animated';
-import { EN } from './__test-utils__/fixtures';
+import { flatStyle, mockTiming } from '../test-utils/animated';
+import { EN } from '../test-utils/fixtures';
 import {
   FullScreen,
   hostContentAccessibilityProps,

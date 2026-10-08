@@ -11,7 +11,7 @@ export interface NetInfoLike {
 
 /** The slice of react-native's `AppState` the adapter uses. */
 export interface AppStateLike {
-  currentState?: string;
+  currentState?: string | null;
   addEventListener(type: 'change', listener: (state: string) => void): { remove(): void };
 }
 

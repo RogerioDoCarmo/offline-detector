@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { AccessibilityInfo, useColorScheme } from 'react-native';
-import { mockTiming, valueOf } from './__test-utils__/animated';
+import { mockTiming, valueOf } from '../test-utils/animated';
 import { usePieceTransition, useOfflineTheme, useReducedMotion } from './hooks';
 import { darkTheme, lightTheme } from './theme';
 

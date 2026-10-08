@@ -5,7 +5,7 @@ import type {
   PanResponderGestureState,
 } from 'react-native';
 import { PanResponder } from 'react-native';
-import { mockTiming, valueOf } from './__test-utils__/animated';
+import { mockTiming, valueOf } from '../test-utils/animated';
 import { useSwipeDismiss } from './use-swipe-dismiss';
 
 type Config = Parameters<typeof PanResponder.create>[0];

@@ -1,4 +1,4 @@
-import type { OfflineStrings } from '../contract-types';
+import type { OfflineStrings } from '../src/contract-types';
 
 /** The English column of docs/design/strings.md. */
 export const EN: OfflineStrings = {

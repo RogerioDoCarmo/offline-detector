@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ComponentRef } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -80,7 +80,7 @@ export function FullScreen({
     theme,
     enterDuration: theme.durationSlow,
   });
-  const titleRef = useRef<Text>(null);
+  const titleRef = useRef<ComponentRef<typeof Text>>(null);
   const restoreFocus = useRef(onRestoreFocus);
   restoreFocus.current = onRestoreFocus;
   const continueOffline = useRef(onContinueOffline);
@@ -92,7 +92,7 @@ export function FullScreen({
     if (!visible) return undefined;
     const frame = requestAnimationFrame(() => {
       const handle = findNodeHandle(titleRef.current);
-      if (handle !== null) AccessibilityInfo.setAccessibilityFocus(handle);
+      if (typeof handle === 'number') AccessibilityInfo.setAccessibilityFocus(handle);
     });
     return () => {
       cancelAnimationFrame(frame);
