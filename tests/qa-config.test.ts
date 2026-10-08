@@ -85,3 +85,79 @@ describe('sonarcloud', () => {
     expect(text).toContain('SONAR_TOKEN');
   });
 });
+
+describe('stryker', () => {
+  const config = () => JSON.parse(read('stryker.config.json'));
+
+  it('runs Jest with per-test coverage analysis', () => {
+    expect(config().testRunner).toBe('jest');
+    expect(config().jest).toEqual({
+      projectType: 'custom',
+      configFile: 'jest.config.js',
+    });
+    expect(config().coverageAnalysis).toBe('perTest');
+    expect(config().plugins).toEqual(['@stryker-mutator/jest-runner']);
+    expect(config().concurrency).toBe(4);
+  });
+
+  it('mutates core and react source, never tests, stories or barrels', () => {
+    expect(config().mutate).toEqual([
+      'packages/core/src/**/*.ts',
+      'packages/react/src/**/*.{ts,tsx}',
+      '!**/*.test.{ts,tsx}',
+      '!**/*.stories.{ts,tsx}',
+      '!**/index.ts',
+    ]);
+  });
+
+  it('breaks the build below 60 and aims for 80', () => {
+    expect(config().thresholds).toEqual({ high: 80, low: 60, break: 60 });
+  });
+
+  it('keeps build output and caches out of the sandbox', () => {
+    expect(config().ignorePatterns).toEqual([
+      'dist',
+      '.turbo',
+      '.next',
+      '.expo',
+      'coverage',
+      'reports',
+      'storybook-static',
+      'playwright-report',
+      'test-results',
+    ]);
+    expect(config().tempDirName).toBe('.stryker-tmp');
+  });
+
+  it('exposes the mutation script', () => {
+    expect(pkg().scripts.mutation).toBe('stryker run');
+  });
+
+  describe('CI job', () => {
+    const job = () => ci().jobs.mutation;
+    const step = (name: string) =>
+      job().steps.find((s: { name?: string }) => s.name === name);
+
+    it('runs on pull requests only, with full history', () => {
+      expect(job().if).toBe("github.event_name == 'pull_request'");
+      expect(job().steps[0].with).toEqual({ 'fetch-depth': 0 });
+    });
+
+    it('mutates only the sources the PR touches, mapping tests back to sources', () => {
+      const script: string = step('Find the mutated source this PR touches').run;
+      expect(script).toContain('git diff --name-only --diff-filter=ACMR');
+      expect(script).toContain('github.event.pull_request.base.sha');
+      expect(script).toContain('packages/core/src packages/react/src');
+      expect(script).toContain("sed -E 's/\\.test\\.(ts|tsx)$/.\\1/'");
+    });
+
+    it('passes the scope without a double dash and uploads the report', () => {
+      const stryker = step('Stryker');
+      expect(stryker.if).toBe("steps.scope.outputs.run == 'true'");
+      expect(stryker.run).toBe(
+        'pnpm mutation --mutate "${{ steps.scope.outputs.mutate }}"',
+      );
+      expect(step('Upload mutation report').with.path).toBe('reports/mutation/');
+    });
+  });
+});

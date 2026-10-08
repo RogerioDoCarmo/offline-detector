@@ -58,3 +58,64 @@ jobs:
           name: coverage
           path: coverage
           if-no-files-found: ignore
+
+  mutation:
+    name: Mutation testing
+    # Only on PRs: a full Stryker run is slow, and its value is in reviewing a change rather than
+    # re-confirming an already-merged branch.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The diff against the base branch needs both sides of it, and the default shallow
+          # clone has neither.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Scoped to the diff so it finishes in seconds, while the PR is still being reviewed. A
+      # changed TEST maps back to its source: gutting assertions while leaving the source alone
+      # must still be mutated, because that is the change mutation testing exists to catch.
+      # The pathspec is the DIRECTORY with the extension filtered after, because a glob such as
+      # `packages/core/src/**/*.ts` would skip files sitting directly in `src/`.
+      - name: Find the mutated source this PR touches
+        id: scope
+        run: |
+          set -euo pipefail
+          BASE='${{ github.event.pull_request.base.sha }}'
+          CHANGED=$(git diff --name-only --diff-filter=ACMR "$BASE" HEAD -- packages/core/src packages/react/src \
+                    | grep -E '\.(ts|tsx)$' \
+                    | sed -E 's/\.test\.(ts|tsx)$/.\1/' \
+                    | grep -vE '\.stories\.(ts|tsx)$|(^|/)index\.ts$|\.d\.ts$' \
+                    | sort -u || true)
+          KEPT=''
+          for file in $CHANGED; do
+            if [ -f "$file" ]; then KEPT="${KEPT:+$KEPT,}$file"; fi
+          done
+          if [ -z "$KEPT" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No mutated source in this PR - nothing for Stryker to do."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "mutate=$KEPT" >> "$GITHUB_OUTPUT"
+            echo "Mutating: $KEPT"
+          fi
+
+      # NO `--` BEFORE THE FLAG: pnpm 10 forwards it verbatim and Stryker rejects it.
+      - name: Stryker
+        if: steps.scope.outputs.run == 'true'
+        run: pnpm mutation --mutate "${{ steps.scope.outputs.mutate }}"
+
+      - name: Upload mutation report
+        if: always() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 7
