@@ -100,6 +100,7 @@ export function createFakeDetector(initial: OfflineState = INITIAL) {
   const listeners: Set<StateListener> = new Set();
   const counts = { start: 0, stop: 0, checkNow: 0 };
   let nextCheck: OfflineState | null = null;
+  let rejectWith: unknown = null;
   const detector: OfflineDetector = {
     getState: () => state,
     subscribe: (listener) => {
@@ -116,6 +117,7 @@ export function createFakeDetector(initial: OfflineState = INITIAL) {
     },
     checkNow: () => {
       counts.checkNow++;
+      if (rejectWith !== null) return Promise.reject(rejectWith);
       if (nextCheck !== null) set(nextCheck);
       return Promise.resolve(state);
     },
@@ -132,6 +134,10 @@ export function createFakeDetector(initial: OfflineState = INITIAL) {
     /** What the next `checkNow()` will move the state to. */
     willCheckTo: (next: OfflineState | null) => {
       nextCheck = next;
+    },
+    /** Makes every `checkNow()` reject with `error` (pass null to stop). */
+    willReject: (error: unknown) => {
+      rejectWith = error;
     },
     listenerCount: () => listeners.size,
   };
