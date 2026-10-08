@@ -12,6 +12,7 @@ module.exports = [
       '**/.docusaurus/**',
       '**/.stryker-tmp/**',
       '**/.superpowers/**',
+      '**/.claude/**',
       '**/storybook-static/**',
       '**/playwright-report/**',
     ],
