@@ -1,5 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { AccessibilityInfo, I18nManager, Platform, StyleSheet, Text } from 'react-native';
+import type { GestureResponderEvent, PanResponderGestureState } from 'react-native';
+import {
+  AccessibilityInfo,
+  I18nManager,
+  PanResponder,
+  Platform,
+  StyleSheet,
+  Text,
+} from 'react-native';
 import { flatStyle, mockTiming } from './__test-utils__/animated';
 import { EN } from './__test-utils__/fixtures';
 import { Banner, type BannerProps } from './banner';
@@ -250,5 +258,43 @@ describe('visibility', () => {
     const view = await render(<Banner {...base} />);
     await view.rerender(<Banner {...base} visible={false} />);
     expect(screen.queryByText('No internet')).toBeNull();
+  });
+});
+
+describe('swipe wiring', () => {
+  function gestureConfig() {
+    const create = jest.spyOn(PanResponder, 'create');
+    return () => create.mock.calls[0]?.[0] as Parameters<typeof PanResponder.create>[0];
+  }
+  const event = {} as GestureResponderEvent;
+  const fling = { dx: 10, dy: 0, vx: 0.9 } as PanResponderGestureState;
+
+  it('dismisses through a fast horizontal swipe', async () => {
+    const config = gestureConfig();
+    await render(<Banner {...base} />);
+    expect(
+      config().onMoveShouldSetPanResponder?.(event, {
+        dx: 8,
+        dy: 0,
+      } as PanResponderGestureState),
+    ).toBe(true);
+    config().onPanResponderRelease?.(event, fling);
+    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not claim swipes when not dismissible', async () => {
+    const config = gestureConfig();
+    await render(<Banner {...base} dismissible={false} />);
+    expect(
+      config().onMoveShouldSetPanResponder?.(event, {
+        dx: 40,
+        dy: 0,
+      } as PanResponderGestureState),
+    ).toBe(false);
+  });
+
+  it('renders without a testID', async () => {
+    await render(<Banner {...base} testID={undefined} />);
+    expect(screen.queryByTestId('anything')).toBeNull();
   });
 });

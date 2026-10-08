@@ -11,8 +11,9 @@ export type TimingCall = {
  * to its target. Lets tests assert the literal durations and the native-driver flag without
  * driving real animation frames. `Animated.parallel` and `.start` keep their real behaviour.
  */
-export function mockTiming() {
+export function mockTiming(options: { defer?: boolean } = {}) {
   const calls: TimingCall[] = [];
+  const pending: (() => void)[] = [];
   const spy = jest.spyOn(Animated, 'timing').mockImplementation(((
     value: Animated.Value,
     config: Animated.TimingAnimationConfig,
@@ -20,14 +21,23 @@ export function mockTiming() {
     calls.push({ value, config, from: valueOf(value) });
     return {
       start(callback?: Animated.EndCallback) {
-        value.setValue(config.toValue as number);
-        callback?.({ finished: true });
+        const finish = () => {
+          value.setValue(config.toValue as number);
+          callback?.({ finished: true });
+        };
+        if (options.defer) pending.push(finish);
+        else finish();
       },
       stop() {},
       reset() {},
     };
   }) as unknown as typeof Animated.timing);
-  return { calls, spy };
+  return {
+    calls,
+    spy,
+    /** With `defer`: finishes every started animation. */
+    flush: () => pending.splice(0).forEach((finish) => finish()),
+  };
 }
 
 /** The numeric value an Animated.Value currently holds. */

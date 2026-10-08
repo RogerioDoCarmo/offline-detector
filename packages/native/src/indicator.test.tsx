@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { Animated, I18nManager } from 'react-native';
+import type { GestureResponderEvent, PanResponderGestureState } from 'react-native';
+import { Animated, I18nManager, PanResponder } from 'react-native';
 import { flatStyle, mockTiming } from './__test-utils__/animated';
 import { EN } from './__test-utils__/fixtures';
 import { DOT_LABEL_MS, Indicator, type IndicatorProps } from './indicator';
@@ -307,5 +308,43 @@ describe('visibility', () => {
     const view = await render(<Indicator {...base} />);
     await view.rerender(<Indicator {...base} visible={false} />);
     expect(screen.queryByText('No internet')).toBeNull();
+  });
+});
+
+describe('swipe wiring', () => {
+  function gestureConfig() {
+    const create = jest.spyOn(PanResponder, 'create');
+    return () => create.mock.calls[0]?.[0] as Parameters<typeof PanResponder.create>[0];
+  }
+  const event = {} as GestureResponderEvent;
+  const fling = { dx: 10, dy: 0, vx: 0.9 } as PanResponderGestureState;
+
+  it('dismisses through a fast horizontal swipe', async () => {
+    const config = gestureConfig();
+    await render(<Indicator {...base} />);
+    expect(
+      config().onMoveShouldSetPanResponder?.(event, {
+        dx: 8,
+        dy: 0,
+      } as PanResponderGestureState),
+    ).toBe(true);
+    config().onPanResponderRelease?.(event, fling);
+    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not claim swipes when not dismissible', async () => {
+    const config = gestureConfig();
+    await render(<Indicator {...base} dismissible={false} />);
+    expect(
+      config().onMoveShouldSetPanResponder?.(event, {
+        dx: 40,
+        dy: 0,
+      } as PanResponderGestureState),
+    ).toBe(false);
+  });
+
+  it('renders without a testID', async () => {
+    await render(<Indicator {...base} testID={undefined} />);
+    expect(screen.queryByTestId('anything')).toBeNull();
   });
 });

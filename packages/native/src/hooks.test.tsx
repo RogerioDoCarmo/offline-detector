@@ -110,6 +110,21 @@ describe('useReducedMotion', () => {
     expect(remove).toHaveBeenCalledTimes(1);
   });
 
+  it('ignores the system answer when unmounted before it arrives', async () => {
+    let resolve: (v: boolean) => void = () => undefined;
+    jest
+      .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
+      .mockImplementation(() => new Promise((r: (v: boolean) => void) => (resolve = r)));
+    jest.spyOn(AccessibilityInfo, 'addEventListener').mockImplementation((() => ({
+      remove: jest.fn(),
+    })) as unknown as typeof AccessibilityInfo.addEventListener);
+    const error = jest.spyOn(console, 'error').mockImplementation();
+    const { unmount } = await renderHook(() => useReducedMotion('auto'));
+    await unmount();
+    await act(async () => resolve(true));
+    expect(error).not.toHaveBeenCalled();
+  });
+
   it('stays false when the system query rejects', async () => {
     stubAccessibility('reject');
     const { result } = await renderHook(() => useReducedMotion('auto'));
@@ -206,6 +221,20 @@ describe('usePieceTransition', () => {
       [0, 120],
       [0, 0],
     ]);
+  });
+
+  it('stays mounted when it becomes visible again before the exit finishes', async () => {
+    const timing = mockTiming({ defer: true });
+    const { result, rerender } = await renderHook(
+      (visible: boolean) =>
+        usePieceTransition({ visible, reduceMotion: false, theme: lightTheme }),
+      { initialProps: true },
+    );
+    await act(async () => timing.flush());
+    await rerender(false);
+    await rerender(true);
+    await act(async () => timing.flush());
+    expect(result.current.mounted).toBe(true);
   });
 
   it('mounts again when it becomes visible after an exit', async () => {

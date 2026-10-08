@@ -243,6 +243,21 @@ describe('default lazy NetInfo', () => {
   });
 });
 
+describe('no options at all', () => {
+  beforeEach(() => jest.resetModules());
+  afterEach(() => jest.dontMock('@react-native-community/netinfo'));
+
+  it('loads NetInfo lazily and uses the react-native AppState', async () => {
+    const { netInfo } = fakeNetInfo(true);
+    jest.doMock('@react-native-community/netinfo', () => ({ default: netInfo }));
+    const { createNativeAdapter: create } =
+      require('./adapter') as typeof import('./adapter');
+    const adapter = create();
+    await expect(adapter.isInterfaceUp()).resolves.toBe(true);
+    expect(netInfo.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('default AppState', () => {
   it('falls back to the react-native AppState', () => {
     const adapter = createNativeAdapter({ netInfo: fakeNetInfo(true).netInfo });
