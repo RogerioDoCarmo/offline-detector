@@ -182,8 +182,9 @@ describe('without NetInfo', () => {
     create({ netInfo: null, appState: fakeAppState().appState });
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]?.[0]).toBe(
-      '[offline-detector] @react-native-community/netinfo is not installed. The network interface is ' +
-        'assumed to be up and only the reachability probe decides. Install it for instant offline detection.',
+      '[offline-detector] No NetInfo module was passed. The network interface is assumed to be up ' +
+        'and only the reachability probe decides. Install @react-native-community/netinfo and pass ' +
+        'it as the `netInfo` option for instant offline detection.',
     );
   });
 
@@ -206,55 +207,31 @@ describe('without NetInfo', () => {
     }
   });
 
-  it('degrades when the module cannot be loaded', async () => {
-    jest.doMock('@react-native-community/netinfo', () => {
-      throw new Error('Cannot find module');
-    });
+  it('degrades when no netInfo is passed, with the same single warning', () => {
     const { createNativeAdapter: create } = load();
     const adapter = create({ appState: fakeAppState().appState });
     expect(adapter.isInterfaceUp()).toBe(true);
+    create();
     expect(warn).toHaveBeenCalledTimes(1);
   });
-});
 
-describe('default lazy NetInfo', () => {
-  beforeEach(() => jest.resetModules());
-  afterEach(() => jest.dontMock('@react-native-community/netinfo'));
-
-  it('uses the default export of the module', async () => {
-    const { netInfo } = fakeNetInfo(false);
-    jest.doMock('@react-native-community/netinfo', () => ({
-      __esModule: true,
-      default: netInfo,
-    }));
-    const { createNativeAdapter: create } =
-      require('./adapter') as typeof import('./adapter');
+  it('never loads the optional module itself', () => {
+    const factory = jest.fn(() => fakeNetInfo(false).netInfo);
+    jest.doMock('@react-native-community/netinfo', factory);
+    const { createNativeAdapter: create } = load();
     const adapter = create({ appState: fakeAppState().appState });
-    await expect(adapter.isInterfaceUp()).resolves.toBe(false);
-  });
-
-  it('uses the module itself when it has no default export', async () => {
-    const { netInfo } = fakeNetInfo(false);
-    jest.doMock('@react-native-community/netinfo', () => netInfo);
-    const { createNativeAdapter: create } =
-      require('./adapter') as typeof import('./adapter');
-    const adapter = create({ appState: fakeAppState().appState });
-    await expect(adapter.isInterfaceUp()).resolves.toBe(false);
+    expect(adapter.isInterfaceUp()).toBe(true);
+    expect(factory).not.toHaveBeenCalled();
   });
 });
 
-describe('no options at all', () => {
-  beforeEach(() => jest.resetModules());
-  afterEach(() => jest.dontMock('@react-native-community/netinfo'));
-
-  it('loads NetInfo lazily and uses the react-native AppState', async () => {
-    const { netInfo } = fakeNetInfo(true);
-    jest.doMock('@react-native-community/netinfo', () => ({ default: netInfo }));
-    const { createNativeAdapter: create } =
-      require('./adapter') as typeof import('./adapter');
-    const adapter = create();
-    await expect(adapter.isInterfaceUp()).resolves.toBe(true);
-    expect(netInfo.fetch).toHaveBeenCalledTimes(1);
+describe('the package source', () => {
+  it('has no require call and no import of the optional module', () => {
+    const { readFileSync } = require('node:fs') as typeof import('node:fs');
+    const { join } = require('node:path') as typeof import('node:path');
+    const adapterSource = readFileSync(join(__dirname, 'adapter.ts'), 'utf8');
+    expect(adapterSource).not.toMatch(/require\s*\(/);
+    expect(adapterSource).not.toMatch(/from\s+['"]@react-native-community\/netinfo['"]/);
   });
 });
 
