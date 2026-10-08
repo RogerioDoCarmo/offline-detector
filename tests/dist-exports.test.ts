@@ -36,6 +36,24 @@ describe.each(names)('built output of package %s', (name) => {
     }
   });
 
+  run(
+    'is compiled with the automatic JSX runtime, so consumers need no React in scope',
+    () => {
+      // The classic runtime emits `React.createElement` with no React import, which throws
+      // "React is not defined" in any consumer of the published bundle.
+      for (const file of ['dist/index.js', 'dist/index.cjs']) {
+        const code = readFileSync(join(dir, file), 'utf8');
+        expect({
+          file,
+          usesClassicRuntime: /\bReact\.createElement\b/.test(code),
+        }).toEqual({
+          file,
+          usesClassicRuntime: false,
+        });
+      }
+    },
+  );
+
   run('contains the legacy entry fields too', () => {
     for (const field of ['main', 'module', 'types'] as const) {
       const file = manifest[field] as string;
