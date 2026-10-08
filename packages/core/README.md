@@ -121,7 +121,10 @@ interface PlatformAdapter {
 
 - An interface-down event is applied immediately (no probe) and overrides any probe in
   flight. An interface-up event triggers an immediate check.
-- A foreground return triggers an immediate `checkNow()`.
+- A foreground return triggers an immediate `checkNow()` only when `recheckOnForeground: true` is
+  passed (default `false`). Re-checking on return is opt-in; the react layer wires it through
+  `useRecheckOnReturn` per screen, so by default the detector does not even subscribe to
+  `subscribeForeground`.
 - If `isInterfaceUp()` throws or rejects it is treated as "up" and the probe decides.
 
 ## Privacy

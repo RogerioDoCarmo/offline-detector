@@ -65,6 +65,11 @@ export type StateListener = (state: OfflineState, previous: OfflineState) => voi
 export interface OfflineDetectorOptions {
   adapter: PlatformAdapter;
   probe?: ProbeOptions;
+  /**
+   * Re-check immediately whenever the adapter reports a foreground return. Off by default: the
+   * react layer exposes this as an explicit per-screen hook instead of an always-on behavior.
+   */
+  recheckOnForeground?: boolean;
   onOffline?: (state: OfflineState) => void;
   onOnline?: (state: OfflineState) => void;
   onChange?: (state: OfflineState, previous: OfflineState) => void;

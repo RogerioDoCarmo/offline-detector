@@ -12,6 +12,7 @@ function rig(extra: Parameters<typeof make>[1] = {}) {
   let net = true;
   const h = make(() => (net ? 'ok' : 'fail'), {
     probe: { urls: ['https://a.test'], timeoutMs: TIMEOUT_MS, intervalMs: 30000 },
+    recheckOnForeground: true,
     ...extra,
   });
   const play = async (op: (typeof NAMED_OPS)[number] | number): Promise<void> => {

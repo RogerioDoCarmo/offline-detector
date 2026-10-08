@@ -205,8 +205,8 @@ describe('adapter events', () => {
     detector.stop();
   });
 
-  it('re-checks immediately when the app returns to the foreground', async () => {
-    const { detector, adapter, fetch } = make();
+  it('re-checks immediately when the app returns to the foreground and recheckOnForeground is on', async () => {
+    const { detector, adapter, fetch } = make(undefined, { recheckOnForeground: true });
     detector.start();
     await flush();
     adapter.foreground();
@@ -215,8 +215,20 @@ describe('adapter events', () => {
     detector.stop();
   });
 
-  it('shares an in-flight probe with a foreground return', async () => {
+  it('ignores foreground returns by default: re-checking on return is the react hook opt-in', async () => {
     const { detector, adapter, fetch } = make();
+    detector.start();
+    await flush();
+    adapter.foreground();
+    await flush();
+    expect(fetch.calls).toHaveLength(1);
+    expect(adapter.subscribeForegroundCalls()).toBe(0);
+    expect(adapter.foregroundListenerCount()).toBe(0);
+    detector.stop();
+  });
+
+  it('shares an in-flight probe with a foreground return', async () => {
+    const { detector, adapter, fetch } = make(undefined, { recheckOnForeground: true });
     detector.start();
     adapter.foreground();
     await flush();
@@ -227,7 +239,7 @@ describe('adapter events', () => {
 
 describe('start and stop', () => {
   it('subscribes to the adapter once even if start is called twice', async () => {
-    const { detector, adapter, fetch } = make();
+    const { detector, adapter, fetch } = make(undefined, { recheckOnForeground: true });
     detector.start();
     detector.start();
     await flush();
@@ -238,7 +250,7 @@ describe('start and stop', () => {
   });
 
   it('stop unsubscribes from the adapter and clears the timer', async () => {
-    const { detector, adapter, clock } = make();
+    const { detector, adapter, clock } = make(undefined, { recheckOnForeground: true });
     detector.start();
     await flush();
     expect(adapter.interfaceListenerCount()).toBe(1);

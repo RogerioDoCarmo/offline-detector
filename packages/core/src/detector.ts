@@ -206,12 +206,14 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
       if (started) return;
       started = true;
       failures = 0;
-      unsubscribers = [
-        adapter.subscribeInterface(onInterfaceEvent),
-        adapter.subscribeForeground(() => {
-          void checkNow();
-        }),
-      ];
+      unsubscribers = [adapter.subscribeInterface(onInterfaceEvent)];
+      if (options.recheckOnForeground === true) {
+        unsubscribers.push(
+          adapter.subscribeForeground(() => {
+            void checkNow();
+          }),
+        );
+      }
       void checkNow();
     },
     stop() {
