@@ -236,7 +236,7 @@ export const componentCss = `
   position: fixed;
   inset-inline: 0;
 }
-.od-banner .od-icon {
+.od-banner > .od-icon {
   color: var(--od-color-status-offline);
 }
 .od-banner .od-msg {
