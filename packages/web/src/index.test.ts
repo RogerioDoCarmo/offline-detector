@@ -10,6 +10,7 @@ describe('@rogeriodocarmo/offline-detector-web', () => {
       'Banner',
       'FullScreen',
       'Indicator',
+      'OfflineDetector',
       'OfflineTokens',
       'SWIPE_RULES',
       'Snackbar',

@@ -1,6 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { OfflineState } from '@rogeriodocarmo/offline-detector-core';
-import type { OfflineStrings, PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
+import type {
+  OfflineStrings,
+  PieceRenderProps,
+} from '@rogeriodocarmo/offline-detector-react';
 
 export type Phase = PieceRenderProps['phase'];
 export type Motion = 'auto' | 'reduced' | 'full';
