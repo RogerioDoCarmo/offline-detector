@@ -17,8 +17,11 @@ export interface AppStateLike {
 
 export interface NativeAdapterOptions {
   /**
-   * Defaults to a lazy `require('@react-native-community/netinfo')`. Pass `null` to run without
-   * it: the interface is then always reported up and the probe decides.
+   * The NetInfo module, passed in by the host: `import NetInfo from
+   * '@react-native-community/netinfo'`. This package never requires it itself (a bundled
+   * `require` can be hoisted out of its try/catch and turn the optional peer into a hard
+   * dependency for Metro). Omit it, or pass `null`, to run without it: the interface is then
+   * always reported up, the probe decides, and development builds warn once.
    */
   netInfo?: NetInfoLike | null;
   /** Defaults to react-native's `AppState`. */
@@ -26,8 +29,9 @@ export interface NativeAdapterOptions {
 }
 
 const MISSING_NETINFO_WARNING =
-  '[offline-detector] @react-native-community/netinfo is not installed. The network interface is ' +
-  'assumed to be up and only the reachability probe decides. Install it for instant offline detection.';
+  '[offline-detector] No NetInfo module was passed. The network interface is assumed to be up ' +
+  'and only the reachability probe decides. Install @react-native-community/netinfo and pass ' +
+  'it as the `netInfo` option for instant offline detection.';
 
 let warnedAboutNetInfo = false;
 
@@ -39,26 +43,12 @@ function warnMissingNetInfoOnce(): void {
   }
 }
 
-function loadNetInfo(): NetInfoLike | null {
-  try {
-    // A literal specifier on purpose: Metro resolves it statically and treats a require inside
-    // try/catch as optional.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('@react-native-community/netinfo') as {
-      default?: NetInfoLike;
-    } & NetInfoLike;
-    return mod.default ?? mod;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * The native platform adapter. Interface up means `isConnected !== false`; a foreground return is
  * an AppState change from `background` or `inactive` to `active`.
  */
 export function createNativeAdapter(options: NativeAdapterOptions = {}): PlatformAdapter {
-  const netInfo = options.netInfo === undefined ? loadNetInfo() : options.netInfo;
+  const netInfo = options.netInfo ?? null;
   const appState: AppStateLike = options.appState ?? AppState;
   if (netInfo === null) warnMissingNetInfoOnce();
 

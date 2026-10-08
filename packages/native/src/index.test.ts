@@ -10,6 +10,7 @@ describe('@rogeriodocarmo/offline-detector-native', () => {
       'Banner',
       'FullScreen',
       'Indicator',
+      'OfflineDetector',
       'Snackbar',
       'createNativeAdapter',
       'createTheme',

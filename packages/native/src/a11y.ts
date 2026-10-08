@@ -1,5 +1,5 @@
 import type { AccessibilityActionEvent } from 'react-native';
-import type { OfflineStrings } from './contract-types';
+import type { OfflineStrings } from '@rogeriodocarmo/offline-detector-react';
 
 /** A piece is dismissible unless turned off, and only when there is something to call. */
 export function isDismissible(
@@ -27,9 +27,4 @@ export function dismissAccessibilityProps(
       if (event.nativeEvent.actionName === 'dismiss') onDismiss?.();
     },
   };
-}
-
-/** Replaces the `{status}` token of `indicatorAccessibleName` with the matching label. */
-export function fillStatus(template: string, status: string): string {
-  return template.split('{status}').join(status);
 }

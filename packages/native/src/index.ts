@@ -20,5 +20,11 @@ export { Banner } from './banner';
 export type { BannerProps } from './banner';
 export { Indicator } from './indicator';
 export type { IndicatorProps } from './indicator';
+export { OfflineDetector } from './offline-detector';
+export type {
+  OfflineDetectorProps,
+  OfflineDetectorSlot,
+  OfflineDetectorSlots,
+} from './offline-detector';
 export { FullScreen, hostContentAccessibilityProps } from './full-screen';
 export type { FullScreenProps } from './full-screen';
