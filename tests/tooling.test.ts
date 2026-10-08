@@ -50,7 +50,12 @@ describe('tooling', () => {
     // markdownlint-cli2 does not read .markdownlintignore: the negated globs in the script are
     // what actually keep these folders out.
     const lintMd: string = JSON.parse(read('package.json')).scripts['lint:md'];
-    for (const glob of ['"#node_modules"', '"#.superpowers"', '"#**/CHANGELOG.md"']) {
+    for (const glob of [
+      '"#**/node_modules"',
+      '"#.superpowers"',
+      '"#.claude"',
+      '"#**/CHANGELOG.md"',
+    ]) {
       expect(lintMd).toContain(glob);
     }
     expect(read('eslint.config.js')).toContain("'**/dist/**'");

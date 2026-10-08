@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.superpowers\" \"#.claude\" \"#**/CHANGELOG.md\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\" \"#.superpowers\" \"#.claude\" \"#**/CHANGELOG.md\"",
     "test": "jest",
     "test:ci": "jest --coverage --ci",
     "mutation": "stryker run",
