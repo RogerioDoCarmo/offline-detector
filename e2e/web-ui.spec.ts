@@ -6,9 +6,9 @@ import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures/test';
 
 /**
- * The web package's presentational pieces, wired the way phase 2's provider will wire them (see
- * e2e/web-ui-fixture/fixture.jsx): a snackbar, a banner and a dot indicator reacting to the real
- * `offline` / `online` events of a real browser.
+ * The real <OfflineDetector> from the web package (see e2e/web-ui-fixture/fixture.jsx): the web
+ * adapter, the detector and the react hooks, reacting to the real `offline` / `online` events of
+ * a real browser. Only the probe `fetch` is a stub (window.__probeOk), so no network is needed.
  *
  * The fixture is bundled with Rspack (shipped by @rslib/core) into a temporary folder and injected
  * with `addScriptTag`, so no static file has to be added to e2e/fixtures/site.
@@ -26,12 +26,15 @@ test.beforeAll(() => {
   ).trim();
 });
 
-async function open(page: Page) {
+async function open(page: Page, props: Record<string, unknown> = {}) {
   await page.setContent(
     '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
       '<meta name="viewport" content="width=device-width, initial-scale=1">' +
       '<title>Web UI fixture</title></head><body><div id="root"></div></body></html>',
   );
+  await page.evaluate((p) => {
+    (window as unknown as { __odProps: unknown }).__odProps = p;
+  }, props);
   await page.addScriptTag({ path: bundle });
   await expect(page.getByRole('heading', { name: 'Host app' })).toBeVisible();
 }
@@ -187,6 +190,7 @@ test.describe('web UI pieces in a real browser', () => {
     await expect(snackbar(page)).toHaveCount(0);
 
     await goOnline();
+    await expect(page.getByRole('status')).toHaveText(/Back online/);
     await goOffline();
 
     await expect(snackbar(page)).toBeVisible();
@@ -203,5 +207,80 @@ test.describe('web UI pieces in a real browser', () => {
     await swipe(page, snackbar(page), 0.5);
 
     await expect(snackbar(page)).toHaveCount(0);
+  });
+});
+
+test.describe('OfflineDetector options and the probe', () => {
+  const setProbe = (page: Page, ok: boolean) =>
+    page.evaluate((value) => {
+      (window as unknown as { __probeOk: boolean }).__probeOk = value;
+    }, ok);
+
+  test('launching offline shows the pieces straight away', async ({ page, context }) => {
+    await context.setOffline(true);
+    await open(page);
+
+    await expect(snackbar(page)).toContainText('No internet');
+    await expect(page.locator('.od-banner')).toBeVisible();
+    await expect(page.locator('.od-indicator')).toBeVisible();
+    await expect(page.getByText('Back online')).toHaveCount(0);
+  });
+
+  test('Retry probes: it stays offline while the probe fails, then recovers', async ({
+    page,
+    context,
+    goOffline,
+  }) => {
+    await open(page);
+    await setProbe(page, false);
+    await goOffline();
+    // The interface comes back but the internet does not: the probe decides.
+    await context.setOffline(false);
+    await expect(snackbar(page)).toContainText('No internet');
+
+    const calls = () =>
+      page.evaluate(() => (window as unknown as { __probeCalls: number }).__probeCalls);
+    const before = await calls();
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await expect.poll(calls).toBeGreaterThan(before);
+    await expect(snackbar(page)).toContainText('No internet');
+
+    await setProbe(page, true);
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await expect(page.getByRole('status')).toHaveText(/Back online/);
+    await expect(page.locator('.od-banner')).toHaveCount(0);
+  });
+
+  test('the opt-in full-screen state replaces the other pieces; Continue offline closes it', async ({
+    page,
+    goOffline,
+  }) => {
+    await open(page, { fullScreen: { continueOffline: true } });
+    await goOffline();
+
+    await expect(page.locator('.od-fullscreen')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'No internet' })).toBeVisible();
+    await expect(snackbar(page)).toHaveCount(0);
+    await expect(page.locator('.od-banner')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Continue offline' }).click();
+    await expect(page.locator('.od-fullscreen')).toHaveCount(0);
+    await expect(page.locator('.od-banner')).toBeVisible();
+  });
+
+  test('speaks Portuguese when asked', async ({ page, goOffline, goOnline }) => {
+    await open(page, { locale: 'pt-BR' });
+    await goOffline();
+    await expect(snackbar(page)).toContainText('Sem internet');
+    await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
+
+    await goOnline();
+    await expect(page.getByRole('status')).toHaveText(/Conexão restabelecida/);
+  });
+
+  test('a forced dark scheme sets data-od-theme on a wrapper', async ({ page }) => {
+    await open(page, { colorScheme: 'dark' });
+    await expect(page.locator('[data-od-theme="dark"]')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Host app' })).toBeVisible();
   });
 });
