@@ -223,8 +223,10 @@ no Reanimated, no gesture-handler, no `react-native-web`.
   (the `react` worker); mutation-resistant assertions; coverage of your package at 95% lines and
   branches or better. Stryker covers `packages/react/src`; run it scoped to your package if it
   works in your worktree and report the score honestly, otherwise say why it did not.
-- Babel 8 under Jest mishandles explicit generics on `new` (`new Promise<boolean>(...)`): write
-  `new Promise((resolve: (v: boolean) => void) => ...)` instead.
+- Babel 8 under Jest mishandles explicit type arguments on any call or `new` expression
+  (`new Promise<boolean>(...)`, `useState<T>(x)`, `createContext<T>(x)`, `useRef<T>(null)`): use a
+  typed parameter or a cast instead (`new Promise((resolve: (v: boolean) => void) => ...)`,
+  `useRef(null as T | null)`). Rslib builds are not affected; only the Jest transform is.
 - Commit on your own branch with the `Co-Authored-By: Claude Sonnet 5.5
 <noreply@anthropic.com>` trailer. Never rebase. Do not push, open PRs or run `gh`.
 - Finish with `pnpm typecheck`, `pnpm typecheck:tests`, `pnpm lint`, `pnpm format:check`,
