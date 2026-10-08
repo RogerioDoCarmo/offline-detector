@@ -44,9 +44,9 @@ message lasts about 4 seconds.
    truncated (translations and large text are longer).
 3. **Action**: "Retry", a text button, `label` semibold, `action-inverse`, minimum 44x44 hit area.
    Hidden on the recovery message.
-4. **Dismiss** (optional, `dismissible` prop; default off for the offline message because it is a
-   state, not a notice): icon button, 44x44, `text-muted-inverse`. A dismissed offline snackbar
-   stays dismissed until the next transition; the banner and indicator still show the state.
+4. **Dismiss**: icon button, 44x44, `text-muted-inverse`, shown while the piece is dismissible (the
+   default, see [Dismissal](#dismissal-swipe-keyboard-and-assistive-technology)). Swiping the
+   snackbar left or right dismisses it too.
 
 Surface: `surface-inverse`, `radius-md`, `shadow-snackbar`, padding `space-md` vertical,
 `space-lg` inline, minimum height 48. Max width 560, centred; on viewports narrower than
@@ -214,6 +214,42 @@ When connectivity returns, the full-screen state exits and the recovery snackbar
 shows. While the full-screen state is visible the banner, indicator and offline snackbar are
 suppressed (it already says the same thing). Focus handling is in `accessibility.md`.
 
+## Dismissal (swipe, keyboard and assistive technology)
+
+Owner decision (8 Oct 2026): every non-full-screen piece (snackbar, banner, indicator) is
+**dismissible by default**, by swiping it to the left or to the right. A single `dismissible` flag
+turns this off; `dismissible={false}` makes the pieces permanent. The full-screen state is never
+swipe-dismissible: it has its own "Continue offline" action.
+
+| Aspect               | Rule                                                                                                                                                                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Flag                 | `dismissible` (default `true`) on the provider or UI wrapper. Per-piece override: `snackbar={{ dismissible }}`, `banner={{ dismissible }}`, `indicator={{ dismissible }}`. A per-piece value wins over the global one.                    |
+| Gesture              | A horizontal drag in either direction. The piece follows the finger or pointer. Release past **30% of its width** or at a speed above **0.5 px/ms** dismisses; anything less springs back (`duration-base`, `ease-out`).                  |
+| Axis lock            | After 8 px of movement the drag locks to its dominant axis. Vertical drags are ignored, so page and list scrolling keep working. Web: `touch-action: pan-y` on the piece.                                                                 |
+| Exit motion          | The piece slides out in the swipe direction while fading, over `duration-exit`. Under reduced motion there is no slide: it fades out instantly.                                                                                           |
+| Direction            | Direction-agnostic and RTL-neutral: both directions behave identically, so nothing is mirrored.                                                                                                                                           |
+| Meaning of dismissed | Only the piece is hidden. The connection state is unchanged, `useNetworkStatus()` and callbacks are unaffected, and the other pieces keep showing.                                                                                        |
+| Comes back when      | The **next status transition** (offline, then online, then offline again shows the pieces again). A dismissed offline piece does not reappear while the same offline period continues, and the recovery snackbar still shows on recovery. |
+| Persistence          | None. Dismissal is in memory only; a reload resets it. Nothing is stored.                                                                                                                                                                 |
+| Layout               | Dismissing the banner reflows content: `--od-banner-height` returns to 0 over `duration-base` (instant under reduced motion).                                                                                                             |
+| Callback             | Optional `onDismiss(piece)` with `'snackbar' \| 'banner' \| 'indicator'` for hosts that want to react.                                                                                                                                    |
+| Implementation       | Web: pointer events (mouse, touch, pen) with pointer capture. Native: `PanResponder` plus the built-in `Animated` API with the native driver. No Reanimated and no gesture-handler dependency.                                            |
+
+### Alternatives to the swipe (required)
+
+A swipe is a path-based gesture, so every dismissible piece also needs a way to dismiss that does
+not depend on it (WCAG 2.2 criterion 2.5.1, Pointer Gestures, and 2.1.1, Keyboard).
+
+| Piece     | Single-pointer alternative                                                     | Keyboard                                                     | Screen reader                                                                                                               |
+| --------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Snackbar  | The visible dismiss button (44x44)                                             | The button is in the tab order; Escape while focus is inside | Button named by the `dismiss` string                                                                                        |
+| Banner    | A dismiss icon button (44x44) at the inline end                                | Same                                                         | Button named by the `dismiss` string                                                                                        |
+| Indicator | None visible (it is a tiny status mark). It becomes focusable when dismissible | Escape or Delete while focused                               | Native `accessibilityActions` entry `dismiss` (TalkBack and VoiceOver custom action), described by the `dismissHint` string |
+
+When a dismissed piece held focus, focus returns to the element that had it before the piece
+appeared, if that element is still in the document, otherwise to the document body. Dismissal by
+the user is never announced (the user caused it).
+
 ## Checking feedback ('brief' vs 'none')
 
 `useRecheckOnReturn({ checkingFeedback })` controls whether a **background** re-probe is visible.
@@ -293,7 +329,7 @@ type PieceRenderProps = {
   actions: {
     retry: () => Promise<OfflineState>; // wraps checkNow, drives the checking phase
     continueOffline?: () => void; // only when the full-screen opted in
-    dismiss?: () => void; // only when the piece is dismissible
+    dismiss?: () => void; // present unless dismissible is false for this piece
   };
   strings: ResolvedStrings; // every string, for custom layouts
   theme: OfflineTheme; // native; on web tokens are inherited CSS variables

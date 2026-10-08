@@ -180,3 +180,13 @@ Rules:
   document's (`lang="pt-BR"`), so a screen reader pronounces the string correctly.
 - Everything works with a keyboard alone (web) and with TalkBack/VoiceOver swipe navigation
   (native). Automated check: `@axe-core/playwright` on every offline UI state, light and dark.
+
+## 6. Dismissal
+
+Swipe-to-dismiss is on by default, so each dismissible piece needs a non-gesture path (WCAG 2.2
+2.5.1 and 2.1.1): a 44x44 dismiss button on the snackbar and banner, Escape or Delete when the
+indicator is focused, and a native `dismiss` custom accessibility action on all three. The hint
+string is `dismissHint`. Vertical scrolling must keep working (axis lock, `touch-action: pan-y`).
+Under reduced motion the exit is an instant fade, with no slide. Dismissal by the user is not
+announced. Full rules:
+[components.md](components.md#dismissal-swipe-keyboard-and-assistive-technology).

@@ -10,23 +10,24 @@ where it is the established word). Sentence case. The ellipsis is the single cha
 
 ## Copy table
 
-| Key                       | en                                   | pt-BR                                    | es                                       |
-| ------------------------- | ------------------------------------ | ---------------------------------------- | ---------------------------------------- |
-| `offline`                 | No internet                          | Sem internet                             | Sin internet                             |
-| `offlineNoInterface`      | No network connection                | Sem conexão com a rede                   | Sin conexión de red                      |
-| `offlineNoInternet`       | Connected, but no internet           | Conectado, mas sem internet              | Conectado, pero sin internet             |
-| `online`                  | Back online                          | Conexão restabelecida                    | Conexión restablecida                    |
-| `retry`                   | Retry                                | Tentar novamente                         | Reintentar                               |
-| `checking`                | Checking…                            | Verificando…                             | Verificando…                             |
-| `continueOffline`         | Continue offline                     | Continuar offline                        | Continuar sin conexión                   |
-| `dismiss`                 | Dismiss                              | Fechar                                   | Cerrar                                   |
-| `indicatorLabelOnline`    | Online                               | Online                                   | En línea                                 |
-| `indicatorLabelOffline`   | No internet                          | Sem internet                             | Sin internet                             |
-| `indicatorLabelChecking`  | Checking connection                  | Verificando conexão                      | Verificando conexión                     |
-| `indicatorAccessibleName` | Connection status: {status}          | Status da conexão: {status}              | Estado de la conexión: {status}          |
-| `fullScreenTitle`         | No internet                          | Sem internet                             | Sin internet                             |
-| `fullScreenBody`          | Check your connection and try again. | Verifique sua conexão e tente novamente. | Revisa tu conexión e inténtalo de nuevo. |
-| `fullScreenRetry`         | Try again                            | Tentar novamente                         | Intentar de nuevo                        |
+| Key                       | en                                   | pt-BR                                          | es                                             |
+| ------------------------- | ------------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
+| `offline`                 | No internet                          | Sem internet                                   | Sin internet                                   |
+| `offlineNoInterface`      | No network connection                | Sem conexão com a rede                         | Sin conexión de red                            |
+| `offlineNoInternet`       | Connected, but no internet           | Conectado, mas sem internet                    | Conectado, pero sin internet                   |
+| `online`                  | Back online                          | Conexão restabelecida                          | Conexión restablecida                          |
+| `retry`                   | Retry                                | Tentar novamente                               | Reintentar                                     |
+| `checking`                | Checking…                            | Verificando…                                   | Verificando…                                   |
+| `continueOffline`         | Continue offline                     | Continuar offline                              | Continuar sin conexión                         |
+| `dismiss`                 | Dismiss                              | Fechar                                         | Cerrar                                         |
+| `dismissHint`             | Swipe left or right to dismiss       | Deslize para a esquerda ou direita para fechar | Desliza a izquierda o a derecha para descartar |
+| `indicatorLabelOnline`    | Online                               | Online                                         | En línea                                       |
+| `indicatorLabelOffline`   | No internet                          | Sem internet                                   | Sin internet                                   |
+| `indicatorLabelChecking`  | Checking connection                  | Verificando conexão                            | Verificando conexión                           |
+| `indicatorAccessibleName` | Connection status: {status}          | Status da conexão: {status}                    | Estado de la conexión: {status}                |
+| `fullScreenTitle`         | No internet                          | Sem internet                                   | Sin internet                                   |
+| `fullScreenBody`          | Check your connection and try again. | Verifique sua conexão e tente novamente.       | Revisa tu conexión e inténtalo de nuevo.       |
+| `fullScreenRetry`         | Try again                            | Tentar novamente                               | Intentar de nuevo                              |
 
 `{status}` is replaced with the matching `indicatorLabel*` string.
 
@@ -44,7 +45,10 @@ where it is the established word). Sentence case. The ellipsis is the single cha
   `indicatorLabelChecking`.
 - **Indicator**: chip text is the `indicatorLabel*` for the state; the accessible name is
   `indicatorAccessibleName` with the status filled in.
-- **Dismiss**: accessible name of the snackbar's close button (an icon button).
+- **Dismiss**: accessible name of the dismiss icon button on the snackbar and banner, and of the
+  indicator's `dismiss` accessibility action.
+- **Dismiss hint**: spoken as the accessibility hint of a swipe-dismissible piece
+  (`accessibilityHint` on native, `aria-description` on web). Omitted when `dismissible` is false.
 
 ## Notes for translators and reviewers
 

@@ -293,3 +293,10 @@ one recurring motif, a thin signal arc that is broken and then completes.
     must be checked on implementation.
 16. `.impeccable/design.json` (the Impeccable sidecar) was not written because it lies outside the
     files this task owns.
+
+## Owner decisions after review (8 Oct 2026)
+
+- The design was reviewed and approved.
+- All non-full-screen pieces are swipe-dismissible (left or right) by default; a `dismissible`
+  flag turns it off. Rules and the required non-gesture alternatives are in
+  docs/design/components.md (Dismissal).
