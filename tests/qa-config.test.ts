@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { setImmediate as nodeSetImmediate } from 'node:timers';
 import { parse } from 'yaml';
 
 const root = join(__dirname, '..');
@@ -89,11 +90,45 @@ describe('sonarcloud', () => {
 describe('stryker', () => {
   const config = () => JSON.parse(read('stryker.config.json'));
 
+  it('uses a flat Jest config because Stryker cannot apply a multi-project one', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const flat = require('../jest.stryker.config.cjs');
+    expect(flat.projects).toBeUndefined();
+    expect(flat.testEnvironment).toBe('@stryker-mutator/jest-runner/jest-env/jsdom');
+    const roots = flat.roots.map(
+      (root: string) => root.replaceAll('\\', '/').split('/packages/')[1],
+    );
+    expect(roots).toEqual(['core/src', 'react/src']);
+    // The SSR test opts into node with a docblock, which cannot report per-test coverage.
+    expect(flat.testPathIgnorePatterns).toContain('ssr\\.test\\.tsx$');
+  });
+
+  it("restores Node's setImmediate in the jsdom environment, which core's test helpers use", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const flat = require('../jest.stryker.config.cjs');
+    expect(
+      flat.setupFiles.map((file: string) => file.replaceAll('\\', '/').split('/').pop()),
+    ).toEqual(['jest.stryker.setup.cjs']);
+    const original = globalThis.setImmediate;
+    // @ts-expect-error simulating the jsdom environment, where the global does not exist
+    delete globalThis.setImmediate;
+    try {
+      expect(typeof globalThis.setImmediate).toBe('undefined');
+      jest.isolateModules(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        require('../jest.stryker.setup.cjs');
+      });
+      expect(globalThis.setImmediate).toBe(nodeSetImmediate);
+    } finally {
+      globalThis.setImmediate = original;
+    }
+  });
+
   it('runs Jest with per-test coverage analysis', () => {
     expect(config().testRunner).toBe('jest');
     expect(config().jest).toEqual({
       projectType: 'custom',
-      configFile: 'jest.config.js',
+      configFile: 'jest.stryker.config.cjs',
     });
     expect(config().coverageAnalysis).toBe('perTest');
     expect(config().plugins).toEqual(['@stryker-mutator/jest-runner']);
