@@ -13,6 +13,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+
 jobs:
   verify:
     name: Build, lint, typecheck and test
@@ -28,6 +31,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm typecheck
+      - run: pnpm typecheck:tests
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm lint:md
