@@ -1,7 +1,7 @@
 import { useReducedMotion, useSettledChecking } from './hooks';
 import type { ReactElement } from 'react';
 import { DotGlyph } from './icons';
-import type { IndicatorPosition } from './contract-types';
+import type { IndicatorPosition } from '@rogeriodocarmo/offline-detector-react';
 import { CHECKING_DELAY_MS, CHECKING_MIN_MS } from './piece-types';
 import type { PieceProps } from './piece-types';
 import { useSwipeDismiss } from './swipe';
