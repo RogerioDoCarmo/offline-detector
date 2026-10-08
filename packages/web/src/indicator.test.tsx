@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Indicator } from './indicator';
-import { EN, layout, pointer } from './test-utils';
+import { EN, layout, pointer } from '../test-utils';
 
 function renderIndicator(props: Partial<React.ComponentProps<typeof Indicator>> = {}) {
   return render(

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { FullScreen } from './fullscreen';
-import { EN } from './test-utils';
+import { EN } from '../test-utils';
 
 const retry = () => Promise.resolve({} as never);
 

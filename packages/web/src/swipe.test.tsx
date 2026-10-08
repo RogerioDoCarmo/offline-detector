@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { lockAxis, shouldDismiss, useSwipeDismiss } from './swipe';
-import { layout, pointer } from './test-utils';
+import { layout, pointer } from '../test-utils';
 
 describe('lockAxis', () => {
   it.each([

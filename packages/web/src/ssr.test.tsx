@@ -11,7 +11,7 @@ import {
   createWebAdapter,
   createWebProbeFetch,
 } from './index';
-import { EN } from './test-utils';
+import { EN } from '../test-utils';
 
 describe('SSR safety (no window, no document)', () => {
   it('is really a node environment', () => {

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Banner } from './banner';
-import { EN, layout, pointer } from './test-utils';
+import { EN, layout, pointer } from '../test-utils';
 
 const retry = () => Promise.resolve({} as never);
 

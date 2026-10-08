@@ -24,7 +24,12 @@ export interface PieceProps {
   strings: OfflineStrings;
   /** Accepted for parity with `PieceRenderProps`; the pieces are driven by `phase`. */
   state?: OfflineState;
-  actions?: Partial<PieceRenderProps['actions']> & { retry?: () => unknown };
+  actions?: {
+    /** Returns whatever the provider's `retry` returns (a promise of the new state); ignored. */
+    retry?: () => unknown;
+    continueOffline?: () => void;
+    dismiss?: () => void;
+  };
   /** False during the exit window: the piece plays its exit animation and ignores input. */
   visible?: boolean;
   /** Role / live-region / dir props from the provider; they win over the piece's defaults. */

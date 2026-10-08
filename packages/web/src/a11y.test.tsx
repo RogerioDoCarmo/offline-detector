@@ -2,7 +2,7 @@ import axe from 'axe-core';
 import { render } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { Banner, FullScreen, Indicator, Snackbar } from './index';
-import { EN } from './test-utils';
+import { EN } from '../test-utils';
 
 const actions = {
   retry: () => Promise.resolve({} as never),
