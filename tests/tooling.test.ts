@@ -44,10 +44,14 @@ describe('tooling', () => {
   });
 
   it('keeps generated folders out of lint and format', () => {
-    for (const file of ['.prettierignore', '.markdownlintignore']) {
-      const lines = read(file).split('\n');
-      expect(lines).toContain('node_modules');
-      expect(lines).toContain('CHANGELOG.md');
+    const prettierIgnore = read('.prettierignore').split('\n');
+    expect(prettierIgnore).toContain('node_modules');
+    expect(prettierIgnore).toContain('CHANGELOG.md');
+    // markdownlint-cli2 does not read .markdownlintignore: the negated globs in the script are
+    // what actually keep these folders out.
+    const lintMd: string = JSON.parse(read('package.json')).scripts['lint:md'];
+    for (const glob of ['"#node_modules"', '"#.superpowers"', '"#**/CHANGELOG.md"']) {
+      expect(lintMd).toContain(glob);
     }
     expect(read('eslint.config.js')).toContain("'**/dist/**'");
   });

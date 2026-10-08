@@ -25,11 +25,16 @@ describe('ci workflow', () => {
       'pnpm install --frozen-lockfile',
       'pnpm build',
       'pnpm typecheck',
+      'pnpm typecheck:tests',
       'pnpm lint',
       'pnpm format:check',
       'pnpm lint:md',
       'pnpm test:ci',
     ]);
+  });
+
+  it('turns Turborepo telemetry off in every job', () => {
+    expect(ci().env).toEqual({ TURBO_TELEMETRY_DISABLED: '1' });
   });
 
   it('installs pnpm from the packageManager field and node from .nvmrc', () => {
@@ -81,6 +86,9 @@ describe('dependabot', () => {
         'react-native',
         'react-native-*',
         '@react-native/*',
+        '@react-native-community/netinfo',
+        '@types/react',
+        '@types/react-native',
       ]),
     );
   });
