@@ -307,6 +307,14 @@ describe('Snackbar: recovery timer pausing', () => {
     expect(onInteractionChange).toHaveBeenCalledTimes(1);
   });
 
+  it('releases the pause if it unmounts while the user is interacting', () => {
+    const onInteractionChange = jest.fn();
+    const { unmount } = renderSnackbar({ onInteractionChange });
+    fireEvent.mouseEnter(screen.getByRole('status'));
+    unmount();
+    expect(onInteractionChange.mock.calls).toEqual([[true], [false]]);
+  });
+
   it('works without a listener', () => {
     renderSnackbar();
     fireEvent.mouseEnter(screen.getByRole('status'));

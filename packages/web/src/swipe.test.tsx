@@ -321,6 +321,34 @@ describe('useSwipeDismiss: keyboard', () => {
   });
 });
 
+function ControlHarness({ onDismiss }: { onDismiss: () => void }) {
+  const swipe = useSwipeDismiss({ enabled: true, reducedMotion: false, onDismiss });
+  return (
+    <div data-testid="piece" {...swipe.props}>
+      <button onClick={swipe.dismiss}>dismiss</button>
+      <button onClick={swipe.reset}>reset</button>
+      <span data-testid="flags">{String(swipe.dismissed)}</span>
+    </div>
+  );
+}
+
+describe('useSwipeDismiss: programmatic control', () => {
+  it('dismiss() slides out and calls onDismiss after the exit; reset() brings it back', () => {
+    const onDismiss = jest.fn();
+    render(<ControlHarness onDismiss={onDismiss} />);
+    fireEvent.click(screen.getByText('dismiss'));
+    expect(screen.getByTestId('flags')).toHaveTextContent('true');
+    fireEvent.click(screen.getByText('reset'));
+    expect(screen.getByTestId('flags')).toHaveTextContent('false');
+    expect(screen.getByTestId('piece').style.transform).toBe('');
+    act(() => void jest.advanceTimersByTime(1000));
+    expect(onDismiss).not.toHaveBeenCalled(); // reset cancelled the pending exit
+    fireEvent.click(screen.getByText('dismiss'));
+    act(() => void jest.advanceTimersByTime(150));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('useSwipeDismiss: lifecycle', () => {
   it('calls onDismiss once even if dismissed twice', () => {
     const { piece, onDismiss } = setup();
