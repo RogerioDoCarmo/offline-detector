@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, useColorScheme } from 'react-native';
+import {
+  AccessibilityInfo,
+  Animated,
+  Easing,
+  Platform,
+  useColorScheme,
+} from 'react-native';
 import { createTheme, type OfflineTheme } from './theme';
 
 /**
@@ -116,4 +122,47 @@ export function usePieceTransition({
   }, [visible, reduceMotion]);
 
   return { mounted, style: { opacity, transform: [{ translateY }] } };
+}
+
+/**
+ * iOS has no `accessibilityLiveRegion`, so a piece that owns the announcement speaks its message
+ * through `announceForAccessibility` when it appears or changes. Android uses the live region
+ * instead (calling both would read the text twice), so this does nothing there.
+ */
+export function useIosAnnouncement(message: string, enabled: boolean): void {
+  useEffect(() => {
+    if (enabled && Platform.OS === 'ios') {
+      AccessibilityInfo.announceForAccessibility(message);
+    }
+  }, [message, enabled]);
+}
+
+/** Opacity for the checking dot: a looping pulse, or a constant 1 when inactive or reduced. */
+export function usePulse(
+  active: boolean,
+  reduceMotion: boolean,
+  duration: number,
+): Animated.Value {
+  const value = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    value.setValue(1);
+    if (!active || reduceMotion) return undefined;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(value, {
+          toValue: 0.4,
+          duration: duration / 2,
+          useNativeDriver: true,
+        }),
+        Animated.timing(value, {
+          toValue: 1,
+          duration: duration / 2,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [active, reduceMotion, duration, value]);
+  return value;
 }
