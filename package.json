@@ -27,6 +27,7 @@
     "@babel/preset-env": "^8.0.7",
     "@babel/preset-react": "^8.0.1",
     "@babel/preset-typescript": "^8.0.7",
+    "@rslib/core": "^1.0.3",
     "@types/jest": "^30.0.0",
     "babel-jest": "^30.5.2",
     "eslint": "^10.12.0",
@@ -36,6 +37,7 @@
     "lint-staged": "^17.6.0",
     "markdownlint-cli2": "^0.23.3",
     "prettier": "^3.9.9",
+    "turbo": "^2.11.7",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "yaml": "^2.9.1"
