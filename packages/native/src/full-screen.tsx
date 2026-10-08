@@ -12,7 +12,8 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import type { OfflineStrings, PiecePhase } from './contract-types';
+import type { OfflineStrings } from '@rogeriodocarmo/offline-detector-react';
+import type { PiecePhase } from './phase';
 import { Glyph, Spinner, type PieceIcons } from './glyphs';
 import { usePieceTransition } from './hooks';
 import { inlineInsets, resolveInsets, type Insets } from './insets';

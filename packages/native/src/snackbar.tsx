@@ -9,7 +9,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { dismissAccessibilityProps, isDismissible } from './a11y';
-import type { OfflineStrings, PiecePhase } from './contract-types';
+import type { OfflineStrings } from '@rogeriodocarmo/offline-detector-react';
+import type { PiecePhase } from './phase';
 import { Glyph, Spinner, type PieceIcons } from './glyphs';
 import { useIosAnnouncement, usePieceTransition } from './hooks';
 import { inlineInsets, resolveInsets, type Insets } from './insets';

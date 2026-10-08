@@ -8,8 +8,13 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { dismissAccessibilityProps, fillStatus, isDismissible } from './a11y';
-import type { IndicatorPosition, OfflineStrings, PiecePhase } from './contract-types';
+import {
+  indicatorName,
+  type IndicatorPosition,
+  type OfflineStrings,
+} from '@rogeriodocarmo/offline-detector-react';
+import { dismissAccessibilityProps, isDismissible } from './a11y';
+import type { PiecePhase } from './phase';
 import { StatusDot } from './glyphs';
 import { usePieceTransition } from './hooks';
 import { inlineInsets, resolveInsets, type Insets } from './insets';
@@ -84,7 +89,7 @@ export function Indicator({
     checking: strings.indicatorLabelChecking,
     online: strings.indicatorLabelOnline,
   }[status];
-  const name = fillStatus(strings.indicatorAccessibleName, label);
+  const name = indicatorName(strings, label);
   const insets = resolveInsets(insetsProp);
   const inline = inlineInsets(insets);
   const [vertical, horizontal] = position.split('-') as [
