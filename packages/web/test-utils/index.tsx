@@ -1,7 +1,7 @@
 // Type-only effect for the tests: brings the jest-dom matchers into the program.
 import '@testing-library/jest-dom';
 import { fireEvent } from '@testing-library/react';
-import type { OfflineStrings } from '../src/contract-types';
+import type { OfflineStrings } from '@rogeriodocarmo/offline-detector-react';
 
 /** The bundled English copy (docs/design/strings.md), written out so tests assert literals. */
 export const EN: OfflineStrings = {

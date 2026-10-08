@@ -17,6 +17,14 @@ const compiler = rspack({
   entry: join(here, 'fixture.jsx'),
   output: { path: outDir, filename: 'bundle.js', clean: true },
   resolve: {
+    // Bundle the sibling package from source, so the fixture does not depend on how (or whether)
+    // it was built.
+    alias: {
+      '@rogeriodocarmo/offline-detector-react': join(
+        here,
+        '../../packages/react/src/index.ts',
+      ),
+    },
     extensions: ['.tsx', '.ts', '.jsx', '.js'],
     // react and react-dom are devDependencies of packages/web only.
     modules: [join(here, '../../packages/web/node_modules'), 'node_modules'],

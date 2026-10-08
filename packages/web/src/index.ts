@@ -14,6 +14,8 @@ export type {
 export { OfflineTokens, offlineCss, offlineTokensCss } from './tokens';
 export type { OfflineTokensProps } from './tokens';
 export { useReducedMotion, useSettledChecking } from './hooks';
+export { OfflineDetector } from './offline-detector';
+export type { OfflineDetectorProps, OfflineDetectorSlots } from './offline-detector';
 export { Snackbar } from './snackbar';
 export type { SnackbarProps } from './snackbar';
 export { Banner } from './banner';
