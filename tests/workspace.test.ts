@@ -55,7 +55,9 @@ describe('workspace', () => {
     const claude = read('CLAUDE.md');
     expect(claude).toMatch(/never rebase/i);
     expect(claude).toContain('develop');
-    expect(claude).toContain('docs/superpowers/specs/2026-10-07-offline-detector-design.md');
+    expect(claude).toContain(
+      'docs/superpowers/specs/2026-10-07-offline-detector-design.md',
+    );
   });
 
   it('has a strict TypeScript base config', () => {

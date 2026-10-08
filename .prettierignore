@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+.turbo
+.next
+.docusaurus
+storybook-static
+playwright-report
+test-results
+CHANGELOG.md

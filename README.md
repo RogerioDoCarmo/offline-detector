@@ -8,12 +8,12 @@ ready-made snackbar, banner, indicator and full-screen UI. Web and mobile, no na
 
 ## Packages
 
-| Package | Purpose |
-| --- | --- |
-| `@rogeriodocarmo/offline-detector-core` | Framework-free state machine and probe |
-| `@rogeriodocarmo/offline-detector-react` | Provider, hooks, callbacks |
-| `@rogeriodocarmo/offline-detector-web` | DOM UI |
-| `@rogeriodocarmo/offline-detector-native` | React Native UI |
+| Package                                   | Purpose                                |
+| ----------------------------------------- | -------------------------------------- |
+| `@rogeriodocarmo/offline-detector-core`   | Framework-free state machine and probe |
+| `@rogeriodocarmo/offline-detector-react`  | Provider, hooks, callbacks             |
+| `@rogeriodocarmo/offline-detector-web`    | DOM UI                                 |
+| `@rogeriodocarmo/offline-detector-native` | React Native UI                        |
 
 ## License
 

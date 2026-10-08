@@ -10,12 +10,12 @@ scoped anyway. The GitHub repo stays `RogerioDoCarmo/offline-detector`.
 
 Planned packages:
 
-| Package | Purpose |
-| --- | --- |
-| `@rogeriodocarmo/offline-detector-core` | Headless state machine, probe, adapter interface |
-| `@rogeriodocarmo/offline-detector-react` | Provider, hooks, callbacks |
-| `@rogeriodocarmo/offline-detector-web` | DOM UI (snackbar, banner, indicator, full-screen) |
-| `@rogeriodocarmo/offline-detector-native` | React Native UI, same four pieces |
+| Package                                   | Purpose                                           |
+| ----------------------------------------- | ------------------------------------------------- |
+| `@rogeriodocarmo/offline-detector-core`   | Headless state machine, probe, adapter interface  |
+| `@rogeriodocarmo/offline-detector-react`  | Provider, hooks, callbacks                        |
+| `@rogeriodocarmo/offline-detector-web`    | DOM UI (snackbar, banner, indicator, full-screen) |
+| `@rogeriodocarmo/offline-detector-native` | React Native UI, same four pieces                 |
 
 ## How scopes work (why this matters)
 
@@ -36,7 +36,7 @@ Planned packages:
 - [ ] Is it `rogeriodocarmo`?
   - **Yes** -> the scope is already yours. Go to step 2.
   - **No, and `rogeriodocarmo` is free** -> create a new account with that
-    username, or rename the existing one under *Account settings*. Renaming
+    username, or rename the existing one under _Account settings_. Renaming
     breaks old links to your existing packages, so prefer a new account if
     you already publish things.
   - **No, and `rogeriodocarmo` is taken** -> stop and tell Claude. Packages
@@ -44,8 +44,8 @@ Planned packages:
 
 ### 2. Turn on two-factor authentication
 
-- [ ] *Account settings -> Two-Factor Authentication -> Enable.* Choose
-  **Authorization and publishing** (the stricter option).
+- [ ] _Account settings -> Two-Factor Authentication -> Enable._ Choose
+      **Authorization and publishing** (the stricter option).
 - [ ] Save the recovery codes somewhere outside this repository.
 
 Provenance publishing (decision Q17) needs a verified account, and npm
@@ -54,7 +54,7 @@ requires 2FA for publishing anyway.
 ### 3. Confirm the scope is really yours
 
 - [ ] Visit `https://www.npmjs.com/~rogeriodocarmo` and check it shows your
-  profile.
+      profile.
 - [ ] Optional sanity check once logged in from a terminal:
 
   ```bash
@@ -84,16 +84,16 @@ already published something with these names.
 Not needed today. When we get to the release workflow, the plan is **npm
 trusted publishing (OIDC)**, which needs no long-lived token:
 
-- [ ] On npmjs.com, open each package -> *Settings -> Trusted Publisher* and
-  link `RogerioDoCarmo/offline-detector` and the release workflow file name.
-  The package page only exists **after the first publish**, so the very first
-  version of each package is published once by hand (with 2FA), then switched
-  to trusted publishing.
+- [ ] On npmjs.com, open each package -> _Settings -> Trusted Publisher_ and
+      link `RogerioDoCarmo/offline-detector` and the release workflow file name.
+      The package page only exists **after the first publish**, so the very first
+      version of each package is published once by hand (with 2FA), then switched
+      to trusted publishing.
 - [ ] In GitHub, create a protected **Environment** named `npm-publish` with
-  you as a required reviewer, so nothing ships without your approval.
+      you as a required reviewer, so nothing ships without your approval.
 
 Do **not** paste an npm token into chat, into a file in this repo, or into a
-workflow. If a token is ever needed, it goes in GitHub *Settings -> Secrets*
+workflow. If a token is ever needed, it goes in GitHub _Settings -> Secrets_
 only.
 
 ## Report back to Claude
