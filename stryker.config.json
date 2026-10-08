@@ -4,7 +4,7 @@
   "testRunner": "jest",
   "jest": {
     "projectType": "custom",
-    "configFile": "jest.config.js"
+    "configFile": "jest.stryker.config.cjs"
   },
   "coverageAnalysis": "perTest",
   "reporters": ["html", "clear-text", "progress"],
