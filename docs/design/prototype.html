@@ -1,0 +1,1330 @@
+<!doctype html>
+<html lang="en" data-reduced-motion="false">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>offline-detector design prototype</title>
+    <style>
+      /* Tokens: values copied exactly from docs/design/tokens.md (light = default). */
+      :root,
+      [data-od-theme='light'] {
+        --od-color-surface: #ffffff;
+        --od-color-surface-raised: #f4f5f7;
+        --od-color-surface-inverse: #1f2328;
+        --od-color-text: #1b1f23;
+        --od-color-text-muted: #545b64;
+        --od-color-text-inverse: #ffffff;
+        --od-color-text-muted-inverse: #c4c9d0;
+        --od-color-border: #80878f;
+        --od-color-border-subtle: #d9dce1;
+        --od-color-status-offline: #b3261e;
+        --od-color-status-offline-subtle: #fdecea;
+        --od-color-status-online: #1a7f37;
+        --od-color-status-checking: #8a5a00;
+        --od-color-action: #0b5fd1;
+        --od-color-on-action: #ffffff;
+        --od-color-action-inverse: #8ab4ff;
+        --od-color-focus-ring: #0b5fd1;
+        --od-color-scrim: rgba(0, 0, 0, 0.4);
+      }
+      [data-od-theme='dark'] {
+        --od-color-surface: #1c1c1e;
+        --od-color-surface-raised: #2c2c2e;
+        --od-color-surface-inverse: #f2f3f5;
+        --od-color-text: #f2f3f5;
+        --od-color-text-muted: #a8aeb7;
+        --od-color-text-inverse: #1b1f23;
+        --od-color-text-muted-inverse: #4a5058;
+        --od-color-border: #8a9099;
+        --od-color-border-subtle: #3a3a3c;
+        --od-color-status-offline: #ff8a80;
+        --od-color-status-offline-subtle: #4a1f1c;
+        --od-color-status-online: #4cc38a;
+        --od-color-status-checking: #f0b429;
+        --od-color-action: #8ab4ff;
+        --od-color-on-action: #0b1b33;
+        --od-color-action-inverse: #0b5fd1;
+        --od-color-focus-ring: #8ab4ff;
+        --od-color-scrim: rgba(0, 0, 0, 0.6);
+      }
+      :root {
+        --od-space-xs: 4px;
+        --od-space-sm: 8px;
+        --od-space-md: 12px;
+        --od-space-lg: 16px;
+        --od-space-xl: 24px;
+        --od-space-2xl: 32px;
+        --od-radius-sm: 4px;
+        --od-radius-md: 8px;
+        --od-radius-lg: 12px;
+        --od-radius-full: 999px;
+        --od-shadow-none: none;
+        --od-shadow-chip: 0 1px 3px rgba(0, 0, 0, 0.2);
+        --od-shadow-snackbar:
+          0 2px 8px rgba(0, 0, 0, 0.24), 0 1px 2px rgba(0, 0, 0, 0.16);
+        --od-font-family:
+          system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+          sans-serif;
+        --od-font-size-label: 12px;
+        --od-font-size-body: 14px;
+        --od-font-size-title: 16px;
+        --od-font-size-headline: 22px;
+        --od-line-height-label: 16px;
+        --od-line-height-body: 20px;
+        --od-line-height-title: 24px;
+        --od-line-height-headline: 28px;
+        --od-font-weight-regular: 400;
+        --od-font-weight-medium: 500;
+        --od-font-weight-semibold: 600;
+        --od-size-touch-target: 44px;
+        --od-size-indicator-dot: 14px;
+        --od-size-icon: 20px;
+        --od-size-snackbar-min-height: 48px;
+        --od-size-snackbar-max-width: 560px;
+        --od-size-fullscreen-measure: 36ch;
+        --od-border-width: 1px;
+        --od-focus-ring-width: 2px;
+        --od-duration-fast: 120ms;
+        --od-duration-base: 200ms;
+        --od-duration-slow: 320ms;
+        --od-duration-exit: 150ms;
+        --od-duration-pulse: 1200ms;
+        --od-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --od-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+        --od-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+        --od-z-banner: 1000;
+        --od-z-indicator: 1010;
+        --od-z-snackbar: 1020;
+        --od-z-fullscreen: 1100;
+      }
+
+      /* ---------- Prototype page chrome (not part of the package) ---------- */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #eceef1;
+        color: var(--od-color-text);
+        font-family: var(--od-font-family);
+        font-size: var(--od-font-size-body);
+        line-height: var(--od-line-height-body);
+      }
+      .page {
+        max-width: 1100px;
+        margin-inline: auto;
+        padding: 0 var(--od-space-lg) var(--od-space-2xl);
+      }
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--od-space-md) var(--od-space-xl);
+        padding: var(--od-space-md) var(--od-space-lg);
+        margin-inline: calc(var(--od-space-lg) * -1);
+        background: var(--od-color-surface);
+        border-bottom: 1px solid var(--od-color-border-subtle);
+      }
+      .toolbar h1 {
+        margin: 0;
+        font-size: var(--od-font-size-title);
+        line-height: var(--od-line-height-title);
+        font-weight: var(--od-font-weight-semibold);
+        flex: 1 1 100%;
+      }
+      .group {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--od-space-sm);
+      }
+      .group > span {
+        color: var(--od-color-text-muted);
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--od-color-border);
+        border-radius: var(--od-radius-md);
+        overflow: hidden;
+      }
+      .seg button {
+        min-height: var(--od-size-touch-target);
+        min-width: var(--od-size-touch-target);
+        padding: 0 var(--od-space-md);
+        border: 0;
+        background: var(--od-color-surface);
+        color: var(--od-color-text);
+        font: inherit;
+        cursor: pointer;
+      }
+      .seg button + button {
+        border-inline-start: 1px solid var(--od-color-border);
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--od-color-action);
+        color: var(--od-color-on-action);
+        font-weight: var(--od-font-weight-semibold);
+      }
+      .toolbar label {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--od-space-sm);
+        min-height: var(--od-size-touch-target);
+        cursor: pointer;
+      }
+      .toolbar input[type='checkbox'] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--od-color-action);
+      }
+      .replay {
+        min-height: var(--od-size-touch-target);
+        padding: 0 var(--od-space-lg);
+        border: 1px solid var(--od-color-border);
+        border-radius: var(--od-radius-md);
+        background: var(--od-color-surface);
+        color: var(--od-color-text);
+        font: inherit;
+        cursor: pointer;
+      }
+      .toolbar :focus-visible,
+      .toolbar button:focus-visible {
+        outline: var(--od-focus-ring-width) solid var(--od-color-focus-ring);
+        outline-offset: 2px;
+      }
+      section.demo {
+        margin-top: var(--od-space-2xl);
+      }
+      section.demo > h2 {
+        margin: 0 0 var(--od-space-xs);
+        font-size: var(--od-font-size-headline);
+        line-height: var(--od-line-height-headline);
+        font-weight: var(--od-font-weight-semibold);
+      }
+      section.demo > p {
+        margin: 0 0 var(--od-space-lg);
+        color: #4a5058;
+        max-width: 70ch;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+        gap: var(--od-space-lg);
+      }
+      .stage {
+        border: 1px solid #c9cdd3;
+        border-radius: var(--od-radius-lg);
+        overflow: hidden;
+        background: var(--od-color-surface);
+        color: var(--od-color-text);
+        font-family: var(--od-font-family);
+      }
+      .stage > .cap {
+        padding: var(--od-space-sm) var(--od-space-lg);
+        font-size: var(--od-font-size-label);
+        line-height: var(--od-line-height-label);
+        font-weight: var(--od-font-weight-semibold);
+        letter-spacing: 0.02em;
+        color: var(--od-color-text-muted);
+        border-bottom: 1px solid var(--od-color-border-subtle);
+        background: var(--od-color-surface-raised);
+      }
+      .screen {
+        position: relative;
+        overflow: hidden;
+        background: var(--od-color-surface);
+        padding: var(--od-space-lg);
+        height: 220px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--od-space-md);
+      }
+      .screen.tall {
+        height: 400px;
+      }
+      .screen.fs {
+        height: 440px;
+        padding: 0;
+      }
+      .screen.flow {
+        padding: 0;
+        gap: 0;
+      }
+      .screen.flow .host {
+        padding: var(--od-space-lg);
+      }
+      [data-od-theme='dark'] .screen {
+        background: #121214;
+      }
+      .host {
+        display: flex;
+        flex-direction: column;
+        gap: var(--od-space-md);
+      }
+      .sk {
+        height: 12px;
+        border-radius: var(--od-radius-sm);
+        background: var(--od-color-border-subtle);
+      }
+      .sk.w1 {
+        width: 60%;
+      }
+      .sk.w2 {
+        width: 90%;
+      }
+      .sk.w3 {
+        width: 75%;
+      }
+      .sk.h {
+        height: 56px;
+        border-radius: var(--od-radius-md);
+      }
+      .panel {
+        padding: var(--od-space-lg);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--od-space-lg);
+        background: var(--od-color-surface);
+      }
+
+      /* ---------- Icons ---------- */
+      .od-icon {
+        width: var(--od-size-icon);
+        height: var(--od-size-icon);
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ---------- Shared: text button, spinner ---------- */
+      .od-text-button,
+      .od-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--od-space-sm);
+        min-height: var(--od-size-touch-target);
+        min-width: var(--od-size-touch-target);
+        border: 0;
+        font: inherit;
+        font-size: var(--od-font-size-label);
+        line-height: var(--od-line-height-label);
+        font-weight: var(--od-font-weight-semibold);
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        position: relative;
+        transition: background-color var(--od-duration-fast) var(--od-ease-standard);
+      }
+      .od-text-button {
+        padding-inline: var(--od-space-md);
+        background: transparent;
+        border-radius: var(--od-radius-md);
+      }
+      .od-button {
+        padding-inline: var(--od-space-xl);
+        border-radius: var(--od-radius-md);
+        background: var(--od-color-action);
+        color: var(--od-color-on-action);
+        font-size: var(--od-font-size-title);
+        line-height: var(--od-line-height-title);
+      }
+      .od-button.full {
+        width: 100%;
+      }
+      .od-button[aria-disabled='true'] {
+        cursor: default;
+      }
+      .od-button:active {
+        background-image: linear-gradient(
+          rgba(255, 255, 255, 0.12),
+          rgba(255, 255, 255, 0.12)
+        );
+      }
+      [data-od-theme='dark'] .od-button:active {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.12));
+      }
+      .od-button:focus-visible,
+      .od-text-button:focus-visible,
+      .od-icon-button:focus-visible {
+        outline: var(--od-focus-ring-width) solid var(--od-color-focus-ring);
+        outline-offset: 2px;
+      }
+      .od-spinner {
+        width: 16px;
+        height: 16px;
+        flex: none;
+        border-radius: 50%;
+        border: 2px solid currentColor;
+        border-inline-end-color: transparent;
+        animation: od-spin 800ms linear infinite;
+      }
+      @keyframes od-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ---------- Snackbar ---------- */
+      .od-snackbar {
+        position: absolute; /* package: position: fixed + safe-area insets */
+        inset-inline: var(--od-space-lg);
+        inset-block-end: var(--od-space-lg);
+        margin-inline: auto;
+        max-width: var(--od-size-snackbar-max-width);
+        min-height: var(--od-size-snackbar-min-height);
+        display: flex;
+        align-items: center;
+        gap: var(--od-space-md);
+        padding: var(--od-space-md) var(--od-space-lg);
+        background: var(--od-color-surface-inverse);
+        color: var(--od-color-text-inverse);
+        border-radius: var(--od-radius-md);
+        box-shadow: var(--od-shadow-snackbar);
+        z-index: var(--od-z-snackbar);
+        font-size: var(--od-font-size-body);
+        line-height: var(--od-line-height-body);
+      }
+      .od-snackbar .od-msg {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .od-snackbar .od-text-button {
+        color: var(--od-color-action-inverse);
+        margin-block: calc(var(--od-space-sm) * -1);
+      }
+      .od-snackbar .od-text-button:focus-visible,
+      .od-snackbar .od-icon-button:focus-visible {
+        outline-color: var(--od-color-action-inverse);
+      }
+      .od-icon-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: var(--od-size-touch-target);
+        min-height: var(--od-size-touch-target);
+        margin-block: calc(var(--od-space-sm) * -1);
+        margin-inline-end: calc(var(--od-space-md) * -1);
+        border: 0;
+        background: transparent;
+        color: var(--od-color-text-muted-inverse);
+        border-radius: var(--od-radius-md);
+        cursor: pointer;
+      }
+      .od-snackbar.enter {
+        animation: od-in-up var(--od-duration-base) var(--od-ease-out) both;
+      }
+      @keyframes od-in-up {
+        from {
+          opacity: 0;
+          transform: translateY(var(--od-space-lg));
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes od-fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes od-expand {
+        from {
+          opacity: 0;
+          max-height: 0;
+        }
+        to {
+          opacity: 1;
+          max-height: 120px;
+        }
+      }
+
+      /* ---------- Banner ---------- */
+      .od-banner {
+        position: relative; /* package: sticky, top: 0, plus safe-area top inset */
+        display: flex;
+        align-items: center;
+        gap: var(--od-space-sm);
+        padding: var(--od-space-sm) var(--od-space-lg);
+        min-height: 40px;
+        background: var(--od-color-status-offline-subtle);
+        color: var(--od-color-text);
+        border-block-end: var(--od-border-width) solid var(--od-color-border-subtle);
+        font-size: var(--od-font-size-body);
+        line-height: var(--od-line-height-body);
+        font-weight: var(--od-font-weight-medium);
+        z-index: var(--od-z-banner);
+      }
+      .od-banner .od-icon {
+        color: var(--od-color-status-offline);
+      }
+      .od-banner.enter {
+        overflow: hidden;
+        animation: od-expand var(--od-duration-base) var(--od-ease-out) both;
+      }
+
+      /* ---------- Dot and chip ---------- */
+      .od-dot {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--od-size-indicator-dot);
+        height: var(--od-size-indicator-dot);
+        flex: none;
+        border-radius: var(--od-radius-full);
+        box-shadow: 0 0 0 1px var(--od-color-surface);
+        color: var(--od-color-surface);
+      }
+      .od-dot svg {
+        width: 10px;
+        height: 10px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .od-dot.offline {
+        background: var(--od-color-status-offline);
+      }
+      .od-dot.online {
+        background: var(--od-color-status-online);
+      }
+      .od-dot.checking {
+        background: var(--od-color-status-checking);
+      }
+      .od-dot.checking::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border: 2px solid var(--od-color-status-checking);
+        animation: od-pulse var(--od-duration-pulse) var(--od-ease-out) infinite;
+      }
+      @keyframes od-pulse {
+        from {
+          transform: scale(1);
+          opacity: 0.7;
+        }
+        to {
+          transform: scale(2.2);
+          opacity: 0;
+        }
+      }
+      .od-dot-target {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: var(--od-size-touch-target);
+        min-height: var(--od-size-touch-target);
+        border-radius: var(--od-radius-full);
+      }
+      .od-dot-target:focus-visible {
+        outline: var(--od-focus-ring-width) solid var(--od-color-focus-ring);
+        outline-offset: -2px;
+      }
+      .od-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--od-space-sm);
+        min-height: 28px;
+        padding-block: var(--od-space-xs);
+        padding-inline: var(--od-space-sm) var(--od-space-md);
+        background: var(--od-color-surface-raised);
+        color: var(--od-color-text);
+        border: var(--od-border-width) solid var(--od-color-border);
+        border-radius: var(--od-radius-full);
+        box-shadow: var(--od-shadow-chip);
+        font-size: var(--od-font-size-label);
+        line-height: var(--od-line-height-label);
+        font-weight: var(--od-font-weight-semibold);
+        letter-spacing: 0.02em;
+        z-index: var(--od-z-indicator);
+      }
+      .od-chip .od-dot {
+        box-shadow: 0 0 0 1px var(--od-color-surface-raised);
+      }
+      .pos-top-end {
+        position: absolute;
+        inset-block-start: var(--od-space-lg);
+        inset-inline-end: var(--od-space-lg);
+      }
+      .caption {
+        font-size: var(--od-font-size-label);
+        line-height: var(--od-line-height-label);
+        color: var(--od-color-text-muted);
+        flex: 1 1 100%;
+      }
+
+      /* ---------- Full-screen ---------- */
+      .od-fullscreen {
+        position: absolute; /* package: position: fixed; inset: 0 */
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: var(--od-space-xl);
+        padding: var(--od-space-xl);
+        background: var(--od-color-surface);
+        color: var(--od-color-text);
+        text-align: center;
+        z-index: var(--od-z-fullscreen);
+      }
+      .od-fullscreen .inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--od-space-lg);
+        max-width: var(--od-size-fullscreen-measure);
+        width: 100%;
+      }
+      .od-fullscreen .od-big-icon {
+        width: 48px;
+        height: 48px;
+        color: var(--od-color-status-offline);
+        stroke-width: 1.75;
+      }
+      .od-fullscreen h3 {
+        margin: 0;
+        font-size: var(--od-font-size-headline);
+        line-height: var(--od-line-height-headline);
+        font-weight: var(--od-font-weight-semibold);
+      }
+      .od-fullscreen p {
+        margin: 0;
+        font-size: var(--od-font-size-title);
+        line-height: var(--od-line-height-title);
+        color: var(--od-color-text-muted);
+      }
+      .od-fullscreen .actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--od-space-sm);
+        width: 100%;
+        margin-block-start: var(--od-space-sm);
+      }
+      .od-fullscreen .od-text-button {
+        color: var(--od-color-action);
+        font-size: var(--od-font-size-title);
+        line-height: var(--od-line-height-title);
+        font-weight: var(--od-font-weight-medium);
+        letter-spacing: 0;
+      }
+      .od-fullscreen.enter {
+        animation: od-fade var(--od-duration-slow) var(--od-ease-out) both;
+      }
+
+      /* ---------- Reduced motion: fade only, no movement, no loops ---------- */
+      :root[data-reduced-motion='true'] .od-snackbar.enter {
+        animation: od-fade var(--od-duration-fast) var(--od-ease-out) both;
+      }
+      :root[data-reduced-motion='true'] .od-banner.enter {
+        animation: od-fade var(--od-duration-fast) var(--od-ease-out) both;
+      }
+      :root[data-reduced-motion='true'] .od-fullscreen.enter {
+        animation: od-fade var(--od-duration-fast) var(--od-ease-out) both;
+      }
+      :root[data-reduced-motion='true'] .od-spinner {
+        display: none;
+      }
+      :root[data-reduced-motion='true'] .od-dot.checking::after {
+        animation: none;
+        opacity: 0.7;
+        transform: scale(1.55);
+      }
+      :root[data-reduced-motion='true'] * {
+        transition-duration: 0ms !important;
+      }
+
+      /* RTL preview */
+      [dir='rtl'] .od-icon.dir {
+        transform: scaleX(-1);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Icon sprite -->
+    <svg
+      width="0"
+      height="0"
+      style="position: absolute"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <symbol id="i-wifi-off" viewBox="0 0 24 24">
+        <path d="M3 3l18 18" />
+        <path d="M5.2 12.4A10 10 0 0 1 9.4 9.9" />
+        <path d="M15.4 9.7a10 10 0 0 1 3.4 2.7" />
+        <path d="M8.6 15.9a5 5 0 0 1 6.8 0" />
+        <path d="M2 8.8a15 15 0 0 1 4-2.6" />
+        <path d="M22 8.8A15 15 0 0 0 11 5" />
+        <path d="M12 20h.01" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="M5 12.5l4.5 4.5L19 7.5" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></symbol>
+    </svg>
+
+    <div class="page">
+      <header class="toolbar">
+        <h1 data-i18n-plain="Prototype: offline-detector default theme">
+          Prototype: offline-detector default theme
+        </h1>
+        <div class="group" role="group" aria-label="Language">
+          <span>Language</span>
+          <div class="seg">
+            <button type="button" data-lang="en" aria-pressed="true">en</button>
+            <button type="button" data-lang="pt-BR" aria-pressed="false">pt-BR</button>
+            <button type="button" data-lang="es" aria-pressed="false">es</button>
+          </div>
+        </div>
+        <label><input type="checkbox" id="rm" /> Reduced motion</label>
+        <label><input type="checkbox" id="rtl" /> RTL preview</label>
+        <button type="button" class="replay" id="replay">Replay entrances</button>
+      </header>
+
+      <!-- 1. Snackbar -->
+      <section class="demo" aria-labelledby="h-snack">
+        <h2 id="h-snack">Snackbar</h2>
+        <p>
+          Offline stays until recovery; recovery lasts about 4 seconds. Inverted against
+          the host theme. Retry is a 44 px text button.
+        </p>
+        <div class="pair">
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light: offline</div>
+            <div class="screen">
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+              <div class="od-snackbar enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span class="od-msg" data-i18n="offline">No internet</span>
+                <button type="button" class="od-text-button" data-i18n="retry">
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark: offline</div>
+            <div class="screen">
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+              <div class="od-snackbar enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span class="od-msg" data-i18n="offline">No internet</span>
+                <button type="button" class="od-text-button" data-i18n="retry">
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light: checking (Retry pressed)</div>
+            <div class="screen">
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+              <div class="od-snackbar" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span class="od-msg" data-i18n="offline">No internet</span>
+                <button
+                  type="button"
+                  class="od-text-button"
+                  aria-disabled="true"
+                  aria-busy="true"
+                >
+                  <span class="od-spinner" aria-hidden="true"></span
+                  ><span data-i18n="checking">Checking…</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark: back online (4 s)</div>
+            <div class="screen">
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+              <div class="od-snackbar enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-check" /></svg>
+                <span class="od-msg" data-i18n="online">Back online</span>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light: back online</div>
+            <div class="screen">
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+              <div class="od-snackbar enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-check" /></svg>
+                <span class="od-msg" data-i18n="online">Back online</span>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark: dismissible variant</div>
+            <div class="screen">
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+              <div class="od-snackbar enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span class="od-msg" data-i18n="offlineNoInternet"
+                  >Connected, but no internet</span
+                >
+                <button type="button" class="od-text-button" data-i18n="retry">
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  class="od-icon-button"
+                  data-i18n-label="dismiss"
+                  aria-label="Dismiss"
+                >
+                  <svg class="od-icon" aria-hidden="true"><use href="#i-close" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Banner -->
+      <section class="demo" aria-labelledby="h-banner">
+        <h2 id="h-banner">Banner</h2>
+        <p>
+          In flow at the top while offline; pushes content down. Tinted surface, text
+          stays in the text colour, glyph carries the red. Default text is "No internet";
+          the second variant is the opt-in reason wording.
+        </p>
+        <div class="pair">
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light: default</div>
+            <div class="screen flow" style="height: 190px">
+              <div class="od-banner enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span data-i18n="offline">No internet</span>
+              </div>
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark: default</div>
+            <div class="screen flow" style="height: 190px">
+              <div class="od-banner enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span data-i18n="offline">No internet</span>
+              </div>
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light: distinguishReason</div>
+            <div class="screen flow" style="height: 190px">
+              <div class="od-banner enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span data-i18n="offlineNoInternet">Connected, but no internet</span>
+              </div>
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark: distinguishReason</div>
+            <div class="screen flow" style="height: 190px">
+              <div class="od-banner enter" role="status">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span data-i18n="offlineNoInternet">Connected, but no internet</span>
+              </div>
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Indicator -->
+      <section class="demo" aria-labelledby="h-ind">
+        <h2 id="h-ind">Indicator</h2>
+        <p>
+          Chip (default) and dot, three states. Each state has a different glyph, so it
+          reads without colour. The dot's accessible name is its label.
+        </p>
+        <div class="pair">
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light</div>
+            <div class="panel">
+              <span class="od-chip"
+                ><span class="od-dot offline" aria-hidden="true"
+                  ><svg viewBox="0 0 24 24"><path d="M5 5l14 14" /></svg></span
+                ><span data-i18n="indicatorOffline">No internet</span></span
+              >
+              <span class="od-chip"
+                ><span class="od-dot checking" aria-hidden="true"
+                  ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" /></svg></span
+                ><span data-i18n="indicatorChecking">Checking connection</span></span
+              >
+              <span class="od-chip"
+                ><span class="od-dot online" aria-hidden="true"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span
+                ><span data-i18n="indicatorOnline">Online</span></span
+              >
+              <span class="caption" data-i18n-plain="Dots (44 px hit area, labelled)"
+                >Dots (44 px hit area, labelled)</span
+              >
+              <span
+                class="od-dot-target"
+                tabindex="0"
+                role="img"
+                data-name="offline"
+                aria-label="Connection status: No internet"
+                ><span class="od-dot offline"
+                  ><svg viewBox="0 0 24 24"><path d="M5 5l14 14" /></svg></span
+              ></span>
+              <span
+                class="od-dot-target"
+                tabindex="0"
+                role="img"
+                data-name="checking"
+                aria-label="Connection status: Checking connection"
+                ><span class="od-dot checking"
+                  ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" /></svg></span
+              ></span>
+              <span
+                class="od-dot-target"
+                tabindex="0"
+                role="img"
+                data-name="online"
+                aria-label="Connection status: Online"
+                ><span class="od-dot online"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span
+              ></span>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark</div>
+            <div class="panel" style="background: #121214">
+              <span class="od-chip"
+                ><span class="od-dot offline" aria-hidden="true"
+                  ><svg viewBox="0 0 24 24"><path d="M5 5l14 14" /></svg></span
+                ><span data-i18n="indicatorOffline">No internet</span></span
+              >
+              <span class="od-chip"
+                ><span class="od-dot checking" aria-hidden="true"
+                  ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" /></svg></span
+                ><span data-i18n="indicatorChecking">Checking connection</span></span
+              >
+              <span class="od-chip"
+                ><span class="od-dot online" aria-hidden="true"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span
+                ><span data-i18n="indicatorOnline">Online</span></span
+              >
+              <span class="caption" data-i18n-plain="Dots (44 px hit area, labelled)"
+                >Dots (44 px hit area, labelled)</span
+              >
+              <span
+                class="od-dot-target"
+                tabindex="0"
+                role="img"
+                data-name="offline"
+                aria-label="Connection status: No internet"
+                ><span class="od-dot offline"
+                  ><svg viewBox="0 0 24 24"><path d="M5 5l14 14" /></svg></span
+              ></span>
+              <span
+                class="od-dot-target"
+                tabindex="0"
+                role="img"
+                data-name="checking"
+                aria-label="Connection status: Checking connection"
+                ><span class="od-dot checking"
+                  ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" /></svg></span
+              ></span>
+              <span
+                class="od-dot-target"
+                tabindex="0"
+                role="img"
+                data-name="online"
+                aria-label="Connection status: Online"
+                ><span class="od-dot online"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span
+              ></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Full-screen -->
+      <section class="demo" aria-labelledby="h-fs">
+        <h2 id="h-fs">Full-screen state (opt-in)</h2>
+        <p>
+          Replaces the view, retry button plus optional "continue offline". Second row
+          shows the checking state of the primary button.
+        </p>
+        <div class="pair">
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light</div>
+            <div class="screen fs">
+              <div class="od-fullscreen enter">
+                <div class="inner">
+                  <svg class="od-icon od-big-icon" aria-hidden="true">
+                    <use href="#i-wifi-off" />
+                  </svg>
+                  <h3 data-i18n="fullScreenTitle">No internet</h3>
+                  <p data-i18n="fullScreenBody">Check your connection and try again.</p>
+                  <div class="actions">
+                    <button
+                      type="button"
+                      class="od-button full"
+                      data-i18n="fullScreenRetry"
+                    >
+                      Try again
+                    </button>
+                    <button
+                      type="button"
+                      class="od-text-button"
+                      data-i18n="continueOffline"
+                    >
+                      Continue offline
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark</div>
+            <div class="screen fs">
+              <div class="od-fullscreen enter">
+                <div class="inner">
+                  <svg class="od-icon od-big-icon" aria-hidden="true">
+                    <use href="#i-wifi-off" />
+                  </svg>
+                  <h3 data-i18n="fullScreenTitle">No internet</h3>
+                  <p data-i18n="fullScreenBody">Check your connection and try again.</p>
+                  <div class="actions">
+                    <button
+                      type="button"
+                      class="od-button full"
+                      data-i18n="fullScreenRetry"
+                    >
+                      Try again
+                    </button>
+                    <button
+                      type="button"
+                      class="od-text-button"
+                      data-i18n="continueOffline"
+                    >
+                      Continue offline
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light: checking</div>
+            <div class="panel">
+              <button
+                type="button"
+                class="od-button"
+                aria-disabled="true"
+                aria-busy="true"
+              >
+                <span class="od-spinner" aria-hidden="true"></span
+                ><span data-i18n="checking">Checking…</span>
+              </button>
+              <button
+                type="button"
+                class="od-button"
+                id="focusdemo"
+                data-i18n="fullScreenRetry"
+              >
+                Try again
+              </button>
+              <span
+                class="caption"
+                data-i18n-plain="Second button: Tab to see the focus ring"
+                >Second button: Tab to see the focus ring</span
+              >
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark: checking</div>
+            <div class="panel" style="background: #121214">
+              <button
+                type="button"
+                class="od-button"
+                aria-disabled="true"
+                aria-busy="true"
+              >
+                <span class="od-spinner" aria-hidden="true"></span
+                ><span data-i18n="checking">Checking…</span>
+              </button>
+              <button type="button" class="od-button" data-i18n="fullScreenRetry">
+                Try again
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Stacked -->
+      <section class="demo" aria-labelledby="h-stack">
+        <h2 id="h-stack">All default pieces together</h2>
+        <p>
+          Banner in flow at the top, the chip collapsed to its dot below it, snackbar at
+          the bottom. One announcer speaks per transition.
+        </p>
+        <div class="pair">
+          <div class="stage" data-od-theme="light">
+            <div class="cap">Light</div>
+            <div class="screen tall flow">
+              <div class="od-banner enter">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span data-i18n="offline">No internet</span>
+              </div>
+              <span
+                class="od-dot-target pos-top-end"
+                style="inset-block-start: 48px; inset-inline-end: 4px"
+                tabindex="0"
+                role="img"
+                data-name="offline"
+                aria-label="Connection status: No internet"
+                ><span class="od-dot offline"
+                  ><svg viewBox="0 0 24 24"><path d="M5 5l14 14" /></svg></span
+              ></span>
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+                <div class="sk w2"></div>
+                <div class="sk w1"></div>
+              </div>
+              <div class="od-snackbar enter">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span class="od-msg" data-i18n="offline">No internet</span>
+                <button type="button" class="od-text-button" data-i18n="retry">
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="stage" data-od-theme="dark">
+            <div class="cap">Dark</div>
+            <div class="screen tall flow">
+              <div class="od-banner enter">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span data-i18n="offline">No internet</span>
+              </div>
+              <span
+                class="od-dot-target pos-top-end"
+                style="inset-block-start: 48px; inset-inline-end: 4px"
+                tabindex="0"
+                role="img"
+                data-name="offline"
+                aria-label="Connection status: No internet"
+                ><span class="od-dot offline"
+                  ><svg viewBox="0 0 24 24"><path d="M5 5l14 14" /></svg></span
+              ></span>
+              <div class="host">
+                <div class="sk w1"></div>
+                <div class="sk w2"></div>
+                <div class="sk w3"></div>
+                <div class="sk h"></div>
+                <div class="sk w2"></div>
+                <div class="sk w1"></div>
+              </div>
+              <div class="od-snackbar enter">
+                <svg class="od-icon" aria-hidden="true"><use href="#i-wifi-off" /></svg>
+                <span class="od-msg" data-i18n="offline">No internet</span>
+                <button type="button" class="od-text-button" data-i18n="retry">
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        var T = {
+          en: {
+            offline: 'No internet',
+            offlineNoInternet: 'Connected, but no internet',
+            online: 'Back online',
+            retry: 'Retry',
+            checking: 'Checking…',
+            continueOffline: 'Continue offline',
+            dismiss: 'Dismiss',
+            indicatorOnline: 'Online',
+            indicatorOffline: 'No internet',
+            indicatorChecking: 'Checking connection',
+            indicatorName: 'Connection status: {status}',
+            fullScreenTitle: 'No internet',
+            fullScreenBody: 'Check your connection and try again.',
+            fullScreenRetry: 'Try again',
+          },
+          'pt-BR': {
+            offline: 'Sem internet',
+            offlineNoInternet: 'Conectado, mas sem internet',
+            online: 'Conexão restabelecida',
+            retry: 'Tentar novamente',
+            checking: 'Verificando…',
+            continueOffline: 'Continuar offline',
+            dismiss: 'Fechar',
+            indicatorOnline: 'Online',
+            indicatorOffline: 'Sem internet',
+            indicatorChecking: 'Verificando conexão',
+            indicatorName: 'Status da conexão: {status}',
+            fullScreenTitle: 'Sem internet',
+            fullScreenBody: 'Verifique sua conexão e tente novamente.',
+            fullScreenRetry: 'Tentar novamente',
+          },
+          es: {
+            offline: 'Sin internet',
+            offlineNoInternet: 'Conectado, pero sin internet',
+            online: 'Conexión restablecida',
+            retry: 'Reintentar',
+            checking: 'Verificando…',
+            continueOffline: 'Continuar sin conexión',
+            dismiss: 'Cerrar',
+            indicatorOnline: 'En línea',
+            indicatorOffline: 'Sin internet',
+            indicatorChecking: 'Verificando conexión',
+            indicatorName: 'Estado de la conexión: {status}',
+            fullScreenTitle: 'Sin internet',
+            fullScreenBody: 'Revisa tu conexión e inténtalo de nuevo.',
+            fullScreenRetry: 'Intentar de nuevo',
+          },
+        };
+        var root = document.documentElement;
+        var statusKey = {
+          offline: 'indicatorOffline',
+          checking: 'indicatorChecking',
+          online: 'indicatorOnline',
+        };
+
+        function setLang(lang) {
+          var d = T[lang];
+          root.lang = lang;
+          document.querySelectorAll('[data-i18n]').forEach(function (el) {
+            el.textContent = d[el.getAttribute('data-i18n')];
+          });
+          document.querySelectorAll('[data-i18n-label]').forEach(function (el) {
+            el.setAttribute('aria-label', d[el.getAttribute('data-i18n-label')]);
+          });
+          document.querySelectorAll('[data-name]').forEach(function (el) {
+            el.setAttribute(
+              'aria-label',
+              d.indicatorName.replace(
+                '{status}',
+                d[statusKey[el.getAttribute('data-name')]],
+              ),
+            );
+          });
+          document.querySelectorAll('[data-lang]').forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang));
+          });
+        }
+        document.querySelectorAll('[data-lang]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            setLang(b.getAttribute('data-lang'));
+          });
+        });
+
+        var rm = document.getElementById('rm');
+        var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        function setRm(on) {
+          rm.checked = on;
+          root.setAttribute('data-reduced-motion', String(on));
+        }
+        setRm(mq.matches);
+        rm.addEventListener('change', function () {
+          setRm(rm.checked);
+        });
+
+        document.getElementById('rtl').addEventListener('change', function (e) {
+          document.querySelectorAll('.stage').forEach(function (s) {
+            s.setAttribute('dir', e.target.checked ? 'rtl' : 'ltr');
+          });
+        });
+
+        document.getElementById('replay').addEventListener('click', function () {
+          var els = document.querySelectorAll('.enter');
+          els.forEach(function (el) {
+            el.classList.remove('enter');
+          });
+          void document.body.offsetWidth;
+          els.forEach(function (el) {
+            el.classList.add('enter');
+          });
+        });
+
+        setLang('en');
+      })();
+    </script>
+  </body>
+</html>
