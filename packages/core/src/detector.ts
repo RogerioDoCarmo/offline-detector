@@ -1,3 +1,4 @@
+import { backoffDelay } from './backoff';
 import { probeAny } from './probe';
 import type {
   ClearTimeoutFn,
@@ -9,6 +10,7 @@ import type {
   ProbeFetch,
   SetTimeoutFn,
   StateListener,
+  TimerHandle,
 } from './types';
 
 export const DEFAULT_PROBE_URLS: readonly string[] = [
@@ -16,6 +18,7 @@ export const DEFAULT_PROBE_URLS: readonly string[] = [
   'https://www.gstatic.com/generate_204',
 ];
 const DEFAULT_TIMEOUT_MS = 5000;
+const DEFAULT_INTERVAL_MS = 30000;
 
 function sameState(a: OfflineState, b: OfflineState): boolean {
   return (
@@ -42,6 +45,7 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
   const probeOptions = options.probe ?? {};
   const urls = probeOptions.urls ?? DEFAULT_PROBE_URLS;
   const timeoutMs = probeOptions.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const intervalMs = probeOptions.intervalMs ?? DEFAULT_INTERVAL_MS;
   const method = probeOptions.method ?? 'HEAD';
   const interfaceOnly = probeOptions.mode === 'interface-only';
 
@@ -64,9 +68,12 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
   };
   const listeners: Set<StateListener> = new Set();
   // Bumped whenever an interface event or stop() overtakes whatever check is in flight.
-  // eslint-disable-next-line prefer-const -- reassigned once stop() and interface events land
   let epoch = 0;
   let inflight: { epoch: number; promise: Promise<OfflineState> } | null = null;
+  let started = false;
+  let failures = 0;
+  let scheduled: { handle: TimerHandle } | null = null;
+  let unsubscribers: Array<() => void> = [];
 
   function guard(fn: () => void): void {
     try {
@@ -116,10 +123,12 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
     if (myEpoch !== epoch) return state;
     if (!interfaceUp) {
       applyResult('offline', 'no-interface');
+      schedule();
       return state;
     }
     if (interfaceOnly) {
       applyResult('online', null);
+      schedule();
       return state;
     }
     const reachable = await probeAny(urls, {
@@ -132,6 +141,7 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
     if (myEpoch !== epoch) return state;
     if (reachable) applyResult('online', null);
     else applyResult('offline', 'no-internet');
+    schedule();
     return state;
   }
 
@@ -144,6 +154,42 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
     return promise;
   }
 
+  function clearScheduled(): void {
+    if (scheduled) clearTimer(scheduled.handle);
+    scheduled = null;
+  }
+
+  function schedule(): void {
+    clearScheduled();
+    if (!started || interfaceOnly) return;
+    let delay: number;
+    if (state.status === 'online') {
+      failures = 0;
+      delay = intervalMs;
+    } else {
+      delay = backoffDelay(failures);
+      failures++;
+    }
+    const handle = setTimer(() => {
+      scheduled = null;
+      void checkNow();
+    }, delay);
+    scheduled = { handle };
+  }
+
+  function onInterfaceEvent(up: boolean): void {
+    epoch++;
+    inflight = null;
+    if (up) {
+      void checkNow();
+      return;
+    }
+    if (state.status === 'offline' && state.reason === 'no-interface' && !state.checking)
+      return;
+    applyResult('offline', 'no-interface');
+    schedule();
+  }
+
   return {
     getState: () => state,
     subscribe(listener) {
@@ -154,10 +200,26 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
     },
     checkNow,
     start() {
-      throw new Error('not implemented');
+      if (started) return;
+      started = true;
+      failures = 0;
+      unsubscribers = [
+        adapter.subscribeInterface(onInterfaceEvent),
+        adapter.subscribeForeground(() => {
+          void checkNow();
+        }),
+      ];
+      void checkNow();
     },
     stop() {
-      throw new Error('not implemented');
+      if (!started) return;
+      started = false;
+      for (const unsubscribe of unsubscribers) unsubscribe();
+      unsubscribers = [];
+      clearScheduled();
+      epoch++;
+      inflight = null;
+      commit({ ...state, checking: false });
     },
   };
 }

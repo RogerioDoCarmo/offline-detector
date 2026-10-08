@@ -96,6 +96,25 @@ describe('probeAny', () => {
     expect(fetch.calls).toEqual(['https://a.test', 'https://b.test']);
   });
 
+  it('treats a fetch that throws synchronously as a failure and tries the next URL', async () => {
+    const clock = createClock();
+    const seen: string[] = [];
+    const result = await probeAny(['https://a.test', 'https://b.test'], {
+      fetch: (url) => {
+        seen.push(url);
+        if (url === 'https://a.test') throw new TypeError('no fetch here');
+        return Promise.resolve({ ok: true });
+      },
+      method: 'HEAD',
+      timeoutMs: 5000,
+      setTimeout: clock.setTimeout,
+      clearTimeout: clock.clearTimeout,
+    });
+    expect(result).toBe(true);
+    expect(seen).toEqual(['https://a.test', 'https://b.test']);
+    expect(clock.pending()).toBe(0);
+  });
+
   it('clears every timeout timer it sets', async () => {
     const { clock, run } = setup((url) => (url === 'https://a.test' ? 'fail' : 'ok'));
     await run(['https://a.test', 'https://b.test']);

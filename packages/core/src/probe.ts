@@ -15,16 +15,21 @@ function probeOne(url: string, deps: ProbeDeps): Promise<boolean> {
       controller.abort();
       resolve(false);
     }, deps.timeoutMs);
-    deps
-      .fetch(url, { method: deps.method, signal: controller.signal })
-      .then(
-        (response) => response.ok || response.type === 'opaque',
-        () => false,
-      )
-      .then((reachable) => {
-        deps.clearTimeout(timer);
-        resolve(reachable);
-      });
+    const attempt = async (): Promise<boolean> => {
+      try {
+        const response = await deps.fetch(url, {
+          method: deps.method,
+          signal: controller.signal,
+        });
+        return response.ok || response.type === 'opaque';
+      } catch {
+        return false;
+      }
+    };
+    void attempt().then((reachable) => {
+      deps.clearTimeout(timer);
+      resolve(reachable);
+    });
   });
 }
 
