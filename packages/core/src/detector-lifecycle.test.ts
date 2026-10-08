@@ -1,4 +1,4 @@
-import { createAdapter, createFetch, flush, make } from './testing/helpers';
+import { createAdapter, createFetch, flush, make } from '../tests/helpers';
 import { createOfflineDetector } from './detector';
 
 /** Delays of the scheduler's own timers (probe timeouts are 5000 ms in `make`). */

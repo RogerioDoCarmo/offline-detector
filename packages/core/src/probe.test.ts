@@ -1,4 +1,4 @@
-import { createClock, createFetch, flush } from './testing/helpers';
+import { createClock, createFetch, flush } from '../tests/helpers';
 import { probeAny } from './probe';
 
 function setup(behave: Parameters<typeof createFetch>[0], timeoutMs = 5000) {

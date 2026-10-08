@@ -1,11 +1,11 @@
-import { createOfflineDetector } from '../detector';
+import { createOfflineDetector } from '../src/detector';
 import type {
   OfflineDetectorOptions,
   PlatformAdapter,
   ProbeFetch,
   ProbeResponse,
   TimerHandle,
-} from '../types';
+} from '../src/types';
 
 /** Lets every pending promise continuation run. */
 export const flush = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));

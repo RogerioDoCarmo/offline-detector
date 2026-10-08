@@ -1,4 +1,4 @@
-import { createAdapter, createClock, createFetch, flush, make } from './testing/helpers';
+import { createAdapter, createClock, createFetch, flush, make } from '../tests/helpers';
 import { createOfflineDetector } from './detector';
 import type { OfflineState } from './types';
 

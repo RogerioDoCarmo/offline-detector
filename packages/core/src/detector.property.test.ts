@@ -1,5 +1,5 @@
 import fc from 'fast-check';
-import { flush, make } from './testing/helpers';
+import { flush, make } from '../tests/helpers';
 import type { OfflineState } from './types';
 
 const TIMEOUT_MS = 7777; // unusual on purpose, so probe timeouts can be told from retries
