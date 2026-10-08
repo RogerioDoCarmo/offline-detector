@@ -7,4 +7,8 @@ module.exports = {
   displayName: 'web',
   rootDir: __dirname,
   roots: [join(__dirname, 'src')],
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: [join(__dirname, 'jest.setup.ts')],
+  // Test helpers are not source.
+  collectCoverageFrom: [...base.collectCoverageFrom, '!**/test-utils.{ts,tsx}'],
 };
