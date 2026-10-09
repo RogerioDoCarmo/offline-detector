@@ -1,6 +1,16 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { execFileSync, spawnSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { parse } from 'yaml';
 
 const { checkTag } = require('../scripts/check-release-tag.cjs');
@@ -208,6 +218,95 @@ describe('checkPacked', () => {
       'publishConfig.access must be public.',
       'repository.url must point at github.com/RogerioDoCarmo/offline-detector.',
     ]);
+  });
+});
+
+describe('verify-pack.cjs given a directory of tarballs', () => {
+  // `changeset pack --out-dir <dir>` writes <dir>/packages/*.tgz and <dir>/publish-plan.json.
+  const run = (extra: string[]) => {
+    const stage = mkdtempSync(join(tmpdir(), 'od-vp-test-'));
+    try {
+      const pkg = join(stage, 'package');
+      mkdirSync(join(pkg, 'dist'), { recursive: true });
+      for (const file of [
+        'README.md',
+        'LICENSE',
+        'dist/index.js',
+        'dist/index.cjs',
+        'dist/index.d.ts',
+        'dist/index.d.cts',
+        ...extra,
+      ]) {
+        mkdirSync(dirname(join(pkg, file)), { recursive: true });
+        writeFileSync(join(pkg, file), 'x');
+      }
+      writeFileSync(
+        join(pkg, 'package.json'),
+        JSON.stringify({
+          name: scoped('react'),
+          version: '0.1.0',
+          license: 'MIT',
+          repository: {
+            url: 'git+https://github.com/RogerioDoCarmo/offline-detector.git',
+          },
+          publishConfig: { access: 'public' },
+          exports: {
+            '.': {
+              import: { types: './dist/index.d.ts', default: './dist/index.js' },
+              require: { types: './dist/index.d.cts', default: './dist/index.cjs' },
+            },
+          },
+        }),
+      );
+      mkdirSync(join(stage, 'out', 'packages'), { recursive: true });
+      // Relative paths, run from the stage: GNU tar reads C:\x as host:file.
+      execFileSync(
+        'tar',
+        ['-czf', 'out/packages/rogeriodocarmo-react-0.1.0.tgz', 'package'],
+        {
+          cwd: stage,
+        },
+      );
+      return spawnSync(
+        process.execPath,
+        [join(root, 'scripts/verify-pack.cjs'), join(stage, 'out')],
+        {
+          encoding: 'utf8',
+        },
+      );
+    } finally {
+      rmSync(stage, { recursive: true, force: true });
+    }
+  };
+
+  it('checks the tarballs it is given instead of packing the workspace', () => {
+    const result = run([]);
+    expect(result.stdout).toContain('rogeriodocarmo/offline-detector-react@0.1.0');
+    expect(result.stdout).toContain('7 files');
+    expect(result.status).toBe(0);
+  });
+
+  it('fails when a given tarball ships source', () => {
+    const result = run(['src/index.ts']);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('src/index.ts must not be in the tarball.');
+  });
+
+  it('fails when the directory holds no tarballs, instead of passing vacuously', () => {
+    const empty = mkdtempSync(join(tmpdir(), 'od-vp-empty-'));
+    try {
+      const result = spawnSync(
+        process.execPath,
+        [join(root, 'scripts/verify-pack.cjs'), empty],
+        {
+          encoding: 'utf8',
+        },
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('No tarballs found');
+    } finally {
+      rmSync(empty, { recursive: true, force: true });
+    }
   });
 });
 
