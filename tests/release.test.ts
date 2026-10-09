@@ -328,6 +328,13 @@ describe('release.yml', () => {
     expect(wf().jobs['github-release'].needs).toEqual(['verify', 'publish']);
   });
 
+  const stepsList = (job: string): Array<Record<string, unknown>> => wf().jobs[job].steps;
+  const indexOfStep = (job: string, needle: string): number =>
+    stepsList(job).findIndex((step) =>
+      `${step.run ?? ''}\n${step.uses ?? ''}`.includes(needle),
+    );
+  const PACK_DIR = '${{ runner.temp }}/release-pack';
+
   it('verifies before anything is published: tag object, branch, version, build and pack', () => {
     const verify = stepsOf('verify');
     expect(verify).toContain('git fetch --force --tags origin');
@@ -336,9 +343,46 @@ describe('release.yml', () => {
     expect(verify).toContain('git merge-base --is-ancestor');
     expect(verify).toContain('origin/main');
     expect(verify).toContain('node scripts/check-release-tag.cjs');
+    expect(verify).toContain('pnpm typecheck:tests');
     expect(verify).toContain('pnpm test:ci');
-    expect(verify).toContain('node scripts/verify-pack.cjs');
-    expect(wf().jobs.verify.permissions).toBeUndefined();
+    // verify holds no OIDC token: it installs and builds the whole dev toolchain.
+    expect(wf().jobs.verify.permissions).toEqual({ contents: 'read', actions: 'read' });
+    expect(verify).not.toContain('id-token');
+  });
+
+  it('packs the tarballs once, in verify, checks those same files and uploads them', () => {
+    const steps = stepsList('verify');
+    const pack = indexOfStep('verify', `pnpm changeset pack --out-dir "${PACK_DIR}"`);
+    const check = indexOfStep('verify', `node scripts/verify-pack.cjs "${PACK_DIR}"`);
+    const upload = indexOfStep('verify', 'actions/upload-artifact@');
+    expect(pack).toBeGreaterThan(indexOfStep('verify', 'pnpm build'));
+    expect(pack).toBeGreaterThan(
+      indexOfStep('verify', 'node scripts/check-release-tag.cjs'),
+    );
+    expect(check).toBe(pack + 1);
+    expect(upload).toBe(check + 1);
+    expect(steps[upload]?.with).toEqual({
+      name: 'release-packages',
+      path: PACK_DIR,
+      'if-no-files-found': 'error',
+      'retention-days': 1,
+    });
+  });
+
+  it('checks that the npm-publish environment requires a reviewer, before the checkout', () => {
+    // A job that names a missing environment makes GitHub create it with no reviewers, so a tag
+    // pushed before the owner set it up would publish without approval. This is the first step.
+    const first = stepsList('verify')[0] as Record<
+      string,
+      string | Record<string, string>
+    >;
+    expect(first.env).toEqual({ GH_TOKEN: '${{ github.token }}' });
+    const script = String(first.run);
+    expect(script).toContain('repos/${GITHUB_REPOSITORY}/environments/npm-publish');
+    expect(script).toContain('select(.type=="required_reviewers")');
+    expect(script).toContain('exit 1');
+    expect(indexOfStep('verify', 'environments/npm-publish')).toBe(0);
+    expect(indexOfStep('verify', 'actions/checkout@')).toBe(1);
   });
 
   it('publishes only after the owner approves the protected environment, with OIDC', () => {
@@ -346,22 +390,65 @@ describe('release.yml', () => {
     expect(publish.environment).toBe('npm-publish');
     expect(publish.permissions).toEqual({ contents: 'read', 'id-token': 'write' });
     const steps = stepsOf('publish');
-    expect(steps).toContain('pnpm changeset publish --no-git-tag');
     expect(steps).toContain('"registry-url":"https://registry.npmjs.org"');
     expect(steps).toContain('"package-manager-cache":false');
     expect(steps).toContain('11.5.1');
   });
 
+  it('publishes the tarballs verify produced and builds nothing while holding id-token', () => {
+    const steps = stepsList('publish');
+    const download = indexOfStep('publish', 'actions/download-artifact@');
+    const publish = indexOfStep('publish', 'pnpm changeset publish');
+    expect(steps[download]?.with).toEqual({ name: 'release-packages', path: PACK_DIR });
+    expect(steps[publish]?.run).toBe(
+      `pnpm changeset publish --from-pack-dir "${PACK_DIR}" --no-git-tag`,
+    );
+    expect(publish).toBeGreaterThan(download);
+    expect(publish).toBe(steps.length - 1);
+    // Only the changeset CLI is installed: root package, frozen lockfile, no lifecycle scripts.
+    expect(stepsOf('publish')).toContain(
+      'pnpm install --frozen-lockfile --ignore-scripts --filter offline-detector',
+    );
+    for (const forbidden of [
+      'pnpm build',
+      'pnpm test',
+      'pnpm lint',
+      'verify-pack',
+      'storybook',
+    ]) {
+      expect({ forbidden, found: stepsOf('publish').includes(forbidden) }).toEqual({
+        forbidden,
+        found: false,
+      });
+    }
+  });
+
+  it('exposes no unused outputs', () => {
+    expect(Object.keys(wf().jobs.verify.outputs)).toEqual(['tag', 'notes']);
+    expect(text()).not.toContain('previous');
+  });
+
   it('creates the GitHub Release last, from the annotated tag message', () => {
     const release = wf().jobs['github-release'];
     expect(release.permissions).toEqual({ contents: 'write' });
+    expect(release['timeout-minutes']).toBe(10);
     expect(stepsOf('github-release')).toContain('softprops/action-gh-release@');
     expect(stepsOf('github-release')).toContain('needs.verify.outputs.notes');
   });
 
   it('pins every action by commit SHA and uses no registry token secret', () => {
     const uses = [...text().matchAll(/uses:\s*(\S+)/g)].map((m) => m[1] ?? '');
-    expect(uses.length).toBe(7);
+    expect(uses.map((use) => use.split('@')[0])).toEqual([
+      'actions/checkout',
+      'pnpm/action-setup',
+      'actions/setup-node',
+      'actions/upload-artifact',
+      'actions/checkout',
+      'pnpm/action-setup',
+      'actions/setup-node',
+      'actions/download-artifact',
+      'softprops/action-gh-release',
+    ]);
     for (const use of uses) {
       expect({ use, pinned: /@[0-9a-f]{40}$/.test(use) }).toEqual({ use, pinned: true });
     }
