@@ -277,8 +277,8 @@ describe('reference pages match the real exports', () => {
     );
     expect(exportedNames('core')).toHaveLength(16);
     expect(exportedNames('react')).toHaveLength(24);
-    expect(exportedNames('web')).toHaveLength(35);
-    expect(exportedNames('native')).toHaveLength(42);
+    expect(exportedNames('web')).toHaveLength(42);
+    expect(exportedNames('native')).toHaveLength(49);
     for (const pkg of ['web', 'native']) {
       expect(exportedNames(pkg)).not.toEqual(
         expect.arrayContaining(['useSwipeDismiss', 'useSettledChecking']),
@@ -735,6 +735,13 @@ describe('reference export kinds', () => {
       useNetworkStatus: 'hook',
       useCheckingFeedback: 'hook',
       OfflineState: 'type',
+      STRINGS: 'constant',
+      resolveLocale: 'function',
+      resolveStrings: 'function',
+      offlineMessage: 'function',
+      indicatorName: 'function',
+      resolveDismissible: 'function',
+      useDismissals: 'hook',
     },
     native: {
       createTheme: 'function',
@@ -746,6 +753,13 @@ describe('reference export kinds', () => {
       createNativeAdapter: 'function',
       FullScreen: 'component',
       PieceProps: 'type',
+      STRINGS: 'constant',
+      resolveLocale: 'function',
+      resolveStrings: 'function',
+      offlineMessage: 'function',
+      indicatorName: 'function',
+      resolveDismissible: 'function',
+      useDismissals: 'hook',
     },
   };
   for (const pkg of Object.keys(expected)) {

@@ -70,9 +70,7 @@ The swipe rules:
 
 ## In your own components
 
-`resolveDismissible` and `useDismissals` are exported from the React package
-(`@rogeriodocarmo/offline-detector-react`, which the web and native packages depend on but do not
-re-export these two from):
+`resolveDismissible` and `useDismissals` are exported by both the web and native packages:
 
 ```ts
 resolveDismissible('banner', { dismissible: false, banner: { dismissible: true } }); // true

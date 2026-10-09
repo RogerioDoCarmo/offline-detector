@@ -72,9 +72,7 @@ As regras do deslize:
 
 ## Nos seus próprios componentes
 
-`resolveDismissible` e `useDismissals` são exportados pelo pacote React
-(`@rogeriodocarmo/offline-detector-react`, do qual os pacotes web e nativo dependem, mas que eles não
-reexportam para estes dois):
+`resolveDismissible` e `useDismissals` são exportados pelos pacotes web e nativo:
 
 ```ts
 resolveDismissible('banner', { dismissible: false, banner: { dismissible: true } }); // true
