@@ -29,10 +29,10 @@ abra o DevTools do navegador, aba Network, e escolha Offline.
 
 ## Leia o status em qualquer lugar
 
-Os hooks do pacote React funcionam em qualquer ponto dentro de `<OfflineDetector>`:
+Os hooks funcionam em qualquer ponto dentro de `<OfflineDetector>`, e o pacote web os exporta:
 
 ```tsx
-import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-react';
+import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-web';
 
 function SaveButton() {
   const { isOnline, reason, checkNow } = useNetworkStatus();
@@ -44,8 +44,8 @@ function SaveButton() {
 }
 ```
 
-`@rogeriodocarmo/offline-detector-react` é instalado junto com o pacote web. Veja a
-[referência do react](./reference/react.md) para todos os hooks.
+O pacote web reexporta os hooks da camada React, então ele é o único pacote a instalar e de onde
+importar. Veja a [referência do react](./reference/react.md) para todos os hooks.
 
 ## Opções comuns
 
@@ -61,13 +61,15 @@ function SaveButton() {
 </OfflineDetector>
 ```
 
-| Opção               | O que faz                                                                                |
-| ------------------- | ---------------------------------------------------------------------------------------- |
-| `locale`            | `en`, `pt-BR` ou `es`. Variantes como `pt` e `es-MX` são resolvidas.                     |
-| `distinguishReason` | Diz o motivo: "Sem conexão com a rede" ou "Conectado, mas sem internet".                 |
-| `fullScreen`        | Um estado de tela cheia opcional, com Tentar novamente e, se quiser, uma saída.          |
-| `probe`             | URLs da sonda, tempo limite, intervalo, método e modo. Veja [Privacidade](./privacy.md). |
-| `dismissible`       | Desliga o deslizar e o Fechar em todas as peças. Veja [Dispensar](./dismissal.md).       |
+| Opção               | O que faz                                                                                 |
+| ------------------- | ----------------------------------------------------------------------------------------- |
+| `locale`            | `en`, `pt-BR` ou `es`. Variantes como `pt` e `es-MX` são resolvidas.                      |
+| `distinguishReason` | Diz o motivo: "Sem conexão com a rede" ou "Conectado, mas sem internet".                  |
+| `fullScreen`        | Um estado de tela cheia opcional, com Tentar novamente e, se quiser, uma saída.           |
+| `probe`             | URLs da sonda, tempo limite, intervalo, método e modo. Veja [Privacidade](./privacy.md).  |
+| `onContinueOffline` | Chamado quando o usuário toca em "Continuar offline" (ou pressiona Escape) na tela cheia. |
+| `nonce`             | Nonce de CSP do elemento `<style>` inline. Veja [Renderização no servidor](./ssr.md).     |
+| `dismissible`       | Desliga o deslizar e o Fechar em todas as peças. Veja [Dispensar](./dismissal.md).        |
 
 A lista completa está na [referência web](./reference/web.md). No Next.js, leia as notas sobre
 [renderização no servidor](./ssr.md): o componente precisa ficar em um componente cliente.

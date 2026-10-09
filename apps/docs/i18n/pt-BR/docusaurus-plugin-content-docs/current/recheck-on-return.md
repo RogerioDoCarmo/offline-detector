@@ -14,7 +14,7 @@ Ele é **opcional, por tela**. Por padrão o detector nem sequer assina o sinal 
 assim, uma tela que não se importa não paga nada.
 
 ```tsx
-import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-react';
+import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-web'; // ou '-native'
 
 function Checkout() {
   const online = useRecheckOnReturn({

@@ -19,7 +19,7 @@ As chaves de `slots` são `snackbar`, `banner`, `indicator` e `fullScreen`.
 
 ## O que um slot recebe
 
-Um slot recebe o contrato `PieceRenderProps` do pacote React:
+Um slot recebe o contrato `PieceRenderProps`. Os pacotes web e nativo exportam o tipo:
 
 | Prop        | O que é                                                                           |
 | ----------- | --------------------------------------------------------------------------------- |
@@ -35,8 +35,8 @@ Um slot recebe o contrato `PieceRenderProps` do pacote React:
 ## Exemplo para web
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
 import { OfflineDetector } from '@rogeriodocarmo/offline-detector-web';
+import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-web';
 
 function Toast({ message, phase, actions, rootProps }: PieceRenderProps) {
   return (
@@ -59,8 +59,10 @@ companhia funcionam no seu CSS. Veja [Temas](./theming.md).
 ## Exemplo para nativo
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
-import type { OfflineTheme } from '@rogeriodocarmo/offline-detector-native';
+import type {
+  OfflineTheme,
+  PieceRenderProps,
+} from '@rogeriodocarmo/offline-detector-native';
 
 function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>) {
   return (

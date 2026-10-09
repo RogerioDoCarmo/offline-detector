@@ -15,7 +15,7 @@ Es **opcional, por pantalla**. Por defecto el detector ni siquiera se suscribe a
 plano; así, una pantalla a la que no le importa no paga nada.
 
 ```tsx
-import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-react';
+import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-web'; // o '-native'
 
 function Checkout() {
   const online = useRecheckOnReturn({

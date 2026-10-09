@@ -31,6 +31,7 @@ Requires React 18 or newer and React Native 0.73 or newer. See the
 | `distinguishReason` | `true` says "No network connection" or "Connected, but no internet".                   |
 | `fullScreen`        | `true`, or `{ continueOffline: true }` for the escape hatch. Off by default.           |
 | `onContinueOffline` | Fires when "Continue offline" is pressed.                                              |
+| `onRestoreFocus`    | Fires when the full-screen state leaves, so the host can put screen reader focus back. |
 | `snackbar`          | Per-piece options: `dismissible`.                                                      |
 | `banner`            | Per-piece options: `dismissible`, `position`, `overlay`.                               |
 | `indicator`         | Per-piece options: `dismissible`, `position`, `variant`.                               |
@@ -64,28 +65,41 @@ the resolved theme inside a component. Every key is listed in [Theming](../themi
 
 ## Safe-area insets
 
-`Insets` is `{ top, right, bottom, left }` in dp. `defaultInsets()` returns the Android status bar
-height on top and zero elsewhere. Pass the real insets (for example from `useSafeAreaInsets()`),
-especially on notched iPhones.
+`Insets` is `{ top, right, bottom, left }` in dp. The default is the Android status bar height on top
+and zero elsewhere, which is wrong on notched iPhones: pass the real insets (for example from
+`useSafeAreaInsets()`).
 
 ## Pieces
 
 `Snackbar`, `Banner`, `Indicator` and `FullScreen` are exported with `SnackbarProps`, `BannerProps`,
-`IndicatorProps` and `FullScreenProps`. `FullScreen` takes `phase`, `title`, `strings`, `onRetry`,
-and optionally `onContinueOffline`, `onRestoreFocus`, `visible`, `theme`, `reduceMotion`, `insets`,
-`icons`, `style` and `testID`. `PieceIcons` types the replaceable glyphs. A slot receives the
-`PieceRenderProps` contract, with `theme` set.
+`IndicatorProps` and `FullScreenProps`. They take the same props as the web pieces:
+`phase`, `message`, `strings`, optionally `state`, `actions`, `visible`, `rootProps` and `theme`,
+plus native extras (`announce`, `reduceMotion`, `insets`, `icons`, `style`, `testID`; banner
+`position`, `overlay`, `showRetry`, `offset`; indicator `variant`, `position`, `offsetTop`,
+`offsetBottom`; snackbar `offsetBottom`; full-screen `onRestoreFocus`).
 
-`hostContentAccessibilityProps(fullScreenVisible)` returns the props that hide your host content
-from assistive technology while the full-screen state is visible (`no-hide-descendants` on Android,
-`accessibilityElementsHidden` on iOS). Spread them on your root view when you assemble the pieces
-yourself.
+`actions` is `{ retry?, dismiss?, continueOffline? }`. A piece is dismissible exactly when
+`actions.dismiss` is present, and the full-screen state shows "Continue offline" exactly when
+`actions.continueOffline` is. There are no separate retry, dismiss, dismissible or title props:
+use `actions` and `message` (the full-screen title). A swiped-away piece is put back at rest when
+`visible` turns true
+again, so it comes back on the next transition. `PieceIcons` types the replaceable glyphs. A slot
+receives the `PieceRenderProps` contract, with `theme` set.
 
-## Hooks
+The swipe hook, the swipe and timing rules and the accessibility helper that hides host content are
+internal and not exported; `<OfflineDetector>` hides the host content for you while the full-screen
+state shows.
+
+## Hooks and types
 
 - `useReducedMotion(motion?)` is `true` when motion should be reduced; `'auto'` reads the OS setting.
-- `useSwipeDismiss({ enabled, onDismiss, reducedMotion, theme? })` returns `panHandlers`,
-  `onLayout` and an animated `style`. It uses `PanResponder` and the built-in `Animated` API.
+- `useOfflineTheme(...)` returns the resolved theme inside your own components.
+- The native package re-exports the react API, so an app installs one package: the hooks
+  `useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector` and `useCheckingFeedback`, and the
+  types `OfflineState`, `OfflineStrings`, `OfflineUiOptions`, `PieceRenderProps`,
+  `DismissiblePiece`, `Locale`, `IndicatorPosition`, `RecheckOnReturnOptions` and
+  `UseNetworkStatusResult`. See the [react reference](./react.md). The web package re-exports the
+  same list.
 
 ## Export index {#export-index}
 
@@ -97,32 +111,43 @@ Everything the package exports, values and types.
 - `Banner` (component)
 - `BannerProps` (type)
 - `Bezier` (type)
-- `createNativeAdapter` (function)
-- `createTheme` (constant)
-- `darkTheme` (constant)
-- `defaultInsets` (function)
+- `DismissiblePiece` (type)
 - `FullScreen` (component)
 - `FullScreenProps` (type)
-- `hostContentAccessibilityProps` (function)
 - `Indicator` (component)
+- `IndicatorPosition` (type)
 - `IndicatorProps` (type)
 - `Insets` (type)
-- `lightTheme` (constant)
+- `Locale` (type)
 - `NativeAdapterOptions` (type)
 - `NetInfoLike` (type)
 - `OfflineDetector` (component)
 - `OfflineDetectorProps` (type)
 - `OfflineDetectorSlot` (type)
 - `OfflineDetectorSlots` (type)
+- `OfflineState` (type)
+- `OfflineStrings` (type)
 - `OfflineTheme` (type)
-- `packageName` (constant)
+- `OfflineUiOptions` (type)
+- `Phase` (type)
 - `PieceIcons` (type)
+- `PieceProps` (type)
+- `PieceRenderProps` (type)
+- `RecheckOnReturnOptions` (type)
 - `ShadowStyle` (type)
 - `Snackbar` (component)
 - `SnackbarProps` (type)
-- `useOfflineTheme` (constant)
+- `UseNetworkStatusResult` (type)
+- `createNativeAdapter` (function)
+- `createTheme` (function)
+- `darkTheme` (constant)
+- `lightTheme` (constant)
+- `packageName` (constant)
+- `useCheckingFeedback` (hook)
+- `useNetworkStatus` (hook)
+- `useOfflineDetector` (hook)
+- `useOfflineTheme` (hook)
+- `useRecheckOnReturn` (hook)
 - `useReducedMotion` (hook)
-- `useSwipeDismiss` (hook)
-- `UseSwipeDismissOptions` (type)
 
 <!--/EXPORTS-->

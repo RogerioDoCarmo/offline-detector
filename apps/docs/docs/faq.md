@@ -15,7 +15,10 @@ online. "Back online" is only shown after a real loss: it never appears at launc
 
 Because "connected" is not "has internet". If the interface is up but the probe fails on every URL,
 the state is `offline` with reason `no-internet`. A captive portal, a dead router or a firewall that
-blocks the probe hosts all look like this. Use your own probe URL if the defaults are blocked. See
+blocks the probe hosts all look like this. A probe fails only when the request itself fails (no
+connection, a TLS error, a timeout); any
+HTTP response, even a 404 or a 500, counts as reachable. Use your own probe URL if the defaults
+are blocked. See
 [Privacy](./privacy.md).
 
 ## How long does it take to notice?

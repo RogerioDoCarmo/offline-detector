@@ -49,36 +49,41 @@ unsubscribe();
 
 ## `createOfflineDetector(options)`
 
-| Opção                                        | Padrão               | Notas                                                                             |
-| -------------------------------------------- | -------------------- | --------------------------------------------------------------------------------- |
-| `adapter`                                    | obrigatório          | Um `PlatformAdapter`.                                                             |
-| `probe.urls`                                 | `DEFAULT_PROBE_URLS` | Tentadas em ordem. Não vazia, exceto se `mode` for `interface-only`.              |
-| `probe.timeoutMs`                            | `5000`               | Por URL. A requisição é abortada no tempo limite.                                 |
-| `probe.intervalMs`                           | `30000`              | Período da nova sonda enquanto online.                                            |
-| `probe.method`                               | `'HEAD'`             | `'HEAD'` ou `'GET'`.                                                              |
-| `probe.mode`                                 | `'probe'`            | `'interface-only'` nunca chama `fetch` e não agenda temporizadores.               |
-| `onOffline(state)`                           | nenhum               | Veja os callbacks abaixo.                                                         |
-| `onOnline(state)`                            | nenhum               | Veja os callbacks abaixo.                                                         |
-| `onChange(state, previous)`                  | nenhum               | Veja os callbacks abaixo.                                                         |
-| `onError(error)`                             | nenhum               | Recebe as exceções lançadas por ouvintes e callbacks.                             |
-| `fetch`, `now`, `setTimeout`, `clearTimeout` | os globais           | Injetáveis para testes. Na web, envolva `fetch` para adicionar `mode: 'no-cors'`. |
+| Opção                                        | Padrão               | Notas                                                                                          |
+| -------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `adapter`                                    | obrigatório          | Um `PlatformAdapter`.                                                                          |
+| `probe.urls`                                 | `DEFAULT_PROBE_URLS` | Um `readonly string[]`, tentadas em ordem. Não vazia, exceto se `mode` for `interface-only`.   |
+| `probe.timeoutMs`                            | `5000`               | Por URL. A requisição é abortada no tempo limite.                                              |
+| `probe.intervalMs`                           | `30000`              | Período da nova sonda enquanto online.                                                         |
+| `probe.method`                               | `'HEAD'`             | `'HEAD'` ou `'GET'`.                                                                           |
+| `probe.mode`                                 | `'probe'`            | `'interface-only'` nunca chama `fetch` e não agenda temporizadores.                            |
+| `onOffline(state)`                           | nenhum               | Veja os callbacks abaixo.                                                                      |
+| `onOnline(state)`                            | nenhum               | Veja os callbacks abaixo.                                                                      |
+| `onChange(state, previous)`                  | nenhum               | Veja os callbacks abaixo.                                                                      |
+| `onError(error)`                             | nenhum               | Recebe as exceções lançadas por ouvintes e callbacks. Se ele também lançar, o erro é engolido. |
+| `fetch`, `now`, `setTimeout`, `clearTimeout` | os globais           | Injetáveis para testes. Na web, envolva `fetch` para adicionar `mode: 'no-cors'`.              |
 
 `DEFAULT_PROBE_URLS` é `['https://cp.cloudflare.com/generate_204',
 'https://www.gstatic.com/generate_204']`. Criar um detector no modo sonda sem `fetch` disponível, ou
 com uma lista `urls` vazia, lança um erro.
 
-Uma sonda tem sucesso quando `fetch` resolve com `ok: true` ou `type: 'opaque'` (o que `no-cors`
-produz). Uma rejeição, uma resposta não ok ou um tempo esgotado contam como falha.
+Uma sonda tem sucesso quando `fetch` resolve com **qualquer coisa**: o valor resolvido é ignorado,
+então qualquer resposta HTTP concluída (um 404, um 500, uma resposta opaca de `no-cors`) significa
+que a rede está alcançável. Só uma rejeição (erro de rede, falha de TLS, abort) ou um tempo esgotado
+conta como falha. A requisição é feita como `fetch(url, { method, signal, credentials: 'omit' })`,
+portanto não envia cookies. `ProbeFetch` é `(url, init) => Promise<unknown>`.
 
-## `OfflineDetector`
+## `OfflineDetectorInstance`
 
-| Membro                              | Comportamento                                                                                       |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `getState(): OfflineState`          | O estado atual. Um objeto novo a cada mudança.                                                      |
-| `subscribe(listener)`               | `listener(state, previous)` roda a cada mudança. Devolve uma função para cancelar.                  |
-| `start()`                           | Assina o adapter, faz uma verificação agora e agenda as demais. Idempotente.                        |
-| `stop()`                            | Limpa o temporizador, cancela a assinatura, descarta qualquer resultado em andamento. Pode repetir. |
-| `checkNow(): Promise<OfflineState>` | Força uma verificação. Chamadas simultâneas compartilham uma sonda. Funciona sem `start()`.         |
+O que `createOfflineDetector` devolve.
+
+| Membro                              | Comportamento                                                                                                                                                                                                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getState(): OfflineState`          | O estado atual. Um objeto novo a cada mudança.                                                                                                                                                                                                                    |
+| `subscribe(listener)`               | `listener(state, previous)` roda a cada mudança. Devolve uma função para cancelar.                                                                                                                                                                                |
+| `start()`                           | Assina o adapter, faz uma verificação agora e agenda as demais. Idempotente.                                                                                                                                                                                      |
+| `stop()`                            | Limpa o temporizador, cancela a assinatura, aborta a requisição em andamento e limpa o temporizador dela, e descarta o resultado. Pode repetir.                                                                                                                   |
+| `checkNow(): Promise<OfflineState>` | Força uma verificação. Chamadas simultâneas compartilham uma sonda. Se um evento de interface ativa ultrapassar a verificação, a promessa resolve com o resultado da verificação que a ultrapassou, nunca com um estado ainda `checking`. Funciona sem `start()`. |
 
 ## `OfflineState`
 
@@ -107,7 +112,8 @@ Eles disparam apenas em **transições de status** reais, nunca a cada sonda:
 - Uma mudança só de motivo (`no-interface` para `no-internet`) não é uma transição de status. Os
   assinantes ficam sabendo; os callbacks não.
 
-As exceções lançadas por um ouvinte ou callback são capturadas e passadas a `onError`; assim, um
+As exceções lançadas por um ouvinte ou callback são capturadas e passadas a `onError` (um `onError`
+que lance também é engolido); assim, um
 consumidor defeituoso não consegue quebrar a detecção.
 
 ## `PlatformAdapter`
@@ -133,21 +139,20 @@ Tudo o que o pacote exporta, valores e tipos.
 <!--EXPORTS-->
 
 - `ClearTimeoutFn` (tipo)
-- `createOfflineDetector` (função)
 - `DEFAULT_PROBE_URLS` (constante)
-- `isOnline` (função)
-- `OfflineDetector` (tipo)
+- `OfflineDetectorInstance` (tipo)
 - `OfflineDetectorOptions` (tipo)
 - `OfflineReason` (tipo)
 - `OfflineState` (tipo)
 - `OfflineStatus` (tipo)
-- `packageName` (constante)
 - `PlatformAdapter` (tipo)
 - `ProbeFetch` (tipo)
 - `ProbeOptions` (tipo)
-- `ProbeResponse` (tipo)
 - `SetTimeoutFn` (tipo)
 - `StateListener` (tipo)
 - `TimerHandle` (tipo)
+- `createOfflineDetector` (função)
+- `isOnline` (função)
+- `packageName` (constante)
 
 <!--/EXPORTS-->

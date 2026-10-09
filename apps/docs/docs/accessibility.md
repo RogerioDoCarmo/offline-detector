@@ -29,6 +29,9 @@ A custom slot takes over its piece's announcement, so it must spread `rootProps`
   and must not interrupt a sentence being read or a form being typed.
 - The text announced is the same localised message the piece shows ("No internet", "Back online").
 - Recovery is announced once. The snackbar disappearing after four seconds is not announced.
+- On the web the live region is mounted empty and receives its text one frame later, because screen
+  readers skip a region that appears together with its text. Dismissing a piece is never announced,
+  and neither is the snackbar that appears after "Continue offline".
 - "Checking…" is not announced as its own message. The Retry control reflects it with
   `aria-busy`, and its name changes.
 - Callbacks fire only on transitions, so announcements do too. A re-check that finds the state
@@ -49,6 +52,9 @@ A swipe is a path-based gesture (WCAG 2.5.1), so a dismissible piece always has 
 - Indicator: focusable when dismissible; Escape or Delete dismisses it, and on native it exposes a
   `dismiss` accessibility action described by the `dismissHint` string.
 
+On the web, dismissing a piece that had keyboard focus puts focus back on the element that had it
+before the piece appeared.
+
 Turn the swipe off with `dismissible={false}`. See [Dismissal](./dismissal.md).
 
 ## The full-screen state
@@ -60,8 +66,8 @@ Full-screen is opt-in and replaces the app's view, so it is deliberately **not**
 - Escape triggers "Continue offline" when that action exists. Without `continueOffline` there is no
   escape, so use it unless the app truly cannot work offline.
 - On exit, focus returns to the element that had it before, when it is still there.
-- On native, spread `hostContentAccessibilityProps(visible)` on your root view if you render the
-  full-screen piece yourself.
+- On native, `<OfflineDetector>` hides the host content for you, and its `onRestoreFocus` prop fires
+  when the full-screen state leaves, so you can put screen reader focus back.
 
 ## Contrast, targets, text size and direction
 
