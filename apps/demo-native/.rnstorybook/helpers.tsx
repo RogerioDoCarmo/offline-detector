@@ -15,7 +15,7 @@ export interface PieceArgs {
   locale: Locale;
   colorScheme: Scheme;
   reduceMotion: boolean;
-  /** On: the piece gets `onDismiss` (swipe it away). Off: it cannot be dismissed. */
+  /** On: the piece gets `actions.dismiss` (swipe it away). Off: it cannot be dismissed. */
   dismissible: boolean;
   onRetry?: () => void;
   onDismiss?: () => void;
@@ -91,9 +91,11 @@ export function pieceProps(args: PieceArgs) {
     theme: themeFor(args.colorScheme),
     reduceMotion: args.reduceMotion,
     insets: STAGE_INSETS,
-    onRetry: args.onRetry,
-    onDismiss: args.onDismiss,
-    dismissible: args.dismissible,
+    // A piece is dismissible exactly when `actions.dismiss` is present.
+    actions: {
+      retry: args.onRetry,
+      dismiss: args.dismissible ? args.onDismiss : undefined,
+    },
   };
 }
 

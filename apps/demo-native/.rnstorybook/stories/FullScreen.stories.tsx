@@ -40,13 +40,15 @@ const meta = {
       <Stage colorScheme={args.colorScheme} height={520}>
         <FullScreen
           phase={args.phase}
-          title={strings.fullScreenTitle}
+          message={strings.fullScreenTitle}
           strings={strings}
           theme={themeFor(args.colorScheme)}
           reduceMotion={args.reduceMotion}
           insets={STAGE_INSETS}
-          onRetry={args.onRetry ?? noop}
-          onContinueOffline={args.continueOffline ? args.onContinueOffline : undefined}
+          actions={{
+            retry: args.onRetry ?? noop,
+            continueOffline: args.continueOffline ? args.onContinueOffline : undefined,
+          }}
         />
       </Stage>
     );

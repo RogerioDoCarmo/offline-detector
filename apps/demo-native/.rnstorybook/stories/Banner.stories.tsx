@@ -21,7 +21,7 @@ const meta = {
     const props = pieceProps({ ...args, phase });
     return (
       <Stage colorScheme={args.colorScheme}>
-        <Banner {...props} phase={phase} position={position} overlay action />
+        <Banner {...props} phase={phase} position={position} overlay showRetry />
       </Stage>
     );
   },

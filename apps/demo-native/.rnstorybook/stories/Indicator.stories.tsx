@@ -14,18 +14,18 @@ const meta = {
   },
   args: { phase: 'offline', variant: 'chip', ...sharedArgs },
   render: ({ variant, ...args }) => {
-    const { phase, strings, theme, reduceMotion, insets, onDismiss, dismissible } =
+    const { phase, message, strings, theme, reduceMotion, insets, actions } =
       pieceProps(args);
     return (
       <Stage colorScheme={args.colorScheme}>
         <Indicator
           phase={phase}
+          message={message}
           strings={strings}
           theme={theme}
           reduceMotion={reduceMotion}
           insets={insets}
-          onDismiss={onDismiss}
-          dismissible={dismissible}
+          actions={{ dismiss: actions.dismiss }}
           variant={variant}
         />
       </Stage>
