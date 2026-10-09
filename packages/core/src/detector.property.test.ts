@@ -3,7 +3,16 @@ import { flush, make } from '../tests/helpers';
 import type { OfflineState } from './types';
 
 const TIMEOUT_MS = 7777; // unusual on purpose, so probe timeouts can be told from retries
-const NAMED_OPS = ['down', 'up', 'foreground', 'check', 'netOn', 'netOff'] as const;
+const NAMED_OPS = [
+  'down',
+  'up',
+  'foreground',
+  'check',
+  'netOn',
+  'netOff',
+  'checkThenUp',
+  'checkThenDown',
+] as const;
 const opArb = fc.oneof(fc.constantFrom(...NAMED_OPS), fc.integer({ min: 0, max: 70000 }));
 const scriptArb = fc.array(opArb, { maxLength: 40 });
 const RUNS = { numRuns: 60 };
@@ -15,18 +24,23 @@ function rig(extra: Parameters<typeof make>[1] = {}) {
     recheckOnForeground: true,
     ...extra,
   });
+  const checks: Promise<OfflineState>[] = [];
   const play = async (op: (typeof NAMED_OPS)[number] | number): Promise<void> => {
     if (typeof op === 'number') await h.clock.advance(op);
     else if (op === 'down') h.adapter.setUp(false);
     else if (op === 'up') h.adapter.setUp(true);
     else if (op === 'foreground') h.adapter.foreground();
-    else if (op === 'check') void h.detector.checkNow();
-    else net = op === 'netOn';
+    else if (op === 'check') checks.push(h.detector.checkNow());
+    else if (op === 'checkThenUp' || op === 'checkThenDown') {
+      // The event lands while the check is still in flight, so it overtakes it.
+      checks.push(h.detector.checkNow());
+      h.adapter.setUp(op === 'checkThenUp');
+    } else net = op === 'netOn';
     await flush();
     h.clock.tick(1); // time only moves forward
   };
   const retries = () => h.clock.delays.filter((d) => d !== TIMEOUT_MS);
-  return { ...h, play, retries };
+  return { ...h, play, retries, checks };
 }
 
 describe('detector properties', () => {
@@ -208,6 +222,34 @@ describe('detector properties', () => {
           expect(r.adapter.interfaceListenerCount()).toBe(running ? 1 : 0);
           expect(r.adapter.foregroundListenerCount()).toBe(running ? 1 : 0);
         }
+        r.detector.stop();
+        expect(r.clock.pending()).toBe(0);
+      }),
+      RUNS,
+    );
+  });
+
+  it('no checkNow promise ever resolves with a still-checking state', async () => {
+    await fc.assert(
+      fc.asyncProperty(scriptArb, async (script) => {
+        const r = rig();
+        r.detector.start();
+        for (const op of script) await r.play(op);
+        r.detector.stop();
+        for (const state of await Promise.all(r.checks)) {
+          expect(state.checking).toBe(false);
+        }
+      }),
+      RUNS,
+    );
+  });
+
+  it('stop() always leaves no live timer, probe timeouts included', async () => {
+    await fc.assert(
+      fc.asyncProperty(scriptArb, async (script) => {
+        const r = rig();
+        r.detector.start();
+        for (const op of script) await r.play(op);
         r.detector.stop();
         expect(r.clock.pending()).toBe(0);
       }),

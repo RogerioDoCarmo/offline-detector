@@ -137,6 +137,56 @@ describe('start: interface-only mode', () => {
   });
 });
 
+describe('stop: cancels the probe in flight', () => {
+  it('aborts the pending fetch and clears its timeout timer', async () => {
+    const { detector, fetch, clock } = make(() => 'hang');
+    detector.start();
+    await flush();
+    expect(fetch.inits[0]?.signal.aborted).toBe(false);
+    expect(clock.pending()).toBe(1);
+    detector.stop();
+    expect(fetch.inits[0]?.signal.aborted).toBe(true);
+    expect(clock.pending()).toBe(0);
+  });
+
+  it('does not try the next URL after stop, and settles checking false', async () => {
+    const { detector, fetch, clock } = make(() => 'hang');
+    detector.start();
+    await flush();
+    const pending = detector.checkNow();
+    detector.stop();
+    await flush();
+    expect((await pending).checking).toBe(false);
+    expect(fetch.calls).toEqual(['https://a.test']);
+    expect(clock.pending()).toBe(0);
+  });
+
+  it('also cancels a probe that an interface event already overtook', async () => {
+    const { detector, fetch, clock, adapter } = make(() => 'hang');
+    detector.start();
+    await flush();
+    adapter.setUp(true);
+    await flush();
+    expect(fetch.inits).toHaveLength(2);
+    expect(clock.pending()).toBe(2);
+    detector.stop();
+    expect(fetch.inits.map((init) => init.signal.aborted)).toEqual([true, true]);
+    expect(clock.pending()).toBe(0);
+  });
+
+  it('a restart probes again with a fresh, un-aborted signal', async () => {
+    const { detector, fetch } = make(() => 'hang');
+    detector.start();
+    await flush();
+    detector.stop();
+    detector.start();
+    await flush();
+    expect(fetch.inits).toHaveLength(2);
+    expect(fetch.inits[1]?.signal.aborted).toBe(false);
+    detector.stop();
+  });
+});
+
 describe('adapter events', () => {
   it('goes offline immediately when the interface drops, without probing', async () => {
     const { detector, adapter, fetch, events } = make();

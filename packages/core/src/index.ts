@@ -4,7 +4,7 @@ export { createOfflineDetector, DEFAULT_PROBE_URLS } from './detector';
 export { isOnline } from './types';
 export type {
   ClearTimeoutFn,
-  OfflineDetector,
+  OfflineDetectorInstance,
   OfflineDetectorOptions,
   OfflineReason,
   OfflineState,
@@ -12,7 +12,6 @@ export type {
   PlatformAdapter,
   ProbeFetch,
   ProbeOptions,
-  ProbeResponse,
   SetTimeoutFn,
   StateListener,
   TimerHandle,

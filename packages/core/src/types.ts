@@ -32,16 +32,15 @@ export interface PlatformAdapter {
   subscribeForeground(listener: () => void): () => void;
 }
 
-export interface ProbeResponse {
-  ok: boolean;
-  /** `'opaque'` is what a `no-cors` fetch yields; it counts as reachable. */
-  type?: string;
-}
-
+/**
+ * The request the probe makes. The resolved value is ignored: any completed response, whatever its
+ * status, means the network was reachable. Only a rejection (network error, TLS failure, abort,
+ * timeout) means unreachable.
+ */
 export type ProbeFetch = (
   url: string,
-  init: { method: string; signal: AbortSignal },
-) => Promise<ProbeResponse>;
+  init: { method: string; signal: AbortSignal; credentials: 'omit' },
+) => Promise<unknown>;
 
 export type TimerHandle = unknown;
 export type SetTimeoutFn = (callback: () => void, ms: number) => TimerHandle;
@@ -49,7 +48,7 @@ export type ClearTimeoutFn = (handle: TimerHandle) => void;
 
 export interface ProbeOptions {
   /** Tried in order; the first success wins. */
-  urls?: string[];
+  urls?: readonly string[];
   /** Per-URL timeout. Default 5000. */
   timeoutMs?: number;
   /** Re-probe period while online. Default 30000. */
@@ -81,7 +80,7 @@ export interface OfflineDetectorOptions {
   clearTimeout?: ClearTimeoutFn;
 }
 
-export interface OfflineDetector {
+export interface OfflineDetectorInstance {
   getState(): OfflineState;
   subscribe(listener: StateListener): () => void;
   start(): void;

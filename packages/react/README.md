@@ -92,7 +92,7 @@ agree, and the hint holds until the first real check completes.
 | Hook                       | Returns                                                  |
 | -------------------------- | -------------------------------------------------------- |
 | `useNetworkStatus()`       | `OfflineState` plus `isOnline: boolean` and `checkNow()` |
-| `useOfflineDetector()`     | The core `OfflineDetector`, for advanced use             |
+| `useOfflineDetector()`     | The core `OfflineDetectorInstance`, for advanced use     |
 | `useRecheckOnReturn(opts)` | `boolean`, the latest known online state                 |
 | `useCheckingFeedback()`    | `'brief'` or `'none'`, for UI packages                   |
 | `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`                 |
@@ -133,7 +133,11 @@ function Checkout() {
   not called after unmount.
 - Several mounted hooks share **one** probe: core de-duplicates concurrent checks.
 - The return value is the latest known boolean, `false` only when the app is offline. It updates
-  with every state change, not only after a return.
+  whenever that answer changes, not only after a return, and it subscribes to nothing else: a
+  `checking` flip or a new timestamp that leaves the answer unchanged does not re-render the
+  screen. Use `useNetworkStatus()` when you need the whole state.
+- `onResult` receives the outcome of the check that the return started. If an interface-up
+  event overtakes that check, it receives the overtaking check's result.
 - Core's own `recheckOnForeground` option stays off. This hook is the only place that re-checks on
   return.
 - `useCheckingFeedback()` is for the UI packages. It reports `'brief'` while a return-triggered
