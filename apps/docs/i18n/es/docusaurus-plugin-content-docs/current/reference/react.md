@@ -59,13 +59,13 @@ primer resultado es en línea.
 
 ## Hooks
 
-| Hook                       | Devuelve                                              |
-| -------------------------- | ----------------------------------------------------- |
-| `useNetworkStatus()`       | `OfflineState` más `isOnline: boolean` y `checkNow()` |
-| `useOfflineDetector()`     | El `OfflineDetector` del core, para uso avanzado      |
-| `useRecheckOnReturn(opts)` | `boolean`, el último estado en línea conocido         |
-| `useCheckingFeedback()`    | `'brief'` o `'none'`, para paquetes de interfaz       |
-| `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`              |
+| Hook                       | Devuelve                                                 |
+| -------------------------- | -------------------------------------------------------- |
+| `useNetworkStatus()`       | `OfflineState` más `isOnline: boolean` y `checkNow()`    |
+| `useOfflineDetector()`     | El `OfflineDetectorInstance` del core, para uso avanzado |
+| `useRecheckOnReturn(opts)` | `boolean`, el último estado en línea conocido            |
+| `useCheckingFeedback()`    | `'brief'` o `'none'`, para paquetes de interfaz          |
+| `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`                 |
 
 Todo hook lanza un error claro cuando se usa fuera de `<OfflineDetectorProvider>`.
 

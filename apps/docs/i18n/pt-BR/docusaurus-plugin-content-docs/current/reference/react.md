@@ -61,7 +61,7 @@ a cada renderização nunca reinicia o detector) e `onOnline` não dispara quand
 | Hook                       | Devolve                                                |
 | -------------------------- | ------------------------------------------------------ |
 | `useNetworkStatus()`       | `OfflineState` mais `isOnline: boolean` e `checkNow()` |
-| `useOfflineDetector()`     | O `OfflineDetector` do core, para uso avançado         |
+| `useOfflineDetector()`     | O `OfflineDetectorInstance` do core, para uso avançado |
 | `useRecheckOnReturn(opts)` | `boolean`, o último estado online conhecido            |
 | `useCheckingFeedback()`    | `'brief'` ou `'none'`, para pacotes de interface       |
 | `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`               |

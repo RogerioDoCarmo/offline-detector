@@ -18,7 +18,7 @@ Todo es opcional. Consulta el [inicio rápido para web](../web-quick-start.md).
 | Prop                | Tipo                                              | Por defecto             | Qué hace                                                                                                               |
 | ------------------- | ------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `adapter`           | `PlatformAdapter`                                 | `createWebAdapter()`    | El punto de conexión con la plataforma. Se crea una vez por montaje; se lee una vez.                                   |
-| `fetch`             | `ProbeFetch`                                      | `createWebProbeFetch()` | Transporte de la sonda (`no-cors`, `no-store`).                                                                        |
+| `fetch`             | `ProbeFetch`                                      | `createWebProbeFetch()` | Transporte de la sonda: `no-cors`, `no-store`, sin cookies, sin `Referer`.                                             |
 | `probe`             | `ProbeOptions`                                    | valores del core        | URL de la sonda, tiempo de espera, intervalo, método, modo.                                                            |
 | `onOffline`         | `(state) => void`                                 |                         | El estado pasó a sin conexión (también cuando el primer resultado es sin conexión).                                    |
 | `onOnline`          | `(state) => void`                                 |                         | El estado volvió de sin conexión a en línea.                                                                           |
@@ -29,6 +29,7 @@ Todo es opcional. Consulta el [inicio rápido para web](../web-quick-start.md).
 | `strings`           | `Partial<OfflineStrings>`                         |                         | Sobrescrituras de texto combinadas sobre el idioma.                                                                    |
 | `distinguishReason` | `boolean`                                         | `false`                 | Dice "Sin conexión de red" o "Conectado, pero sin internet" en lugar de "Sin internet".                                |
 | `fullScreen`        | `boolean \| { continueOffline?: boolean }`        | desactivado             | Estado de pantalla completa opcional sin conexión. `continueOffline: true` añade una salida.                           |
+| `onContinueOffline` | `() => void`                                      |                         | El usuario pulsó "Continuar sin conexión" (o Escape) en el estado de pantalla completa.                                |
 | `dismissible`       | `boolean`                                         | `true`                  | Interruptor global del deslizamiento y del Cerrar. Por pieza: opciones `snackbar`, `banner`, `indicator`.              |
 | `onDismiss`         | `(piece) => void`                                 |                         | Se descartó una pieza (`'snackbar' \| 'banner' \| 'indicator'`).                                                       |
 | `snackbar`          | `{ dismissible? }`                                |                         | Opciones por pieza.                                                                                                    |
@@ -37,21 +38,31 @@ Todo es opcional. Consulta el [inicio rápido para web](../web-quick-start.md).
 | `motion`            | `'auto' \| 'reduced' \| 'full'`                   | `'auto'`                | `auto` sigue `prefers-reduced-motion`.                                                                                 |
 | `colorScheme`       | `'auto' \| 'light' \| 'dark'`                     | `'auto'`                | Cualquier valor distinto de `auto` envuelve el árbol en un elemento `data-od-theme` (`display: contents`).             |
 | `recoveryMs`        | `number`                                          | `4000`                  | Cuánto tiempo se muestra "Conexión restablecida". El tiempo se pausa con el snackbar bajo el ratón, con foco o tocado. |
+| `nonce`             | `string`                                          |                         | Nonce de CSP del elemento `<style>` en línea que lleva los tokens y los estilos.                                       |
 | `slots`             | `{ snackbar?, banner?, indicator?, fullScreen? }` |                         | Reemplaza una pieza por tu componente. Consulta [Slots](../slots.md).                                                  |
 | `children`          | `ReactNode`                                       |                         | Tu app.                                                                                                                |
 
-`<OfflineDetector>` no necesita provider ni adapter. Los hooks del [paquete React](./react.md)
-funcionan en cualquier punto dentro de él.
+Una pieza descartada sigue oculta hasta el siguiente cambio de estado; después vuelven todas. El
+descarte vive solo en memoria. Cuando la pieza descartada tenía el foco del teclado, el foco vuelve
+al elemento que lo tenía antes de que apareciera la pieza (al cuerpo de la página si ese elemento
+ya no está).
+
+El título de pantalla completa es `strings.fullScreenTitle`; con `distinguishReason` es el mensaje
+que depende del motivo.
+
+`<OfflineDetector>` no necesita provider ni adapter. Los hooks (véase abajo) funcionan en cualquier
+punto dentro de él.
 
 ## Las piezas
 
 `Snackbar`, `Banner`, `Indicator` y `FullScreen` se exportan para que un [slot](../slots.md) las
-reutilice o para que armes tu propio árbol. Todas aceptan `PieceProps`:
+reutilice o para que armes tu propio árbol. Todas aceptan `PieceProps`, la misma forma que reciben las piezas nativas:
 
 | Prop                               | Qué hace                                                                               |
 | ---------------------------------- | -------------------------------------------------------------------------------------- |
 | `phase`, `message`, `strings`      | Qué mostrar: `'offline' \| 'checking' \| 'recovered'`, el texto y las etiquetas.       |
 | `actions`                          | `retry`, `dismiss` (su presencia indica que es descartable), `continueOffline`.        |
+| `state`, `theme`                   | Aceptados por paridad con `PieceRenderProps`; las piezas se guían por `phase`.         |
 | `visible`                          | Falso en la ventana de salida: la pieza reproduce la salida e ignora entradas.         |
 | `rootProps`                        | Props de rol, región viva y dirección que vienen del provider.                         |
 | `announce`                         | Si esta pieza es dueña del anuncio al lector de pantalla. Por defecto true.            |
@@ -68,29 +79,33 @@ variante del indicador); `SnackbarProps` también extiende `PieceProps`.
   eventos `online` y `offline` y de `visibilitychange` o foco. Lee los globales del navegador solo
   cuando se llama, nunca al importar. `WebAdapterEnv` permite inyectar `window`, `document` y
   `navigator` en pruebas.
-- `createWebProbeFetch(fetchImpl?)` envuelve el `fetch` de la sonda con `mode: 'no-cors'` y
-  `cache: 'no-store'`; así, un éxito opaco cuenta como alcanzable y no hacen falta cabeceras CORS.
+- `createWebProbeFetch(fetchImpl?)` envuelve el `fetch` de la sonda con `mode: 'no-cors'`,
+  `cache: 'no-store'`, `credentials: 'omit'` y `referrerPolicy: 'no-referrer'`, y devuelve el
+  resultado sin tocarlo. Cualquier respuesta completada cuenta como alcanzable, no hacen falta
+  cabeceras CORS y la sonda no envía cookies ni `Referer`, ni siquiera a un endpoint del mismo origen.
 
-## Deslizar
+## Internos del descarte
 
-`useSwipeDismiss({ enabled, onDismiss, reducedMotion, keys? })` devuelve `{ props, dragging,
-dismissed, dismiss, reset }`; esparce `props` en la raíz de la pieza. `SWIPE_RULES` guarda los umbrales
-(30 por ciento del ancho, 0,5 px/ms, bloqueo de eje a 8 px). `lockAxis(dx, dy)` y
-`shouldDismiss(dx, width, elapsedMs)` son las decisiones puras que hay detrás. Las teclas por
-defecto son `Escape` y `Delete`.
+El hook de deslizar, sus umbrales y los auxiliares de tiempo son internos y no se exportan. Un
+diseño propio descarta una pieza pasando `actions.dismiss`: una pieza es descartable exactamente
+cuando esa función está presente. Todo deslizamiento tiene una alternativa de teclado (Escape,
+Delete) y un botón.
 
 ## Tokens
 
 `OfflineTokens` renderiza los tokens y los estilos en un elemento `<style>` (acepta un `nonce`).
-`offlineTokensCss` son los tokens como cadena; `offlineCss` añade los estilos de las cuatro piezas.
+`offlineTokensCss` y `offlineCss` son constantes: los tokens como cadena, y los tokens más los
+estilos de las cuatro piezas. Los tokens se declaran bajo `:where(:root)`, así que una regla tuya
+`:root { --od-... }` prevalece.
 Consulta [Temas](../theming.md).
 
-## Hooks
+## Hooks y tipos del paquete react
 
-- `useReducedMotion(motion?)` es `true` cuando el movimiento debe reducirse; `'auto'` lee
-  `prefers-reduced-motion`.
-- `useSettledChecking(...)` aplica las reglas de 150 ms y 400 ms a un estado "Verificando…"
-  pendiente, para que no destelle ni parpadee.
+El paquete web reexporta la API de react, así que una app web instala un solo paquete: los hooks
+`useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector` y `useCheckingFeedback`, y los tipos
+`OfflineState`, `OfflineStrings`, `OfflineUiOptions`, `PieceRenderProps`, `DismissiblePiece`,
+`Locale`, `IndicatorPosition`, `RecheckOnReturnOptions` y `UseNetworkStatusResult`. Consulta la
+[referencia de react](./react.md) para ver qué hacen. El paquete nativo reexporta la misma lista.
 
 ## Índice de exportaciones {#export-index}
 
@@ -98,38 +113,40 @@ Todo lo que exporta el paquete, valores y tipos.
 
 <!--EXPORTS-->
 
-- `Axis` (tipo)
 - `Banner` (componente)
 - `BannerProps` (tipo)
-- `createWebAdapter` (función)
-- `createWebProbeFetch` (función)
-- `DismissKey` (tipo)
+- `DismissiblePiece` (tipo)
 - `FullScreen` (componente)
 - `Indicator` (componente)
+- `IndicatorPosition` (tipo)
 - `IndicatorProps` (tipo)
-- `lockAxis` (función)
+- `Locale` (tipo)
 - `Motion` (tipo)
-- `offlineCss` (función)
 - `OfflineDetector` (componente)
 - `OfflineDetectorProps` (tipo)
 - `OfflineDetectorSlots` (tipo)
+- `OfflineState` (tipo)
+- `OfflineStrings` (tipo)
 - `OfflineTokens` (componente)
-- `offlineTokensCss` (función)
 - `OfflineTokensProps` (tipo)
-- `packageName` (constante)
+- `OfflineUiOptions` (tipo)
 - `Phase` (tipo)
 - `PieceIcons` (tipo)
 - `PieceProps` (tipo)
-- `shouldDismiss` (función)
+- `PieceRenderProps` (tipo)
+- `RecheckOnReturnOptions` (tipo)
 - `Snackbar` (componente)
 - `SnackbarProps` (tipo)
-- `SWIPE_RULES` (constante)
-- `SwipeDismissProps` (tipo)
-- `useReducedMotion` (hook)
-- `useSettledChecking` (hook)
-- `useSwipeDismiss` (hook)
-- `UseSwipeDismissOptions` (tipo)
-- `UseSwipeDismissResult` (tipo)
+- `UseNetworkStatusResult` (tipo)
 - `WebAdapterEnv` (tipo)
+- `createWebAdapter` (función)
+- `createWebProbeFetch` (función)
+- `offlineCss` (constante)
+- `offlineTokensCss` (constante)
+- `packageName` (constante)
+- `useCheckingFeedback` (hook)
+- `useNetworkStatus` (hook)
+- `useOfflineDetector` (hook)
+- `useRecheckOnReturn` (hook)
 
 <!--/EXPORTS-->

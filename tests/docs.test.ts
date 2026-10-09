@@ -693,8 +693,31 @@ describe('slots and accessibility pages do not promise a fallback announcer that
 describe('reference export kinds', () => {
   const kinds = (path: string): Record<string, string> =>
     Object.fromEntries(
-      [...read(path).matchAll(/^- `([^`]+)` \((\w+)\)$/gm)].map((m) => [m[1], m[2]]),
+      [...read(path).matchAll(/^- `([^`]+)` \(([^)]+)\)$/gm)].map((m) => [m[1], m[2]]),
     );
+  const word: Record<string, Record<string, string>> = {
+    en: {
+      type: 'type',
+      function: 'function',
+      constant: 'constant',
+      component: 'component',
+      hook: 'hook',
+    },
+    'pt-BR': {
+      type: 'tipo',
+      function: 'função',
+      constant: 'constante',
+      component: 'componente',
+      hook: 'hook',
+    },
+    es: {
+      type: 'tipo',
+      function: 'función',
+      constant: 'constante',
+      component: 'componente',
+      hook: 'hook',
+    },
+  };
   const expected: Record<string, Record<string, string>> = {
     core: {
       createOfflineDetector: 'function',
@@ -730,7 +753,10 @@ describe('reference export kinds', () => {
       it(`labels ${pkg} exports with the right kind (${locale})`, () => {
         const found = kinds(docPath(locale, `reference/${pkg}`));
         for (const [name, kind] of Object.entries(expected[pkg] ?? {})) {
-          expect({ name, kind: found[name] }).toEqual({ name, kind });
+          expect({ name, kind: found[name] }).toEqual({
+            name,
+            kind: word[locale]?.[kind],
+          });
         }
       });
     }
@@ -768,7 +794,7 @@ describe('no page documents the old API', () => {
   it('never calls the core engine type OfflineDetector', () => {
     for (const locale of LOCALES) {
       expect(read(docPath(locale, 'reference/react'))).toContain(
-        'The core `OfflineDetectorInstance`',
+        '`OfflineDetectorInstance`',
       );
       expect(read(docPath(locale, 'reference/core'))).toContain(
         '## `OfflineDetectorInstance`',

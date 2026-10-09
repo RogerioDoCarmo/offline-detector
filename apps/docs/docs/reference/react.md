@@ -61,7 +61,7 @@ online.
 | Hook                       | Returns                                                  |
 | -------------------------- | -------------------------------------------------------- |
 | `useNetworkStatus()`       | `OfflineState` plus `isOnline: boolean` and `checkNow()` |
-| `useOfflineDetector()`     | The core `OfflineDetector`, for advanced use             |
+| `useOfflineDetector()`     | The core `OfflineDetectorInstance`, for advanced use     |
 | `useRecheckOnReturn(opts)` | `boolean`, the latest known online state                 |
 | `useCheckingFeedback()`    | `'brief'` or `'none'`, for UI packages                   |
 | `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`                 |
