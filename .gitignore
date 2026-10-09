@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+coverage
+reports
+.stryker-tmp
+.turbo
+.next
+.expo
+.docusaurus
+storybook-static
+playwright-report
+test-results
+*.tsbuildinfo
+.DS_Store
+.superpowers
+.env*.local

@@ -1,0 +1,46 @@
+{
+  "name": "offline-detector",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Detect and show when a React or React Native app has no internet.",
+  "license": "MIT",
+  "author": "Rogério do Carmo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RogerioDoCarmo/offline-detector.git"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.superpowers\" \"#**/CHANGELOG.md\"",
+    "test": "jest",
+    "test:ci": "jest --coverage --ci",
+    "changeset": "changeset",
+    "prepare": "husky"
+  },
+  "packageManager": "pnpm@10.34.6+sha512.7e1ae66a83a9143c118cc1944f37cc4f2b8acddeda4b001cfa78908f6e46e45e15292739ca6c9d026426cc757e9318cc98c5551d6a16c165097b0028ba87b4e6",
+  "devDependencies": {
+    "@babel/core": "^8.0.7",
+    "@babel/preset-env": "^8.0.7",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.7",
+    "@changesets/cli": "^3.0.3",
+    "@rslib/core": "^1.0.3",
+    "@types/jest": "^30.0.0",
+    "babel-jest": "^30.5.2",
+    "eslint": "^10.12.0",
+    "fast-check": "^4.10.2",
+    "husky": "^9.1.7",
+    "jest": "^30.5.2",
+    "lint-staged": "^17.6.0",
+    "markdownlint-cli2": "^0.23.3",
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.7",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "yaml": "^2.9.1"
+  }
+}
