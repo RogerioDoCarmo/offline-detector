@@ -8,10 +8,13 @@ import { darkTheme } from './theme';
 
 const HIDDEN = { includeHiddenElements: true };
 
+const dismiss = jest.fn();
+
 const base: IndicatorProps = {
   phase: 'offline',
+  message: 'No internet',
   strings: EN,
-  onDismiss: jest.fn(),
+  actions: { dismiss },
   testID: 'indicator',
 };
 
@@ -211,23 +214,23 @@ describe('dismissal', () => {
       ]);
       expect(body().props.accessibilityHint).toBe('Swipe left or right to dismiss');
       body().props.onAccessibilityAction({ nativeEvent: { actionName: 'other' } });
-      expect(base.onDismiss).not.toHaveBeenCalled();
+      expect(dismiss).not.toHaveBeenCalled();
       body().props.onAccessibilityAction({ nativeEvent: { actionName: 'dismiss' } });
-      expect(base.onDismiss).toHaveBeenCalledTimes(1);
+      expect(dismiss).toHaveBeenCalledTimes(1);
     },
   );
 
   it.each(['chip', 'dot'] as const)(
     '%s has no action when not dismissible',
     async (variant) => {
-      await render(<Indicator {...base} variant={variant} dismissible={false} />);
+      await render(<Indicator {...base} variant={variant} actions={{}} />);
       expect(body().props.accessibilityActions).toBeUndefined();
       expect(body().props.accessibilityHint).toBeUndefined();
     },
   );
 
   it('has no action without a handler', async () => {
-    await render(<Indicator {...base} onDismiss={undefined} />);
+    await render(<Indicator {...base} actions={{}} />);
     expect(body().props.accessibilityActions).toBeUndefined();
   });
 });
@@ -329,12 +332,12 @@ describe('swipe wiring', () => {
       } as PanResponderGestureState),
     ).toBe(true);
     config().onPanResponderRelease?.(event, fling);
-    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('does not claim swipes when not dismissible', async () => {
     const config = gestureConfig();
-    await render(<Indicator {...base} dismissible={false} />);
+    await render(<Indicator {...base} actions={{}} />);
     expect(
       config().onMoveShouldSetPanResponder?.(event, {
         dx: 40,

@@ -15,12 +15,14 @@ import { darkTheme } from './theme';
 
 const HIDDEN = { includeHiddenElements: true };
 
+const retry = jest.fn();
+const dismiss = jest.fn();
+
 const base: BannerProps = {
   phase: 'offline',
   message: 'No internet',
   strings: EN,
-  onDismiss: jest.fn(),
-  onRetry: jest.fn(),
+  actions: { dismiss, retry },
   testID: 'banner',
 };
 
@@ -32,6 +34,15 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+describe('recovered phase (a slot may forward it)', () => {
+  it('shows the online mark in the online colour, not the offline one', async () => {
+    await render(<Banner {...base} phase="recovered" message="Back online" />);
+    expect(screen.getByText('Back online')).toBeTruthy();
+    expect(screen.queryByText('⊘', HIDDEN)).toBeNull();
+    expect(flatStyle(screen.getByText('✓', HIDDEN).props.style).color).toBe('#1a7f37');
+  });
+});
+
 describe('offline', () => {
   it('shows the message and a dismiss button, and no Retry by default', async () => {
     await render(<Banner {...base} />);
@@ -40,21 +51,21 @@ describe('offline', () => {
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
   });
 
-  it('adds a Retry text button with action', async () => {
-    await render(<Banner {...base} action />);
+  it('adds a Retry text button with showRetry', async () => {
+    await render(<Banner {...base} showRetry />);
     await fireEvent.press(screen.getByRole('button', { name: 'Retry' }));
-    expect(base.onRetry).toHaveBeenCalledTimes(1);
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
-  it('has no Retry for action without a handler', async () => {
-    await render(<Banner {...base} action onRetry={undefined} />);
+  it('has no Retry for showRetry without a handler', async () => {
+    await render(<Banner {...base} showRetry actions={{ dismiss }} />);
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
   });
 
   it('calls onDismiss from the dismiss button', async () => {
     await render(<Banner {...base} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('draws the offline glyph in the offline status colour', async () => {
@@ -91,12 +102,12 @@ describe('checking', () => {
     expect(screen.queryByTestId('od-spinner', HIDDEN)).toBeNull();
   });
 
-  it('shows a busy, disabled Retry labelled "Checking…" with action', async () => {
-    await render(<Banner {...base} phase="checking" action />);
+  it('shows a busy, disabled Retry labelled "Checking…" with showRetry', async () => {
+    await render(<Banner {...base} phase="checking" showRetry />);
     const button = screen.getByRole('button', { name: 'Checking…' });
     expect(button.props.accessibilityState).toEqual({ busy: true, disabled: true });
     await fireEvent.press(button);
-    expect(base.onRetry).not.toHaveBeenCalled();
+    expect(retry).not.toHaveBeenCalled();
   });
 });
 
@@ -129,18 +140,18 @@ describe('accessibility', () => {
     ]);
     expect(message.props.accessibilityHint).toBe('Swipe left or right to dismiss');
     message.props.onAccessibilityAction({ nativeEvent: { actionName: 'dismiss' } });
-    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('omits the action and hint when not dismissible', async () => {
-    await render(<Banner {...base} dismissible={false} />);
+    await render(<Banner {...base} actions={{ retry }} />);
     const message = screen.getByTestId('banner-message');
     expect(message.props.accessibilityActions).toBeUndefined();
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull();
   });
 
   it('has 44 point targets', async () => {
-    await render(<Banner {...base} action />);
+    await render(<Banner {...base} showRetry />);
     const retry = flatStyle(screen.getByRole('button', { name: 'Retry' }).props.style);
     const dismiss = flatStyle(
       screen.getByRole('button', { name: 'Dismiss' }).props.style,
@@ -279,12 +290,12 @@ describe('swipe wiring', () => {
       } as PanResponderGestureState),
     ).toBe(true);
     config().onPanResponderRelease?.(event, fling);
-    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('does not claim swipes when not dismissible', async () => {
     const config = gestureConfig();
-    await render(<Banner {...base} dismissible={false} />);
+    await render(<Banner {...base} actions={{ retry }} />);
     expect(
       config().onMoveShouldSetPanResponder?.(event, {
         dx: 40,
@@ -296,5 +307,17 @@ describe('swipe wiring', () => {
   it('renders without a testID', async () => {
     await render(<Banner {...base} testID={undefined} />);
     expect(screen.queryByTestId('anything')).toBeNull();
+  });
+});
+
+describe('rootProps', () => {
+  it('lets the provider turn the live region off, which makes the banner a labelled view', async () => {
+    await render(
+      <Banner {...base} rootProps={{ accessibilityLiveRegion: 'none', nativeID: 'b' }} />,
+    );
+    const message = screen.getByTestId('banner-message');
+    expect(message.props.accessibilityLiveRegion).toBeUndefined();
+    expect(message.props.accessibilityLabel).toBe('No internet');
+    expect(screen.getByTestId('banner').props.nativeID).toBe('b');
   });
 });
