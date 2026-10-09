@@ -78,8 +78,10 @@ function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>
 ## Keep it accessible
 
 - Spread `rootProps` on your root. It carries the role and live-region settings that make the
-  transition announced exactly once. A slot that omits `rootProps` makes the provider fall back to
-  a visually hidden announcer, so the message is still spoken.
+  transition announced exactly once. There is no fallback: a slot that omits `rootProps` is not
+  caught by anything else, so a screen reader hears nothing for it. iOS has no live region at all,
+  so a native slot must also call `AccessibilityInfo.announceForAccessibility(message)` itself when
+  it appears or its message changes.
 - Put `aria-label` only on an element with a naming role (`role="status"`, `role="region"`,
   `role="img"`), never on a bare `div` or `span`.
 - Keep targets at least 44 by 44 and offer a way to dismiss that is not a swipe.

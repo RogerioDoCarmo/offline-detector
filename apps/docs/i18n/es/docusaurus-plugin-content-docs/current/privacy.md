@@ -54,8 +54,8 @@ Puedes apuntar la sonda a un servidor que controles, para que ningún tercero ve
 Lo que debe hacer tu endpoint:
 
 - Responder rápido a `HEAD` y `GET`, preferiblemente con `204 No Content` y cuerpo vacío. El estado
-  no se inspecciona (cualquier respuesta demuestra que la red funciona), pero una respuesta pequeña y
-  vacía mantiene la comprobación barata.
+  no se inspecciona (cualquier respuesta demuestra que la red funciona), pero una respuesta pequeña
+  y vacía mantiene la comprobación barata.
 - Servirse por HTTPS (una página servida por HTTPS no puede llamar a una URL HTTP).
 - No ser almacenado en caché por un service worker o una CDN: el fetch de sonda de la web ya envía
   `cache: 'no-store'`.

@@ -613,3 +613,74 @@ describe('docs README', () => {
     expect(readme).toContain('es');
   });
 });
+
+describe('the web reference is honest about banner.position', () => {
+  it('says the option is accepted and not yet applied', () => {
+    const text = read('apps/docs/docs/reference/web.md').replace(/\s+/g, ' ');
+    expect(text).toContain('`banner.position` is accepted and not yet applied');
+  });
+});
+
+describe('slots and accessibility pages do not promise a fallback announcer that does not exist', () => {
+  const flatText = (path: string): string => read(path).replace(/\s+/g, ' ');
+  const expected = {
+    en: {
+      slots: [
+        'Spread `rootProps` on your root.',
+        'There is no fallback:',
+        'a screen reader hears nothing for it',
+        'call `AccessibilityInfo.announceForAccessibility(message)` itself',
+      ],
+      accessibility: [
+        'snackbar, banner, indicator. If none of them is enabled, nothing is announced',
+        'There is no hidden fallback announcer.',
+      ],
+      banned: /announcer/gi,
+    },
+    'pt-BR': {
+      slots: [
+        'Espalhe `rootProps` na sua raiz.',
+        'Não há alternativa:',
+        'um leitor de tela não fala nada para ele',
+        'chamar `AccessibilityInfo.announceForAccessibility(message)` por conta própria',
+      ],
+      accessibility: [
+        'snackbar, banner, indicador. Se nenhum deles estiver ativado, nada é anunciado',
+        'Não existe anunciador oculto de reserva.',
+      ],
+      banned: /anunciador/gi,
+    },
+    es: {
+      slots: [
+        'Esparce `rootProps` en tu raíz.',
+        'No hay alternativa:',
+        'un lector de pantalla no lee nada para él',
+        'llamar a `AccessibilityInfo.announceForAccessibility(message)` por su cuenta',
+      ],
+      accessibility: [
+        'snackbar, banner, indicador. Si ninguno está activado, no se anuncia nada',
+        'No existe un anunciador oculto de reserva.',
+      ],
+      banned: /anunciador/gi,
+    },
+  } as const;
+
+  it.each(LOCALES)(
+    '%s: slots.md says what a slot must do and that nothing catches it',
+    (locale) => {
+      const text = flatText(docPath(locale, 'slots'));
+      for (const phrase of expected[locale].slots) expect(text).toContain(phrase);
+      expect(text).not.toMatch(expected[locale].banned);
+    },
+  );
+
+  it.each(LOCALES)(
+    '%s: accessibility.md says that with no visible piece nothing is announced',
+    (locale) => {
+      const text = flatText(docPath(locale, 'accessibility'));
+      for (const phrase of expected[locale].accessibility) expect(text).toContain(phrase);
+      // The one place the word may remain is the sentence that denies the fallback exists.
+      expect(text.match(expected[locale].banned)).toHaveLength(1);
+    },
+  );
+});

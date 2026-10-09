@@ -80,8 +80,10 @@ function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>
 ## Mantenlo accesible
 
 - Esparce `rootProps` en tu raíz. Lleva el rol y la configuración de región viva que hacen que la
-  transición se anuncie exactamente una vez. Un slot que omite `rootProps` hace que el provider
-  recurra a un anunciador visualmente oculto; así el mensaje se sigue leyendo.
+  transición se anuncie exactamente una vez. No hay alternativa: un slot que omite `rootProps` no lo
+  cubre nada más, así que un lector de pantalla no lee nada para él. iOS no tiene ninguna región
+  viva; por eso un slot nativo debe además llamar a `AccessibilityInfo.announceForAccessibility(message)`
+  por su cuenta cuando aparece o cambia su mensaje.
 - Pon `aria-label` solo en un elemento con un rol que admita nombre (`role="status"`,
   `role="region"`, `role="img"`), nunca en un `div` o `span` sin rol.
 - Mantén los objetivos de al menos 44 por 44 y ofrece una forma de descartar que no sea deslizar.
