@@ -1,5 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createOfflineDetector } from '../packages/core/src';
+import { createWebProbeFetch } from '../packages/web/src/probe-fetch';
 
 const root = join(__dirname, '..');
 const read = (path: string): string => readFileSync(join(root, path), 'utf8');
@@ -304,4 +306,71 @@ describe('the docs privacy page tells the same story as the policy, in every loc
       expect(flat(read(pages[locale as keyof typeof pages][0]))).toContain(scoped);
     },
   );
+});
+
+// These call the real functions and look at what they hand to fetch, because grepping the source
+// for a string proved nothing: `credentials: 'omit'` also appears in a type and in a comment, so
+// removing the real line left a source-grep test green.
+describe('what the packages actually put on the wire matches the policy', () => {
+  const fakeAdapter = {
+    isInterfaceUp: () => true,
+    subscribeInterface: () => () => undefined,
+    subscribeForeground: () => () => undefined,
+  };
+  const detectorWith = (fetch: (url: string, init: unknown) => Promise<unknown>) =>
+    createOfflineDetector({
+      adapter: fakeAdapter,
+      fetch: fetch as never,
+      probe: { urls: ['https://a.test/204'] },
+    });
+
+  it('core asks without cookies, with the HEAD method and an abort signal', async () => {
+    const inits: unknown[] = [];
+    await detectorWith((_url, init) => {
+      inits.push(init);
+      return Promise.resolve({});
+    }).checkNow();
+    expect(inits).toHaveLength(1);
+    expect(inits[0]).toMatchObject({ method: 'HEAD', credentials: 'omit' });
+    expect((inits[0] as { signal: unknown }).signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('the web probe adds no-cors, no cache, no cookies and no Referer, whatever the caller sends', async () => {
+    const received: Array<Record<string, unknown>> = [];
+    const probe = createWebProbeFetch(((_url: string, init: Record<string, unknown>) => {
+      received.push(init);
+      return Promise.resolve({});
+    }) as never);
+    // The caller asks for nothing special; the privacy settings must come from the probe itself.
+    await probe('https://a.test/204', {
+      method: 'HEAD',
+      signal: new AbortController().signal,
+    } as never);
+    expect(received[0]).toMatchObject({
+      mode: 'no-cors',
+      cache: 'no-store',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+    });
+  });
+
+  it('counts a response of any status as reachable, never reading a status or a body', async () => {
+    for (const response of [
+      { ok: false, status: 503 },
+      { ok: false, status: 404 },
+      {},
+      null,
+    ]) {
+      const state = await detectorWith(() => Promise.resolve(response)).checkNow();
+      expect({ response, status: state.status }).toEqual({ response, status: 'online' });
+    }
+  });
+
+  it('counts a failed request as unreachable', async () => {
+    const state = await detectorWith(() =>
+      Promise.reject(new TypeError('Failed to fetch')),
+    ).checkNow();
+    expect(state.status).toBe('offline');
+    expect(state.reason).toBe('no-internet');
+  });
 });
