@@ -257,7 +257,9 @@ describe('demo-native: Maestro', () => {
 
     it('uses the pinned emulator runner and prebuilds in CI', () => {
       const text = read('.github/workflows/maestro.yml');
-      expect(text).toContain('reactivecircus/android-emulator-runner@v2');
+      expect(text).toContain(
+        'reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2',
+      );
       expect(text).toContain('expo prebuild');
       expect(text).toContain('maestro test');
     });

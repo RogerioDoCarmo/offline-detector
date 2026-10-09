@@ -15,7 +15,10 @@ nativo. A cor nunca é o único sinal: cada estado é transmitido por palavras m
 A falha a evitar é a fala duplicada: um banner e um snackbar aparecendo juntos e um leitor de tela
 lendo "Sem internet" duas vezes. Por isso **cada transição é anunciada uma única vez**. A primeira
 peça visível, nesta ordem, é dona do anúncio e as outras ficam em silêncio: snackbar, banner,
-indicador e, por fim, um anunciador visualmente oculto quando nenhuma peça visível está ativada.
+indicador. Se nenhum deles estiver ativado, nada é anunciado. Não existe anunciador oculto de
+reserva. Um slot personalizado assume o anúncio da sua peça; portanto, precisa espalhar `rootProps`
+(e, no iOS, chamar `AccessibilityInfo.announceForAccessibility` por conta própria); veja
+[Slots](./slots.md).
 
 | Peça              | Web                                            | Nativo                                                           |
 | ----------------- | ---------------------------------------------- | ---------------------------------------------------------------- |

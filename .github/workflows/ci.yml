@@ -15,14 +15,14 @@ concurrency:
 
 env:
   TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+  STORYBOOK_DISABLE_TELEMETRY: '1'
 
 jobs:
   verify:
     name: Build, lint, typecheck and test
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,15 +45,28 @@ jobs:
       - run: pnpm test:ci
       # Non-blocking and skipped, not failed, when there is nothing to scan with: secrets are
       # unreadable from fork and Dependabot PRs, and the SonarCloud project may not exist yet.
-      # A third-party outage must not turn this required check red. Pinned by major on purpose
-      # (v8.0.x to v8.1.x failed GPG verification on long temp paths; the floating tag has the fix).
+      # A third-party outage must not turn this required check red. Pinned by commit SHA, which
+      # is what the v8 tag pointed at when this was written (v8.0.x to v8.1.x failed GPG
+      # verification on long temp paths; v8 has the fix). Dependabot moves the pin. The token is
+      # visible to this step only, not to the build and test steps that run repository scripts.
+      #
+      # A step's own `env` is not visible to its own `if`, so a tiny step that runs no repository
+      # code reports whether the secret exists, and the scan step reads that output.
+      - name: Is there a Sonar token to scan with?
+        id: sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -n "${SONAR_TOKEN}" ]; then echo "present=true" >> "$GITHUB_OUTPUT"; fi
       - name: SonarCloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         continue-on-error: true
         if: >-
           github.actor != 'dependabot[bot]' &&
           github.event.pull_request.head.repo.fork != true &&
-          env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarqube-scan-action@v8
+          steps.sonar.outputs.present == 'true'
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -88,9 +101,10 @@ jobs:
       # `packages/core/src/**/*.ts` would skip files sitting directly in `src/`.
       - name: Find the mutated source this PR touches
         id: scope
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
-          BASE='${{ github.event.pull_request.base.sha }}'
           CHANGED=$(git diff --name-only --diff-filter=ACMR "$BASE" HEAD -- packages/core/src packages/react/src \
                     | grep -E '\.(ts|tsx)$' \
                     | sed -E 's/\.test\.(ts|tsx)$/.\1/' \
@@ -112,7 +126,11 @@ jobs:
       # NO `--` BEFORE THE FLAG: pnpm 10 forwards it verbatim and Stryker rejects it.
       - name: Stryker
         if: steps.scope.outputs.run == 'true'
-        run: pnpm mutation --mutate "${{ steps.scope.outputs.mutate }}"
+        # The list is built from PR file names, which the PR author controls, so it reaches the
+        # shell as an environment variable and is never spliced into the script text.
+        env:
+          MUTATE: ${{ steps.scope.outputs.mutate }}
+        run: pnpm mutation --mutate "$MUTATE"
 
       - name: Upload mutation report
         if: always() && steps.scope.outputs.run == 'true'

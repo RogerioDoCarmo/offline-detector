@@ -32,7 +32,7 @@ Everything is optional. See the [web quick start](../web-quick-start.md).
 | `dismissible`       | `boolean`                                         | `true`                  | Global switch for swipe and Dismiss. Per piece: `snackbar`, `banner`, `indicator` options.      |
 | `onDismiss`         | `(piece) => void`                                 |                         | A piece was dismissed (`'snackbar' \| 'banner' \| 'indicator'`).                                |
 | `snackbar`          | `{ dismissible? }`                                |                         | Per-piece options.                                                                              |
-| `banner`            | `{ overlay?, dismissible? }`                      |                         | `overlay` floats over the content.                                                              |
+| `banner`            | `{ overlay?, dismissible? }`                      |                         | `overlay` floats over the content. `banner.position` is accepted and not yet applied.           |
 | `indicator`         | `{ position?, variant?, dismissible? }`           | `top-end`, auto         | `variant` is `dot` while the banner shows, else `chip`.                                         |
 | `motion`            | `'auto' \| 'reduced' \| 'full'`                   | `'auto'`                | `auto` follows `prefers-reduced-motion`.                                                        |
 | `colorScheme`       | `'auto' \| 'light' \| 'dark'`                     | `'auto'`                | Anything but `auto` wraps the tree in a `data-od-theme` element (`display: contents`).          |

@@ -38,14 +38,17 @@ describe.each(names)('package %s', (name) => {
       core: { dependencies: undefined, peerDependencies: undefined },
       react: {
         dependencies: { '@rogeriodocarmo/offline-detector-core': 'workspace:*' },
-        peerDependencies: { react: '>=18.0.0' },
+        peerDependencies: { react: '^18.0.0 || ^19.0.0' },
       },
       web: {
         dependencies: {
           '@rogeriodocarmo/offline-detector-core': 'workspace:*',
           '@rogeriodocarmo/offline-detector-react': 'workspace:*',
         },
-        peerDependencies: { react: '>=18.0.0', 'react-dom': '>=18.0.0' },
+        peerDependencies: {
+          react: '^18.0.0 || ^19.0.0',
+          'react-dom': '^18.0.0 || ^19.0.0',
+        },
       },
       native: {
         dependencies: {
@@ -53,7 +56,7 @@ describe.each(names)('package %s', (name) => {
           '@rogeriodocarmo/offline-detector-react': 'workspace:*',
         },
         peerDependencies: {
-          react: '>=18.0.0',
+          react: '^18.0.0 || ^19.0.0',
           'react-native': '>=0.73.0',
           '@react-native-community/netinfo': '>=11.0.0',
         },

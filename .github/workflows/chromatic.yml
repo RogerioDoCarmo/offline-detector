@@ -15,6 +15,11 @@ on:
 permissions:
   contents: read
 
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+  STORYBOOK_DISABLE_TELEMETRY: '1'
+
 jobs:
   # Runs first, with no checkout, no install and no secret: a wrong answer fails in seconds.
   guard:
@@ -49,7 +54,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Snapshot
-        uses: chromaui/action@v13
+        uses: chromaui/action@07791f8243f4cb2698bf4d00426baf4b2d1cb7e0 # v13
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           workingDir: apps/storybook-web

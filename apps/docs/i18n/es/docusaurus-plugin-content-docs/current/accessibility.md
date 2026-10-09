@@ -15,8 +15,10 @@ el color es una tercera señal, de apoyo.
 El fallo que hay que evitar es la voz duplicada: un banner y un snackbar que aparecen a la vez y un
 lector de pantalla que lee "Sin internet" dos veces. Por eso **cada transición se anuncia una sola
 vez**. La primera pieza visible, en este orden, es dueña del anuncio y las demás quedan en silencio:
-snackbar, banner, indicador y, por último, un anunciador visualmente oculto cuando no hay ninguna
-pieza visible activada.
+snackbar, banner, indicador. Si ninguno está activado, no se anuncia nada. No existe un anunciador
+oculto de reserva. Un slot personalizado asume el anuncio de su pieza, así que debe esparcir
+`rootProps` (y, en iOS, llamar a `AccessibilityInfo.announceForAccessibility` por su cuenta);
+consulta [Slots](./slots.md).
 
 | Pieza             | Web                                              | Nativo                                                           |
 | ----------------- | ------------------------------------------------ | ---------------------------------------------------------------- |

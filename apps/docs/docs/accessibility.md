@@ -15,7 +15,9 @@ supporting signal.
 The failure to avoid is double speech: a banner and a snackbar appearing together and a screen
 reader reading "No internet" twice. So **each transition is announced once**. The first visible
 piece in this order owns the announcement and the others render silent: snackbar, banner,
-indicator, and finally a visually hidden announcer when no visible piece is enabled.
+indicator. If none of them is enabled, nothing is announced. There is no hidden fallback announcer.
+A custom slot takes over its piece's announcement, so it must spread `rootProps` (and on iOS call
+`AccessibilityInfo.announceForAccessibility` itself); see [Slots](./slots.md).
 
 | Piece               | Web                                              | Native                                                                |
 | ------------------- | ------------------------------------------------ | --------------------------------------------------------------------- |
