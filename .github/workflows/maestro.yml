@@ -1,0 +1,67 @@
+name: Maestro
+
+# Device flows on an Android emulator. Slow and costly, so never on pull requests.
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maestro-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  EXPO_NO_TELEMETRY: '1'
+
+jobs:
+  android:
+    name: Maestro on Android emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # The native project is generated here and never committed.
+      - name: Prebuild and assemble the release APK (JS bundled in)
+        working-directory: apps/demo-native
+        run: |
+          npx expo prebuild --platform android --no-install
+          cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run the flows
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb install apps/demo-native/android/app/build/outputs/apk/release/app-release.apk
+            maestro test apps/demo-native/.maestro --format junit --output maestro-report.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maestro-report
+          path: maestro-report.xml
+          if-no-files-found: ignore

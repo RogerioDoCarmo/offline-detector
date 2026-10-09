@@ -47,14 +47,16 @@ export default defineConfig({
     { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
   ],
 
-  // A plain node script, so nothing is downloaded when the tests start.
+  // A plain node script, so nothing is downloaded when the tests start. It also serves the static
+  // export of apps/demo-web under /offline-detector/demo/ and builds that export first when it is
+  // missing (the long timeout covers a cold build of the packages and the demo).
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
         command: 'node e2e/fixtures/serve.mjs',
         url: baseURL,
         reuseExistingServer: !isCI,
-        timeout: 30_000,
+        timeout: 300_000,
         env: { PORT: String(port) },
       },
 });

@@ -59,5 +59,6 @@ describe('tooling', () => {
       expect(lintMd).toContain(glob);
     }
     expect(read('eslint.config.js')).toContain("'**/dist/**'");
+    expect(read('eslint.config.js')).toContain("'**/out/**'");
   });
 });

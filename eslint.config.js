@@ -5,6 +5,7 @@ module.exports = [
     ignores: [
       '**/dist/**',
       '**/build/**',
+      '**/out/**',
       '**/coverage/**',
       '**/.turbo/**',
       '**/.next/**',

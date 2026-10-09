@@ -1,0 +1,32 @@
+{
+  "name": "@offline-detector/demo-native",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Expo demo of @rogeriodocarmo/offline-detector-native with a control panel for every option.",
+  "license": "MIT",
+  "author": "Rogério do Carmo",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "expo start",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "bundle": "expo export --platform android",
+    "bundle:ios": "expo export --platform ios"
+  },
+  "dependencies": {
+    "@react-native-community/netinfo": "12.0.1",
+    "@rogeriodocarmo/offline-detector-core": "workspace:*",
+    "@rogeriodocarmo/offline-detector-native": "workspace:*",
+    "@rogeriodocarmo/offline-detector-react": "workspace:*",
+    "expo": "~57.0.27",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.0",
+    "babel-preset-expo": "~57.0.14",
+    "typescript": "^6.0.3"
+  }
+}
