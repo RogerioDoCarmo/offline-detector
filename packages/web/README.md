@@ -11,8 +11,9 @@ render on the server.
 pnpm add @rogeriodocarmo/offline-detector-web
 ```
 
-The web package depends on `@rogeriodocarmo/offline-detector-react` and the core; React and
-react-dom 18 or newer are peer dependencies.
+The web package depends on `@rogeriodocarmo/offline-detector-react` and the core, and re-exports
+the hooks you need, so this is the only package to install. React and react-dom 18 or newer are
+peer dependencies.
 
 Render `<OfflineDetector>` once, near the root. It needs no provider and no adapter:
 
@@ -30,8 +31,9 @@ export function Root() {
 
 That is the whole setup. The app launches online and shows nothing. When the connection drops, a
 snackbar ("No internet", with Retry), a banner and an indicator appear; when it returns, a "Back
-online" snackbar shows for four seconds. Hooks from `@rogeriodocarmo/offline-detector-react`
-(`useNetworkStatus`, `useRecheckOnReturn`, ...) work anywhere inside it.
+online" snackbar shows for four seconds. The hooks (`useNetworkStatus`, `useRecheckOnReturn`,
+`useOfflineDetector`, `useCheckingFeedback`) are exported from this package and work anywhere
+inside it.
 
 ## Props
 
@@ -40,7 +42,7 @@ Everything is optional.
 | Prop                | Type                                              | Default                 | What it does                                                                                    |
 | ------------------- | ------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
 | `adapter`           | `PlatformAdapter`                                 | `createWebAdapter()`    | The platform seam. Created once per mount; read once.                                           |
-| `fetch`             | `ProbeFetch`                                      | `createWebProbeFetch()` | Probe transport (`no-cors`, `no-store`).                                                        |
+| `fetch`             | `ProbeFetch`                                      | `createWebProbeFetch()` | Probe transport: `no-cors`, `no-store`, no cookies, no `Referer`.                               |
 | `probe`             | `ProbeOptions`                                    | core defaults           | Probe URLs, timeout, interval, method, mode.                                                    |
 | `onOffline`         | `(state) => void`                                 |                         | Status became offline (also when the first result is offline).                                  |
 | `onOnline`          | `(state) => void`                                 |                         | Status went from offline back to online.                                                        |
@@ -51,6 +53,7 @@ Everything is optional.
 | `strings`           | `Partial<OfflineStrings>`                         |                         | Copy overrides merged over the locale.                                                          |
 | `distinguishReason` | `boolean`                                         | `false`                 | Say "No network connection" or "Connected, but no internet" instead of "No internet".           |
 | `fullScreen`        | `boolean \| { continueOffline?: boolean }`        | off                     | Opt-in full-screen state while offline. `continueOffline: true` adds an escape hatch.           |
+| `onContinueOffline` | `() => void`                                      |                         | The user pressed "Continue offline" (or Escape) on the full-screen state.                       |
 | `dismissible`       | `boolean`                                         | `true`                  | Global switch for swipe and Dismiss. Per piece: `snackbar`, `banner`, `indicator` options.      |
 | `onDismiss`         | `(piece) => void`                                 |                         | A piece was dismissed (`'snackbar' \| 'banner' \| 'indicator'`).                                |
 | `snackbar`          | `{ dismissible? }`                                |                         |                                                                                                 |
@@ -59,11 +62,16 @@ Everything is optional.
 | `motion`            | `'auto' \| 'reduced' \| 'full'`                   | `'auto'`                | `auto` follows `prefers-reduced-motion`.                                                        |
 | `colorScheme`       | `'auto' \| 'light' \| 'dark'`                     | `'auto'`                | Anything but `auto` wraps the tree in a `data-od-theme` element (`display: contents`).          |
 | `recoveryMs`        | `number`                                          | `4000`                  | How long "Back online" shows. The timer pauses while the snackbar is hovered, focused, touched. |
+| `nonce`             | `string`                                          |                         | CSP nonce for the inline `<style>` element that carries the tokens and styles.                  |
 | `slots`             | `{ snackbar?, banner?, indicator?, fullScreen? }` |                         | Replace a piece with your own component.                                                        |
 | `children`          | `ReactNode`                                       |                         | Your app.                                                                                       |
 
 A dismissed piece stays hidden until the next status change, then every piece comes back.
-Dismissal is in memory only.
+Dismissal is in memory only. When the piece that was dismissed held keyboard focus, focus goes back
+to the element that had it before the piece appeared (the page body if that element is gone).
+
+The full-screen title is `strings.fullScreenTitle`; with `distinguishReason` it is the reason-aware
+message instead.
 
 ### Re-checking on return
 
@@ -72,7 +80,7 @@ Re-probing when the user returns to the tab is opt-in per screen. With
 runs; a pressed Retry always shows it at once.
 
 ```tsx
-import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-react';
+import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-web';
 
 function Checkout() {
   useRecheckOnReturn({ checkingFeedback: 'brief' });
@@ -86,11 +94,14 @@ A slot replaces a piece entirely. It receives `PieceRenderProps`: `state`, `phas
 (`'offline' | 'checking' | 'recovered'`), `message` (already localised), `strings`, `actions`
 (`retry`, `dismiss` when allowed, `continueOffline` for the full-screen state), `visible`, `theme`
 (native only, `undefined` on the web) and `rootProps` (role and label to spread on your root).
-The tokens are still rendered, so `var(--od-color-surface-inverse)` and friends work.
+The tokens are still rendered, so `var(--od-color-surface-inverse)` and friends work. For the
+full-screen slot, `message` is the title. A slot that spreads `rootProps` gets the live region role
+the bundled piece would have; unlike the bundled pieces, a slot's text is present from its first
+render, so if it must be announced, mount its live element first and set the text a frame later.
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
 import { OfflineDetector } from '@rogeriodocarmo/offline-detector-web';
+import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-web';
 
 function Toast({ message, phase, actions, rootProps }: PieceRenderProps) {
   return (
@@ -110,9 +121,38 @@ function Toast({ message, phase, actions, rootProps }: PieceRenderProps) {
 ## Theming
 
 `<OfflineDetector>` renders one inline `<style>` with the `--od-*` custom properties (light, and
-dark through `prefers-color-scheme`). Override any token in your own CSS, or force a scheme with
-`colorScheme`. The bundled pieces, `OfflineTokens`, `createWebAdapter`, `createWebProbeFetch` and
-`useSwipeDismiss` are exported too, if you want to assemble your own.
+dark through `prefers-color-scheme`). The package's own rules are written under `:where()`, so they
+have no specificity: any rule of yours that sets a token wins, wherever it sits in the cascade.
+
+```css
+:root {
+  --od-color-surface-inverse: #0b3d2e;
+}
+```
+
+Force a scheme with `colorScheme`. Under a Content Security Policy, pass the same `nonce` your
+other inline styles use: `<OfflineDetector nonce={nonce}>` (or `<OfflineTokens nonce={nonce} />`).
+
+## Building your own layout
+
+The pieces (`Snackbar`, `Banner`, `Indicator`, `FullScreen`), `OfflineTokens`, `createWebAdapter`
+and `createWebProbeFetch` are exported for custom layouts. Every piece takes the same props as a
+slot: `phase`, `message`, `strings`, `actions` (`retry`, `dismiss`, `continueOffline`), `visible`,
+`rootProps`, plus web extras such as `announce`, `motion`, `className`, `style` and `icons`. A piece
+is dismissible exactly when `actions.dismiss` is present. The swipe hook and the timing helpers are
+internal and not exported.
+
+## Accessibility
+
+- The piece that owns the announcement renders a polite `role="status"` region. It is mounted
+  empty and receives its text one animation frame later, because screen readers skip a live region
+  that appears together with its text. The other pieces are silent; the banner becomes a labelled
+  region while the snackbar speaks.
+- Dismissing is never announced. Every swipe has a keyboard (Escape, Delete) and a button
+  alternative.
+- The full-screen state moves focus to its title, makes the rest of the page inert (including
+  elements added later) and gives focus back when it goes away.
+- Focus moving into an embedded iframe (a card field) does not count as leaving the page.
 
 ## Next.js and other frameworks
 
@@ -139,5 +179,7 @@ pieces simply go away, with no "Back online".
 
 ## Privacy
 
-The only network traffic is the configurable reachability probe. See the repository's
-`PRIVACY.md`.
+The only network traffic is the configurable reachability probe. It is sent with
+`credentials: 'omit'` and `referrerPolicy: 'no-referrer'`, so it carries no cookies and no
+`Referer`, even to a same-origin endpoint, and a response of any kind counts as reachable. See the
+repository's `PRIVACY.md`.
