@@ -21,16 +21,38 @@ gh api -X PATCH repos/RogerioDoCarmo/offline-detector/code-scanning/default-setu
 
 ## Enable GitHub Pages
 
-Publishes the docs and demo site under the owner's name. Branch `main`, folder `/docs` is the
-standing convention; revisit when Plan 6 defines the Pages build.
+Publishes the docs and the web demo as one site under the owner's name:
+`https://rogeriodocarmo.github.io/offline-detector/`. Nothing in the repository enables it.
+
+The site is **built** by `.github/workflows/pages.yml` (docs at the root, the demo under `/demo/`,
+and `docs/privacy-policy.html` at `/privacy-policy.html` once that file exists), so the Pages source
+must be **GitHub Actions**, not a branch and folder. The older convention of `main` and `/docs` does
+not apply here, because `/docs` holds sources, not the built site.
 
 ```bash
-gh api -X POST repos/RogerioDoCarmo/offline-detector/pages \
-  -f "source[branch]=main" -f "source[path]=/docs"
+gh api -X POST repos/RogerioDoCarmo/offline-detector/pages -f build_type=workflow
+# if Pages already exists with another source:
+gh api -X PUT repos/RogerioDoCarmo/offline-detector/pages -f build_type=workflow
+```
+
+Then merge to `main` (or run the workflow manually from `main`) and poll until the status reads
+`built`:
+
+```bash
 gh api repos/RogerioDoCarmo/offline-detector/pages --jq .status
 ```
 
-Poll until the status reads `built`, then compare the live bytes against the local file.
+Verify by bytes, not by a 200. A 200 can come from a stale copy elsewhere (a project site shadows a
+same-named folder in the user site). Build the docs locally and compare the length of the live page
+with the local file:
+
+```bash
+pnpm --filter @offline-detector/docs build
+wc -c < apps/docs/build/index.html
+curl -s https://rogeriodocarmo.github.io/offline-detector/ | wc -c
+```
+
+The two numbers must match. Check `/demo/` the same way against `apps/demo-web/out/index.html`.
 
 ## Create the npm-publish environment
 
