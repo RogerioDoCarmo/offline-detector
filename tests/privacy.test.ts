@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = join(__dirname, '..');
@@ -7,6 +7,8 @@ const read = (path: string): string => readFileSync(join(root, path), 'utf8');
 const flat = (text: string): string => text.replace(/\s+/g, ' ');
 const html = () => flat(read('docs/privacy-policy.html'));
 const md = () => flat(read('PRIVACY.md'));
+// Code formatting is not part of the sentence: `Referer` and <code>Referer</code> read the same.
+const plain = (text: string): string => text.replace(/<\/?code>/g, '').replace(/`/g, '');
 
 // The numbers and addresses below are read from the source, so the policy cannot drift from what
 // the packages actually do: changing a default fails this file until the policy is updated too.
@@ -129,16 +131,64 @@ describe('privacy policy matches the code', () => {
     }
   });
 
+  // Every non-test source file of every package, comments removed so prose cannot trigger a hit.
+  const sourceFiles = (): string[] => {
+    const walk = (dir: string): string[] =>
+      readdirSync(join(root, dir), { withFileTypes: true }).flatMap((entry) => {
+        const path = `${dir}/${entry.name}`;
+        if (entry.isDirectory()) return walk(path);
+        return /\.tsx?$/.test(entry.name) && !/\.(test|stories)\.tsx?$/.test(entry.name)
+          ? [path]
+          : [];
+      });
+    return ['core', 'react', 'web', 'native'].flatMap((name) =>
+      walk(`packages/${name}/src`),
+    );
+  };
+  const code = (path: string): string =>
+    read(path)
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+  it('scans every package source file, not a fixed list of names', () => {
+    const files = sourceFiles();
+    expect(files.length).toBeGreaterThan(40);
+    expect(files).toContain('packages/core/src/probe.ts');
+    expect(files).toContain('packages/web/src/offline-detector.tsx');
+    expect(files).toContain('packages/native/src/use-swipe-dismiss.ts');
+    expect(files.some((file) => /\.test\./.test(file))).toBe(false);
+  });
+
   it('claims no analytics only where the code has none', () => {
     // If any package source starts using storage or analytics APIs, the policy needs a new section.
     const forbidden =
-      /localStorage|sessionStorage|AsyncStorage|document\.cookie|indexedDB|sendBeacon|XMLHttpRequest|WebSocket/;
-    for (const name of ['core', 'react', 'web', 'native']) {
-      for (const file of ['index.ts', 'detector.ts', 'adapter.ts', 'probe.ts']) {
-        const path = `packages/${name}/src/${file}`;
-        if (existsSync(join(root, path)))
-          expect({ path, hit: forbidden.test(read(path)) }).toEqual({ path, hit: false });
-      }
+      /localStorage|sessionStorage|AsyncStorage|document\.cookie|indexedDB|sendBeacon|XMLHttpRequest|WebSocket|EventSource|navigator\.language/;
+    for (const path of sourceFiles()) {
+      expect({ path, hit: forbidden.test(code(path)) }).toEqual({ path, hit: false });
+    }
+  });
+
+  it('makes a network request from the probe code only', () => {
+    // Anything else that calls fetch( is a data flow the policy has not described. NetInfo's own
+    // fetch() in the native adapter asks the OS for the interface state; it is not an HTTP request.
+    const callers = sourceFiles().filter((path) => /\bfetch\s*\(/.test(code(path)));
+    expect(callers).toEqual([
+      'packages/core/src/detector.ts',
+      'packages/core/src/probe.ts',
+      'packages/native/src/adapter.ts',
+    ]);
+  });
+
+  it('says what the request carries and what counts as reachable, in both copies', () => {
+    for (const text of [html(), md()].map(plain)) {
+      expect(text).toContain('The packages send no cookies');
+      expect(text).toContain('credentials are omitted');
+      expect(text).toContain('even a same-origin address you configure receives none');
+      expect(text).toContain('no Referer header');
+      expect(text).toContain('the referrer policy is no-referrer');
+      expect(text).toContain('any completed HTTP response');
+      expect(text).toContain('whatever its status');
+      expect(text).toContain('Only a request that fails');
     }
   });
 });
@@ -206,6 +256,33 @@ describe('the docs privacy page tells the same story as the policy, in every loc
     expect(page).toContain('5');
     expect(page).toContain('60');
   });
+
+  it.each(Object.keys(pages))(
+    '%s says what the probe sends and what counts as reachable',
+    (locale) => {
+      const page = plain(flat(read(pages[locale as keyof typeof pages][0])));
+      const expected = {
+        en: [
+          "The probe sends no cookies (credentials: 'omit', so even a same-origin endpoint receives none) and no Referer header (referrerPolicy: 'no-referrer')",
+          'A probe counts as reachable when any HTTP response completes, whatever its status',
+          'Only a request that fails',
+        ],
+        'pt-BR': [
+          "A sonda não envia cookies (credentials: 'omit', então nem um endpoint de mesma origem recebe algum) nem o cabeçalho Referer (referrerPolicy: 'no-referrer')",
+          'Uma sonda conta como alcançável quando qualquer resposta HTTP é concluída, qualquer que seja o status',
+          'Só uma requisição que falha',
+        ],
+        es: [
+          "La sonda no envía cookies (credentials: 'omit', así que ni siquiera un endpoint del mismo origen recibe alguna) ni la cabecera Referer (referrerPolicy: 'no-referrer')",
+          'Una sonda cuenta como alcanzable cuando se completa cualquier respuesta HTTP, sea cual sea su estado',
+          'Solo una petición que falla',
+        ],
+      }[locale as 'en' | 'pt-BR' | 'es'];
+      for (const phrase of expected) expect(page).toContain(phrase);
+      // The old rule, an `ok` or opaque response, is gone from every locale.
+      expect(page).not.toMatch(/\bok\b.{0,12}(opaque|opaca)/);
+    },
+  );
 
   it.each(Object.keys(pages))(
     '%s says the docs site keeps preferences in local storage',
