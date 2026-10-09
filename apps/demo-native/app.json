@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Offline Detector Demo",
+    "slug": "offline-detector-demo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": { "bundleIdentifier": "dev.rogeriodocarmo.offlinedetector.demo" },
+    "android": { "package": "dev.rogeriodocarmo.offlinedetector.demo" }
+  }
+}

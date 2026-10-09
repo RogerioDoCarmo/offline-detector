@@ -1,3 +1,11 @@
 packages:
   - packages/*
   - apps/*
+
+# @react-native/jest-preset requires react-native without declaring it, so it found whichever
+# version pnpm hoisted. With the Expo demo on React Native 0.86 that is the wrong one for the
+# packages' Jest. Declaring the peer makes pnpm link each importer's own react-native.
+packageExtensions:
+  '@react-native/jest-preset':
+    peerDependencies:
+      react-native: '*'

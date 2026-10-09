@@ -1,0 +1,17 @@
+appId: dev.rogeriodocarmo.offlinedetector.demo
+name: Offline shows the No internet pieces
+---
+- launchApp:
+    clearState: true
+# Launching online shows nothing.
+- assertNotVisible: 'No internet'
+- tapOn:
+    id: 'simulate-offline'
+- extendedWaitUntil:
+    visible: 'No internet'
+    timeout: 10000
+- assertVisible:
+    id: 'offline-detector-snackbar'
+- assertVisible:
+    id: 'offline-detector-banner'
+- assertVisible: 'Retry'
