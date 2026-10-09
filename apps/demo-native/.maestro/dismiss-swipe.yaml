@@ -1,0 +1,23 @@
+appId: dev.rogeriodocarmo.offlinedetector.demo
+name: Swiping the snackbar away dismisses it
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'simulate-offline'
+- extendedWaitUntil:
+    visible:
+      id: 'offline-detector-snackbar'
+    timeout: 10000
+- swipe:
+    from:
+      id: 'offline-detector-snackbar'
+    direction: RIGHT
+    duration: 300
+- extendedWaitUntil:
+    notVisible:
+      id: 'offline-detector-snackbar'
+    timeout: 5000
+# The banner is a separate piece and stays until it is dismissed too.
+- assertVisible:
+    id: 'offline-detector-banner'
