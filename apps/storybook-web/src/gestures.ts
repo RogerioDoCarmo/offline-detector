@@ -38,6 +38,10 @@ async function gesture(element: HTMLElement, fraction: number, holdMs: number) {
         pointerType: 'touch',
         isPrimary: true,
         button: 0,
+        // A real touch reports buttons 1 while in contact and 0 once lifted. The swipe ends a
+        // gesture whose move arrives with no button pressed (a mouse released outside the piece),
+        // so a synthetic move without this would look like an abandoned drag.
+        buttons: type === 'pointerup' ? 0 : 1,
         clientX: x,
         clientY: y,
       }),
