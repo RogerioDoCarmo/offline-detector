@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentType, ReactElement, ReactNode } from 'react';
 import type { OfflineState } from '@rogeriodocarmo/offline-detector-core';
 import {
@@ -42,6 +42,10 @@ export interface OfflineDetectorProps
   slots?: OfflineDetectorSlots;
   /** How long the "Back online" snackbar stays. Default 4000. */
   recoveryMs?: number;
+  /** Fires when the user presses "Continue offline" (or Escape) on the full-screen state. */
+  onContinueOffline?: () => void;
+  /** CSP nonce for the inline `<style>` element that carries the tokens and piece styles. */
+  nonce?: string;
   children?: ReactNode;
 }
 
@@ -50,6 +54,7 @@ const DEFAULT_RECOVERY_MS = 4000;
 type UiProps = OfflineUiOptions & {
   slots?: OfflineDetectorSlots;
   recoveryMs: number;
+  onContinueOffline?: () => void;
 };
 
 type Phase = PieceRenderProps['phase'];
@@ -123,9 +128,13 @@ function Pieces(props: UiProps): ReactElement {
   const fullScreenOption = props.fullScreen;
   const fullScreenOn = fullScreenOption !== undefined && fullScreenOption !== false;
   const showFullScreen = fullScreenOn && offline && !continued;
+  const onContinueOffline = props.onContinueOffline;
   const continueOffline =
     typeof fullScreenOption === 'object' && fullScreenOption.continueOffline === true
-      ? () => setContinued(true)
+      ? () => {
+          setContinued(true);
+          onContinueOffline?.();
+        }
       : undefined;
 
   const showSnackbar =
@@ -139,9 +148,10 @@ function Pieces(props: UiProps): ReactElement {
     : userChecking || (checking && feedback === 'brief')
       ? 'checking'
       : 'offline';
-  const message = recovering
-    ? strings.online
-    : offlineMessage(state, strings, props.distinguishReason);
+  const offlineText = offlineMessage(state, strings, props.distinguishReason);
+  const message = recovering ? strings.online : offlineText;
+  // The full-screen title is its own string, unless the reason-aware message was asked for.
+  const fullScreenTitle = props.distinguishReason ? offlineText : strings.fullScreenTitle;
   const checkingDelayMs = userChecking ? 0 : undefined;
 
   const dismissAction = (piece: DismissiblePiece) =>
@@ -160,68 +170,94 @@ function Pieces(props: UiProps): ReactElement {
   const indicatorOptions = props.indicator;
   const bannerOptions = props.banner;
 
+  // Each piece is keyed by the status it was shown for. A status change therefore starts a fresh
+  // piece: its live region mounts empty (accessibility.md, section 1), and an exit animation or a
+  // half-finished swipe left over from the previous status can neither hide the new piece nor
+  // record a dismissal under the new status.
   return (
     <>
-      {showBanner &&
-        pick(
-          slots?.banner,
-          () => (
-            <Banner
-              {...ownProps}
-              actions={bannerActions}
-              announce={bannerAnnounces}
-              overlay={bannerOptions?.overlay}
-              showRetry={!showSnackbar}
-            />
-          ),
-          {
-            ...common,
-            actions: bannerActions,
-            rootProps: bannerAnnounces
-              ? { role: 'status' }
-              : { role: 'region', 'aria-label': message },
-          },
-        )}
-      {showIndicator &&
-        pick(
-          slots?.indicator,
-          () => (
-            <Indicator
-              {...ownProps}
-              actions={indicatorActions}
-              variant={indicatorOptions?.variant ?? (showBanner ? 'dot' : 'chip')}
-              position={indicatorOptions?.position}
-            />
-          ),
-          {
-            ...common,
-            actions: indicatorActions,
-            rootProps: {
-              role: 'img',
-              'aria-label': indicatorName(
-                strings,
-                recovering ? strings.indicatorLabelOnline : strings.indicatorLabelOffline,
-              ),
+      {showBanner && (
+        <Fragment key={`banner-${status}`}>
+          {pick(
+            slots?.banner,
+            () => (
+              <Banner
+                {...ownProps}
+                actions={bannerActions}
+                announce={bannerAnnounces}
+                overlay={bannerOptions?.overlay}
+                showRetry={!showSnackbar}
+              />
+            ),
+            {
+              ...common,
+              actions: bannerActions,
+              rootProps: bannerAnnounces
+                ? { role: 'status' }
+                : { role: 'region', 'aria-label': message },
             },
-          },
-        )}
-      {showSnackbar &&
-        pick(
-          slots?.snackbar,
-          () => (
-            <Snackbar
-              {...ownProps}
-              actions={snackbarActions}
-              onInteractionChange={setPaused}
-            />
-          ),
-          { ...common, actions: snackbarActions, rootProps: { role: 'status' } },
-        )}
+          )}
+        </Fragment>
+      )}
+      {showIndicator && (
+        <Fragment key={`indicator-${status}`}>
+          {pick(
+            slots?.indicator,
+            () => (
+              <Indicator
+                {...ownProps}
+                actions={indicatorActions}
+                variant={indicatorOptions?.variant ?? (showBanner ? 'dot' : 'chip')}
+                position={indicatorOptions?.position}
+              />
+            ),
+            {
+              ...common,
+              actions: indicatorActions,
+              rootProps: {
+                role: 'img',
+                'aria-label': indicatorName(
+                  strings,
+                  recovering
+                    ? strings.indicatorLabelOnline
+                    : strings.indicatorLabelOffline,
+                ),
+              },
+            },
+          )}
+        </Fragment>
+      )}
+      {showSnackbar && (
+        <Fragment key={`snackbar-${status}`}>
+          {pick(
+            slots?.snackbar,
+            () => (
+              <Snackbar
+                {...ownProps}
+                actions={snackbarActions}
+                onInteractionChange={setPaused}
+              />
+            ),
+            { ...common, actions: snackbarActions, rootProps: { role: 'status' } },
+          )}
+        </Fragment>
+      )}
       {showFullScreen &&
         pick(
           slots?.fullScreen,
-          () => <FullScreen {...ownProps} actions={fullScreenActions} />,
-          { ...common, actions: fullScreenActions, rootProps: {} },
+          () => (
+            <FullScreen
+              {...ownProps}
+              message={fullScreenTitle}
+              actions={fullScreenActions}
+            />
+          ),
+          {
+            ...common,
+            message: fullScreenTitle,
+            actions: fullScreenActions,
+            rootProps: {},
+          },
         )}
     </>
   );
@@ -239,6 +275,7 @@ export function OfflineDetector(props: OfflineDetectorProps): ReactElement {
     slots,
     recoveryMs = DEFAULT_RECOVERY_MS,
     colorScheme,
+    nonce,
     ...rest
   } = props;
   // Both are read once by the provider, so create them once per mount. Neither touches a browser
@@ -259,7 +296,7 @@ export function OfflineDetector(props: OfflineDetectorProps): ReactElement {
 
   const body = (
     <>
-      <OfflineTokens />
+      <OfflineTokens nonce={nonce} />
       {children}
       <Pieces {...ui} slots={slots} recoveryMs={recoveryMs} />
     </>

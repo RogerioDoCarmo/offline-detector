@@ -5,6 +5,43 @@ import type {
   PieceRenderProps,
 } from '@rogeriodocarmo/offline-detector-react';
 
+/*
+ * THE PIECE PROPS SHAPE (shared by web and native)
+ * ------------------------------------------------
+ * The web pieces (`Snackbar`, `Banner`, `Indicator`, `FullScreen`) take the props below, and the
+ * native pieces adopt the same shape (docs/superpowers/specs/2026-10-09-final-review-fixes.md).
+ * Everything in the first group is platform neutral; the second group is web-only styling.
+ *
+ *   phase     'offline' | 'checking' | 'recovered'   what the piece shows now
+ *   message   string                                 already localised and reason-aware; for the
+ *                                                    full-screen piece it is the title
+ *                                                    (`strings.fullScreenTitle`, or the
+ *                                                    reason-aware message with `distinguishReason`)
+ *   strings   OfflineStrings                         the resolved copy (labels, hints, buttons)
+ *   state?    OfflineState                           accepted for parity with `PieceRenderProps`
+ *   actions?  { retry?, dismiss?, continueOffline? } see below
+ *   visible?  boolean (default true)                 false during the exit window: the piece plays
+ *                                                    its exit animation and ignores input
+ *   theme?    unknown                                native tokens; ignored on the web
+ *   rootProps? Record<string, unknown>               role / live region / label props from the
+ *                                                    provider; they win over the piece's defaults
+ *
+ *   actions.retry            () => unknown           return value ignored
+ *   actions.dismiss          () => void              THE piece is dismissible exactly when this is
+ *                                                    present; there is no separate `dismissible`
+ *                                                    prop, `onDismiss` or `onRetry`
+ *   actions.continueOffline  () => void              full-screen only; the button shows when set
+ *
+ * Web-only extras (native may add its own, but must keep the names above):
+ *   announce, motion, className, style, icons, checkingDelayMs, checkingMinMs, and per piece
+ *   `overlay` / `showRetry` (banner), `variant` / `position` / `idlePhase` (indicator),
+ *   `onInteractionChange` (snackbar).
+ *
+ * A piece owns the screen reader announcement of the transition only when `announce` is not false
+ * (web) and it carries a live role; on the web its text then arrives one frame after the region
+ * mounts (see `useAnnouncedText`).
+ */
+
 export type Phase = PieceRenderProps['phase'];
 export type Motion = 'auto' | 'reduced' | 'full';
 
@@ -37,7 +74,7 @@ export interface PieceProps {
   visible?: boolean;
   /** Role / live-region / dir props from the provider; they win over the piece's defaults. */
   rootProps?: Record<string, unknown>;
-  /** Native-only in the contract; ignored on the web, where tokens are inherited CSS variables. */
+  /** Native-only; ignored on the web, where tokens are inherited CSS variables. */
   theme?: unknown;
 
   /**

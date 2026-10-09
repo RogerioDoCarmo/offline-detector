@@ -33,6 +33,8 @@ export function pointer(
     id?: number;
     pointerType?: string;
     button?: number;
+    /** Pressed buttons; by default 1 while down or moving, 0 on up and cancel. */
+    buttons?: number;
   } = {},
 ): boolean {
   const event = new MouseEvent(type, {
@@ -41,6 +43,7 @@ export function pointer(
     clientX: init.x ?? 0,
     clientY: init.y ?? 0,
     button: init.button ?? 0,
+    buttons: init.buttons ?? (type === 'pointerdown' || type === 'pointermove' ? 1 : 0),
   });
   Object.defineProperty(event, 'pointerId', { value: init.id ?? 1 });
   Object.defineProperty(event, 'pointerType', { value: init.pointerType ?? 'touch' });
@@ -65,3 +68,6 @@ export function layout(element: Element, width: number) {
     }) as DOMRect;
   return { setPointerCapture, releasePointerCapture };
 }
+
+/** Long enough for the fake requestAnimationFrame to fire once (a frame is 16 ms, and the fake clock's phase varies). */
+export const FRAME = 50;

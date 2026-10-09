@@ -108,11 +108,13 @@ function declarations(values: Record<string, string>): string {
 }
 
 // Flat, unindented blocks on purpose: they are easy to read and to assert on in tests.
-const LIGHT_SELECTOR = ":root,\n[data-od-root],\n[data-od-theme='light']";
+// Wrapped in :where() so the selectors weigh nothing: a host rule that sets any `--od-*` token
+// wins whatever its specificity or position in the cascade, which is what the README promises.
+const LIGHT_SELECTOR = ":where(:root, [data-od-root], [data-od-theme='light'])";
 const DARK_SELECTOR =
-  ":root[data-od-theme='dark'],\n[data-od-root][data-od-theme='dark'],\n[data-od-theme='dark']";
+  ":where(:root[data-od-theme='dark'], [data-od-root][data-od-theme='dark'], [data-od-theme='dark'])";
 const AUTO_DARK_SELECTOR =
-  ":root:not([data-od-theme='light']),\n[data-od-root]:not([data-od-theme='light'])";
+  ":where(:root:not([data-od-theme='light']), [data-od-root]:not([data-od-theme='light']))";
 
 /**
  * The `--od-*` custom properties. Light is the default; dark follows `prefers-color-scheme`

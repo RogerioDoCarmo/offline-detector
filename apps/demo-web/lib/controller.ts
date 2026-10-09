@@ -68,8 +68,10 @@ export function createDemoController(initialLatencyMs: number): DemoController {
 
     fetch: async (url, { signal }) => {
       await wait(latency, signal);
+      // Like a real request: any response means reachable, only a failed request means not.
       const ok = mode !== 'no-internet';
       controller.onProbe(`stub probe ${ok ? 'answered' : 'failed'}: ${url}`);
+      if (!ok) throw new TypeError('Failed to fetch');
       return { ok };
     },
 

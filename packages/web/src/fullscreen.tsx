@@ -15,26 +15,54 @@ const SKIPPED = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TEMPLATE', 'NOSCRIP
  */
 function inertHost(root: HTMLElement): () => void {
   const restore: Array<() => void> = [];
+  const onPath: Set<Node> = new Set([root]);
+  const parents: HTMLElement[] = [];
+
+  const mark = (sibling: Element) => {
+    const inert = sibling.getAttribute('inert');
+    const hidden = sibling.getAttribute('aria-hidden');
+    sibling.setAttribute('inert', '');
+    sibling.setAttribute('aria-hidden', 'true');
+    restore.push(() => {
+      if (inert === null) sibling.removeAttribute('inert');
+      else sibling.setAttribute('inert', inert);
+      if (hidden === null) sibling.removeAttribute('aria-hidden');
+      else sibling.setAttribute('aria-hidden', hidden);
+    });
+  };
+
   let node: HTMLElement = root;
   while (node.parentElement) {
     const parent: HTMLElement = node.parentElement;
+    parents.push(parent);
+    onPath.add(parent);
     for (const sibling of Array.from(parent.children)) {
       if (sibling === node || SKIPPED.has(sibling.tagName)) continue;
-      const inert = sibling.getAttribute('inert');
-      const hidden = sibling.getAttribute('aria-hidden');
-      sibling.setAttribute('inert', '');
-      sibling.setAttribute('aria-hidden', 'true');
-      restore.push(() => {
-        if (inert === null) sibling.removeAttribute('inert');
-        else sibling.setAttribute('inert', inert);
-        if (hidden === null) sibling.removeAttribute('aria-hidden');
-        else sibling.setAttribute('aria-hidden', hidden);
-      });
+      mark(sibling);
     }
     if (parent === parent.ownerDocument.body) break;
     node = parent;
   }
-  return () => restore.forEach((undo) => undo());
+
+  // Whatever the host adds while the screen is up (a toast, a modal) must not be reachable either.
+  const observer =
+    typeof MutationObserver === 'function'
+      ? new MutationObserver((records) => {
+          for (const record of records) {
+            for (const added of Array.from(record.addedNodes)) {
+              if (added.nodeType !== 1 || onPath.has(added)) continue;
+              if (SKIPPED.has((added as Element).tagName)) continue;
+              mark(added as Element);
+            }
+          }
+        })
+      : undefined;
+  for (const parent of parents) observer?.observe(parent, { childList: true });
+
+  return () => {
+    observer?.disconnect();
+    restore.forEach((undo) => undo());
+  };
 }
 
 /**
@@ -59,6 +87,7 @@ export function FullScreen(props: PieceProps): ReactElement {
 
   const rootRef = useRef(null as HTMLDivElement | null);
   const titleRef = useRef(null as HTMLHeadingElement | null);
+  const returnTo = useRef(null as HTMLElement | null);
   const checking = useSettledChecking(
     phase === 'checking',
     checkingDelayMs,
@@ -69,7 +98,11 @@ export function FullScreen(props: PieceProps): ReactElement {
     const root = rootRef.current;
     if (!visible || !root) return undefined;
     const doc = root.ownerDocument;
-    const previous = doc.activeElement as HTMLElement | null;
+    // A second setup (StrictMode runs setup, cleanup, setup) can find focus still inside the
+    // screen; the element to return to is then the one the first setup recorded.
+    const active = doc.activeElement as HTMLElement | null;
+    if (!active || !root.contains(active)) returnTo.current = active;
+    const previous = returnTo.current;
     titleRef.current?.focus();
     const release = inertHost(root);
     return () => {

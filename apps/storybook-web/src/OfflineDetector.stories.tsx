@@ -100,7 +100,9 @@ export const Offline: Story = {
   ...startingAt({ reachable: false, interfaceUp: true }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole('status')).toHaveTextContent('No internet');
+    await waitFor(async () =>
+      expect(await canvas.findByRole('status')).toHaveTextContent('No internet'),
+    );
     await waitFor(() =>
       expect(canvas.getByRole('region', { name: 'No internet' })).toBeVisible(),
     );
@@ -116,8 +118,10 @@ export const OfflineDistinguishingTheReason: Story = {
   ...startingAt({ reachable: false, interfaceUp: true }),
   args: { distinguishReason: true },
   play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByRole('status')).toHaveTextContent(
-      'Connected, but no internet',
+    await waitFor(async () =>
+      expect(await within(canvasElement).findByRole('status')).toHaveTextContent(
+        'Connected, but no internet',
+      ),
     );
   },
 };
@@ -181,7 +185,9 @@ export const FullScreen: Story = {
     await waitFor(() =>
       expect(canvas.queryByRole('heading', { name: 'No internet' })).toBeNull(),
     );
-    await expect(await canvas.findByRole('status')).toHaveTextContent('No internet');
+    await waitFor(async () =>
+      expect(await canvas.findByRole('status')).toHaveTextContent('No internet'),
+    );
   },
 };
 
@@ -195,7 +201,7 @@ export const Dismissed: Story = {
     await waitFor(() => expect(args.onDismiss).toHaveBeenCalledWith('snackbar'));
 
     const banner = await canvas.findByRole('status');
-    await expect(banner).toHaveTextContent('No internet');
+    await waitFor(() => expect(banner).toHaveTextContent('No internet'));
     within(banner).getByRole('button', { name: 'Dismiss' }).focus();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(args.onDismiss).toHaveBeenCalledWith('banner'));

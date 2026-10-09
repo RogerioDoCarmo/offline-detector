@@ -1,6 +1,8 @@
-import { useReducedMotion, useSettledChecking } from './hooks';
+import { useRef } from 'react';
+import { useFocusReturn, useReducedMotion, useSettledChecking } from './hooks';
 import type { ReactElement } from 'react';
 import { DotGlyph } from './icons';
+import { indicatorName } from '@rogeriodocarmo/offline-detector-react';
 import type { IndicatorPosition } from '@rogeriodocarmo/offline-detector-react';
 import { CHECKING_DELAY_MS, CHECKING_MIN_MS } from './piece-types';
 import type { PieceProps } from './piece-types';
@@ -36,11 +38,13 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
     checkingMinMs = CHECKING_MIN_MS,
   } = props;
 
+  const ref = useRef(null as HTMLDivElement | null);
   const reduced = useReducedMotion(motion);
   const dismissible = actions?.dismiss !== undefined;
+  const dismissWith = useFocusReturn(ref);
   const swipe = useSwipeDismiss({
     enabled: dismissible && visible,
-    onDismiss: () => actions?.dismiss?.(),
+    onDismiss: () => dismissWith(actions?.dismiss),
     reducedMotion: reduced,
   });
   const checking = useSettledChecking(
@@ -59,7 +63,7 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
       : dot === 'checking'
         ? strings.indicatorLabelChecking
         : strings.indicatorLabelOffline;
-  const name = strings.indicatorAccessibleName.replace('{status}', label);
+  const name = indicatorName(strings, label);
 
   const labelled = {
     role: 'img',
@@ -70,6 +74,7 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
 
   return (
     <div
+      ref={ref}
       className={`od-indicator od-pos-${position}${className ? ` ${className}` : ''}`}
       data-od-phase={shown}
       data-od-motion={motion}

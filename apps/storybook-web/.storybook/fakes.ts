@@ -1,8 +1,4 @@
-import type {
-  PlatformAdapter,
-  ProbeFetch,
-  ProbeResponse,
-} from '@rogeriodocarmo/offline-detector-core';
+import type { PlatformAdapter, ProbeFetch } from '@rogeriodocarmo/offline-detector-core';
 
 /** An in-memory adapter driven by hand. It never reads `navigator` or listens to the window. */
 export function createFakeAdapter(initialUp = true) {
@@ -37,22 +33,28 @@ export function createFakeAdapter(initialUp = true) {
 }
 
 /**
- * A probe that never leaves the page: it answers `ok` or not on demand, and `hold()` keeps the
+ * A probe that never leaves the page: it answers or fails on demand, and `hold()` keeps the
  * answer pending so a story can sit in the "checking" state.
  */
 export function createFakeFetch(initialOk = true) {
   let ok = initialOk;
   let held: Array<() => void> | null = null;
   const calls: string[] = [];
-  const fetchFn: ProbeFetch = (url) => {
+  // Any completed request means reachable; only a failed one means not. So "not ok" rejects.
+  const fetchFn = ((url: string) => {
     calls.push(url);
-    const answer = (): ProbeResponse => ({ ok });
-    if (held === null) return Promise.resolve(answer());
+    const answer = (resolve: (value: unknown) => void, reject: (error: Error) => void) =>
+      ok ? resolve({ ok: true }) : reject(new TypeError('Failed to fetch'));
+    if (held === null) {
+      return new Promise((resolve: (value: unknown) => void, reject) =>
+        answer(resolve, reject),
+      );
+    }
     const waiting = held;
-    return new Promise<ProbeResponse>((resolve) => {
-      waiting.push(() => resolve(answer()));
+    return new Promise((resolve: (value: unknown) => void, reject) => {
+      waiting.push(() => answer(resolve, reject));
     });
-  };
+  }) as ProbeFetch;
   return Object.assign(fetchFn, {
     calls,
     setOk(next: boolean) {
