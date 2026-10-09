@@ -25,9 +25,17 @@ export type { IndicatorProps } from './indicator';
 export { FullScreen } from './full-screen';
 export type { FullScreenProps } from './full-screen';
 
-// The react API, so an app installs one package.
+// The react API, so an app installs one package: the hooks, plus the string and dismissal helpers
+// a custom slot needs.
 export {
+  STRINGS,
+  indicatorName,
+  offlineMessage,
+  resolveDismissible,
+  resolveLocale,
+  resolveStrings,
   useCheckingFeedback,
+  useDismissals,
   useNetworkStatus,
   useOfflineDetector,
   useRecheckOnReturn,

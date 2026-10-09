@@ -20,7 +20,14 @@ export type { OfflineTokensProps } from './tokens';
 // The react API, so a web app installs one package. The same list is re-exported by the native
 // package.
 export {
+  STRINGS,
+  indicatorName,
+  offlineMessage,
+  resolveDismissible,
+  resolveLocale,
+  resolveStrings,
   useCheckingFeedback,
+  useDismissals,
   useNetworkStatus,
   useOfflineDetector,
   useRecheckOnReturn,

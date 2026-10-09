@@ -4,6 +4,7 @@ import {
   useOfflineDetector,
   useRecheckOnReturn,
 } from '@rogeriodocarmo/offline-detector-react';
+import * as react from '@rogeriodocarmo/offline-detector-react';
 import * as api from './index';
 
 describe('@rogeriodocarmo/offline-detector-web', () => {
@@ -18,13 +19,20 @@ describe('@rogeriodocarmo/offline-detector-web', () => {
       'Indicator',
       'OfflineDetector',
       'OfflineTokens',
+      'STRINGS',
       'Snackbar',
       'createWebAdapter',
       'createWebProbeFetch',
+      'indicatorName',
       'offlineCss',
+      'offlineMessage',
       'offlineTokensCss',
       'packageName',
+      'resolveDismissible',
+      'resolveLocale',
+      'resolveStrings',
       'useCheckingFeedback',
+      'useDismissals',
       'useNetworkStatus',
       'useOfflineDetector',
       'useRecheckOnReturn',
@@ -36,5 +44,19 @@ describe('@rogeriodocarmo/offline-detector-web', () => {
     expect(api.useRecheckOnReturn).toBe(useRecheckOnReturn);
     expect(api.useOfflineDetector).toBe(useOfflineDetector);
     expect(api.useCheckingFeedback).toBe(useCheckingFeedback);
+  });
+
+  it.each([
+    'STRINGS',
+    'indicatorName',
+    'offlineMessage',
+    'resolveDismissible',
+    'resolveLocale',
+    'resolveStrings',
+    'useDismissals',
+  ])('re-exports the react helper %s itself, so one package is enough', (name) => {
+    expect((api as Record<string, unknown>)[name]).toBe(
+      (react as Record<string, unknown>)[name],
+    );
   });
 });

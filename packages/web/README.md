@@ -12,7 +12,10 @@ pnpm add @rogeriodocarmo/offline-detector-web
 ```
 
 The web package depends on `@rogeriodocarmo/offline-detector-react` and the core, and re-exports
-the hooks you need, so this is the only package to install. React and react-dom 18 or newer are
+the hooks you need (`useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector`,
+`useCheckingFeedback`, `useDismissals`) and the string and dismissal helpers a custom slot uses
+(`STRINGS`, `resolveLocale`, `resolveStrings`, `offlineMessage`, `indicatorName`,
+`resolveDismissible`), so this is the only package to install. React and react-dom 18 or newer are
 peer dependencies.
 
 Render `<OfflineDetector>` once, near the root. It needs no provider and no adapter:

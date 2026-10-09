@@ -151,9 +151,11 @@ A swiped-away piece is put back at rest when `visible` turns true again.
 
 `OfflineDetector`, `Snackbar`, `Banner`, `Indicator`, `FullScreen`, `createNativeAdapter`,
 `createTheme`, `lightTheme`, `darkTheme`, `useOfflineTheme`, `useReducedMotion`, and the react API
-so one package is enough: `useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector`,
-`useCheckingFeedback`. Types: `OfflineState`, `OfflineStrings`, `OfflineUiOptions`,
-`PieceRenderProps`, `DismissiblePiece`, `Locale`, `IndicatorPosition`, `RecheckOnReturnOptions`,
+so one package is enough: the hooks `useNetworkStatus`, `useRecheckOnReturn`,
+`useOfflineDetector`, `useCheckingFeedback` and `useDismissals`, and the helpers `STRINGS`,
+`resolveLocale`, `resolveStrings`, `offlineMessage`, `indicatorName` and `resolveDismissible`.
+Types: `OfflineState`, `OfflineStrings`, `OfflineUiOptions`, `PieceRenderProps`,
+`DismissiblePiece`, `Locale`, `IndicatorPosition`, `RecheckOnReturnOptions`,
 `UseNetworkStatusResult`, plus the props types of each export, `PieceProps`, `Phase`, `Insets`,
 `PieceIcons`, `OfflineTheme`, `Bezier`, `ShadowStyle`, `NetInfoLike`, `AppStateLike` and
 `NativeAdapterOptions`. The swipe hook, the swipe and timing rules, the default insets and the

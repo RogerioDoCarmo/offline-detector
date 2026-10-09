@@ -1,3 +1,4 @@
+import * as react from '@rogeriodocarmo/offline-detector-react';
 import * as api from './index';
 
 describe('@rogeriodocarmo/offline-detector-native', () => {
@@ -11,13 +12,20 @@ describe('@rogeriodocarmo/offline-detector-native', () => {
       'FullScreen',
       'Indicator',
       'OfflineDetector',
+      'STRINGS',
       'Snackbar',
       'createNativeAdapter',
       'createTheme',
       'darkTheme',
+      'indicatorName',
       'lightTheme',
+      'offlineMessage',
       'packageName',
+      'resolveDismissible',
+      'resolveLocale',
+      'resolveStrings',
       'useCheckingFeedback',
+      'useDismissals',
       'useNetworkStatus',
       'useOfflineDetector',
       'useOfflineTheme',
@@ -38,5 +46,19 @@ describe('@rogeriodocarmo/offline-detector-native', () => {
     'usePieceTransition',
   ])('keeps the internal %s private', (name) => {
     expect(name in api).toBe(false);
+  });
+
+  it.each([
+    'STRINGS',
+    'indicatorName',
+    'offlineMessage',
+    'resolveDismissible',
+    'resolveLocale',
+    'resolveStrings',
+    'useDismissals',
+  ])('re-exports the react helper %s itself, so one package is enough', (name) => {
+    expect((api as Record<string, unknown>)[name]).toBe(
+      (react as Record<string, unknown>)[name],
+    );
   });
 });
