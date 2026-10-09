@@ -1,0 +1,348 @@
+/* Colours are tokens; every pair below is AA (4.5:1 text, 3:1 UI) in light and dark. */
+:root {
+  --bg: #ffffff;
+  --surface: #f4f5f7;
+  --text: #1b1f23;
+  --muted: #545b64;
+  --border: #80878f;
+  --border-subtle: #d9dce1;
+  --accent: #0b5fd1;
+  --on-accent: #ffffff;
+  --focus: #0b5fd1;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #14171a;
+    --surface: #1e2227;
+    --text: #e8eaed;
+    --muted: #b4bac2;
+    --border: #8b929b;
+    --border-subtle: #353b42;
+    --accent: #8ab4ff;
+    --on-accent: #0d1117;
+    --focus: #8ab4ff;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #14171a;
+  --surface: #1e2227;
+  --text: #e8eaed;
+  --muted: #b4bac2;
+  --border: #8b929b;
+  --border-subtle: #353b42;
+  --accent: #8ab4ff;
+  --on-accent: #0d1117;
+  --focus: #8ab4ff;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* The snackbar and banner float; keep focused controls clear of them. */
+  scroll-padding-top: 5rem;
+  scroll-padding-bottom: 8rem;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 8rem;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 0.75rem;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 0 0.3em;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.lede {
+  max-width: 44rem;
+  color: var(--muted);
+}
+
+.masthead {
+  margin-bottom: 1.5rem;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.group {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+}
+
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.field > label,
+.radios legend {
+  font-weight: 600;
+}
+
+.field-check {
+  grid-template-columns: auto 1fr;
+  column-gap: 0.5rem;
+  align-items: center;
+}
+
+.field-check .hint {
+  grid-column: 1 / -1;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+select,
+input[type='text'],
+input[type='number'],
+textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.625rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.radios {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
+
+button {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 2px solid var(--accent);
+}
+
+button.primary[aria-pressed='true'] {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+button.secondary {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0;
+}
+
+.readout dt {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.readout dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.screen {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.log {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.footer {
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* The slot example: a component of the host app, themed with the library's own tokens. */
+.demo-toast {
+  position: fixed;
+  inset-inline: 1rem;
+  bottom: 1rem;
+  z-index: var(--od-z-snackbar, 1020);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 36rem;
+  margin-inline: auto;
+  padding: 0.75rem 1rem;
+  background: var(--od-color-surface-inverse, #1f2328);
+  color: var(--od-color-text-inverse, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+}
+
+.demo-toast button {
+  background: transparent;
+  color: var(--od-color-action-inverse, #8ab4ff);
+  border: 1px solid currentColor;
+  min-height: 2.75rem;
+}
+
+.demo-toast-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: #ffb4ab;
+}
+
+.demo-toast[data-phase='recovered'] .demo-toast-dot {
+  background: #7ee2a0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}

@@ -9,3 +9,5 @@ storybook-static
 playwright-report
 test-results
 CHANGELOG.md
+out
+next-env.d.ts
