@@ -143,6 +143,15 @@ describe('demo-native: package and scripts', () => {
   });
 });
 
+describe('demo-native: pnpm workspace', () => {
+  it('declares the react-native peer of the jest preset so Jest keeps 0.87 next to the demo 0.86', () => {
+    const workspace = parse(read('pnpm-workspace.yaml'));
+    expect(workspace.packageExtensions).toEqual({
+      '@react-native/jest-preset': { peerDependencies: { 'react-native': '*' } },
+    });
+  });
+});
+
 describe('demo-native: metro config', () => {
   const metro = read(`${app}/metro.config.js`);
 
