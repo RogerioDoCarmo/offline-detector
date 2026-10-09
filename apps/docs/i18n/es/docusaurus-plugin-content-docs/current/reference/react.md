@@ -67,7 +67,10 @@ primer resultado es en línea.
 | `useCheckingFeedback()`    | `'brief'` o `'none'`, para paquetes de interfaz          |
 | `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`                 |
 
-Todo hook lanza un error claro cuando se usa fuera de `<OfflineDetectorProvider>`.
+Todo hook lanza un error claro cuando se usa fuera de `<OfflineDetectorProvider>` (o del
+`<OfflineDetector>` de los paquetes web y nativo, que lo proporciona). Los paquetes web y nativo
+reexportan `useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector` y `useCheckingFeedback`,
+así que una app que usa uno de ellos no necesita una dependencia directa de este paquete.
 
 ```ts
 type UseNetworkStatusResult = OfflineState & {

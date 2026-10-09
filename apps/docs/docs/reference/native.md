@@ -81,7 +81,8 @@ plus native extras (`announce`, `reduceMotion`, `insets`, `icons`, `style`, `tes
 `actions` is `{ retry?, dismiss?, continueOffline? }`. A piece is dismissible exactly when
 `actions.dismiss` is present, and the full-screen state shows "Continue offline" exactly when
 `actions.continueOffline` is. There are no separate retry, dismiss, dismissible or title props:
-use `actions` and `message` (the full-screen title). A swiped-away piece is put back at rest when `visible` turns true
+use `actions` and `message` (the full-screen title). A swiped-away piece is put back at rest when
+`visible` turns true
 again, so it comes back on the next transition. `PieceIcons` types the replaceable glyphs. A slot
 receives the `PieceRenderProps` contract, with `theme` set.
 

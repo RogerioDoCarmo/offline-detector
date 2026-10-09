@@ -54,7 +54,8 @@ message instead.
 ## The pieces
 
 `Snackbar`, `Banner`, `Indicator` and `FullScreen` are exported so a [slot](../slots.md) can reuse
-them or you can assemble your own tree. They all accept `PieceProps`, the same shape the native pieces take:
+them or you can assemble your own tree. They all accept `PieceProps`, the same shape the native
+pieces take:
 
 | Prop                               | What it does                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------ |
@@ -91,7 +92,8 @@ is present. Every swipe has a keyboard (Escape, Delete) and a button alternative
 
 `OfflineTokens` renders the tokens and styles in a `<style>` element (accepts a `nonce`).
 `offlineTokensCss` and `offlineCss` are constants: the tokens as a string, and the tokens plus the
-styles of the four pieces. The tokens are declared under `:where(...)` selectors, which have no specificity, so a
+styles of the four pieces. The tokens are declared under `:where(...)` selectors, which have no
+specificity, so a
 `:root { --od-... }` rule of yours wins. See
 [Theming](../theming.md).
 

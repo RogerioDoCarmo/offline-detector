@@ -66,7 +66,10 @@ a cada renderização nunca reinicia o detector) e `onOnline` não dispara quand
 | `useCheckingFeedback()`    | `'brief'` ou `'none'`, para pacotes de interface       |
 | `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`               |
 
-Todo hook lança um erro claro quando usado fora de `<OfflineDetectorProvider>`.
+Todo hook lança um erro claro quando usado fora de `<OfflineDetectorProvider>` (ou do
+`<OfflineDetector>` dos pacotes web e nativo, que o fornece). Os pacotes web e nativo reexportam
+`useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector` e `useCheckingFeedback`, então um app
+que usa um deles não precisa de dependência direta deste pacote.
 
 ```ts
 type UseNetworkStatusResult = OfflineState & {

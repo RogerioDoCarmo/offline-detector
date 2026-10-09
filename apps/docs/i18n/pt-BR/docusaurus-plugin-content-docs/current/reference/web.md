@@ -55,7 +55,8 @@ qualquer ponto dentro dele.
 ## As peças
 
 `Snackbar`, `Banner`, `Indicator` e `FullScreen` são exportados para que um [slot](../slots.md) os
-reaproveite ou para você montar a sua própria árvore. Todos aceitam `PieceProps`, o mesmo formato que as peças nativas recebem:
+reaproveite ou para você montar a sua própria árvore. Todos aceitam `PieceProps`, o mesmo formato
+que as peças nativas recebem:
 
 | Prop                               | O que faz                                                                         |
 | ---------------------------------- | --------------------------------------------------------------------------------- |
@@ -94,7 +95,8 @@ um botão.
 
 `OfflineTokens` renderiza os tokens e os estilos em um elemento `<style>` (aceita um `nonce`).
 `offlineTokensCss` e `offlineCss` são constantes: os tokens como string, e os tokens mais os estilos
-das quatro peças. Os tokens são declarados sob seletores `:where(...)`, que não têm especificidade, então uma regra
+das quatro peças. Os tokens são declarados sob seletores `:where(...)`, que não têm especificidade,
+então uma regra
 sua `:root { --od-... }` prevalece.
 Veja [Temas](../theming.md).
 

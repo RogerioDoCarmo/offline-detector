@@ -112,7 +112,8 @@ Eles disparam apenas em **transições de status** reais, nunca a cada sonda:
 - Uma mudança só de motivo (`no-interface` para `no-internet`) não é uma transição de status. Os
   assinantes ficam sabendo; os callbacks não.
 
-As exceções lançadas por um ouvinte ou callback são capturadas e passadas a `onError` (um `onError` que lance também é engolido); assim, um
+As exceções lançadas por um ouvinte ou callback são capturadas e passadas a `onError` (um `onError`
+que lance também é engolido); assim, um
 consumidor defeituoso não consegue quebrar a detecção.
 
 ## `PlatformAdapter`

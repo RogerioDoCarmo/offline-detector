@@ -113,7 +113,8 @@ Se disparan solo en **transiciones de estado** reales, nunca en cada sonda:
 - Un cambio solo de motivo (`no-interface` a `no-internet`) no es una transición de estado. Los
   suscriptores se enteran; los callbacks no.
 
-Las excepciones lanzadas por un oyente o callback se capturan y se pasan a `onError` (un `onError` que lance también se descarta); así, un
+Las excepciones lanzadas por un oyente o callback se capturan y se pasan a `onError` (un `onError`
+que lance también se descarta); así, un
 consumidor defectuoso no puede romper la detección.
 
 ## `PlatformAdapter`

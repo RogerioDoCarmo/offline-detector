@@ -15,7 +15,8 @@ online. "Conexão restabelecida" só aparece depois de uma perda real: nunca na 
 
 Porque "conectado" não é "tem internet". Se a interface está ativa mas a sonda falha em todas as
 URLs, o estado é `offline` com o motivo `no-internet`. Um portal cativo, um roteador sem saída ou
-um firewall que bloqueia os hosts da sonda têm essa aparência. Uma sonda só falha quando a própria requisição falha (sem conexão, erro de TLS, tempo esgotado);
+um firewall que bloqueia os hosts da sonda têm essa aparência. Uma sonda só falha quando a própria
+requisição falha (sem conexão, erro de TLS, tempo esgotado);
 qualquer resposta HTTP, mesmo um 404 ou um 500, conta como alcançável. Use a sua própria URL de
 sonda se as
 padrão estiverem bloqueadas. Veja [Privacidade](./privacy.md).

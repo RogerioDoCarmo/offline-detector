@@ -66,7 +66,10 @@ online.
 | `useCheckingFeedback()`    | `'brief'` or `'none'`, for UI packages                   |
 | `useDismissals(options)`   | `{ isDismissed(piece), dismiss(piece) }`                 |
 
-Every hook throws a clear error when used outside `<OfflineDetectorProvider>`.
+Every hook throws a clear error when used outside `<OfflineDetectorProvider>` (or the
+`<OfflineDetector>` of the web and native packages, which provides it). The web and native packages
+re-export `useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector` and `useCheckingFeedback`,
+so an app that uses one of them needs no direct dependency on this package.
 
 ```ts
 type UseNetworkStatusResult = OfflineState & {
