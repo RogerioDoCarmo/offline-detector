@@ -9,34 +9,16 @@ import {
   Text,
   View,
   findNodeHandle,
-  type StyleProp,
-  type ViewStyle,
 } from 'react-native';
-import type { OfflineStrings } from '@rogeriodocarmo/offline-detector-react';
-import type { PiecePhase } from './phase';
-import { Glyph, Spinner, type PieceIcons } from './glyphs';
+import type { PieceProps } from './piece-types';
+import { Glyph, Spinner } from './glyphs';
 import { usePieceTransition } from './hooks';
-import { inlineInsets, resolveInsets, type Insets } from './insets';
-import { lightTheme, type OfflineTheme } from './theme';
+import { inlineInsets, resolveInsets } from './insets';
+import { lightTheme } from './theme';
 
-export interface FullScreenProps {
-  phase: Exclude<PiecePhase, 'recovered'>;
-  /** The title: `strings.fullScreenTitle`, or the reason-aware message. */
-  title: string;
-  strings: OfflineStrings;
-  onRetry: () => void;
-  /** Adds the "Continue offline" action, and makes the Android back button trigger it. */
-  onContinueOffline?: () => void;
+export interface FullScreenProps extends PieceProps {
   /** Called when the state leaves the screen, so the host can restore its previous focus. */
   onRestoreFocus?: () => void;
-  /** False plays the exit fade and then renders nothing. Default true. */
-  visible?: boolean;
-  theme?: OfflineTheme;
-  reduceMotion?: boolean;
-  insets?: Partial<Insets>;
-  icons?: Pick<PieceIcons, 'offline'>;
-  style?: StyleProp<ViewStyle>;
-  testID?: string;
 }
 
 /**
@@ -62,12 +44,12 @@ export function hostContentAccessibilityProps(fullScreenVisible: boolean) {
  */
 export function FullScreen({
   phase,
-  title,
+  message,
   strings,
-  onRetry,
-  onContinueOffline,
+  actions,
   onRestoreFocus,
   visible = true,
+  rootProps,
   theme = lightTheme,
   reduceMotion = false,
   insets: insetsProp,
@@ -75,6 +57,8 @@ export function FullScreen({
   style,
   testID,
 }: FullScreenProps) {
+  const onRetry = actions?.retry;
+  const onContinueOffline = actions?.continueOffline;
   const transition = usePieceTransition({
     visible,
     reduceMotion,
@@ -131,6 +115,7 @@ export function FullScreen({
         transition.style,
         style,
       ]}
+      {...rootProps}
     >
       <ScrollView contentContainerStyle={styles.scroll}>
         <View
@@ -167,7 +152,7 @@ export function FullScreen({
                   fontWeight: theme.fontWeightSemibold,
                 }}
               >
-                {title}
+                {message}
               </Text>
               <Text
                 style={{
@@ -183,40 +168,42 @@ export function FullScreen({
               </Text>
             </View>
             <View style={{ alignSelf: 'stretch', gap: theme.spaceSm }}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={retryLabel}
-                accessibilityState={{ busy: checking, disabled: checking }}
-                onPress={checking ? undefined : onRetry}
-                style={[
-                  styles.button,
-                  {
-                    minHeight: theme.sizeTouchTarget,
-                    borderRadius: theme.radiusMd,
-                    backgroundColor: theme.colorAction,
-                    paddingHorizontal: theme.spaceLg,
-                  },
-                ]}
-              >
-                <Spinner color={theme.colorOnAction} reduceMotion={reduceMotion} />
-                <Text
-                  style={{
-                    marginStart: checking && !reduceMotion ? theme.spaceSm : 0,
-                    color: theme.colorOnAction,
-                    fontFamily: theme.fontFamily,
-                    fontSize: theme.fontSizeTitle,
-                    lineHeight: theme.lineHeightTitle,
-                    fontWeight: theme.fontWeightSemibold,
-                  }}
+              {onRetry ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={retryLabel}
+                  accessibilityState={{ busy: checking, disabled: checking }}
+                  onPress={checking ? undefined : () => void onRetry()}
+                  style={[
+                    styles.button,
+                    {
+                      minHeight: theme.sizeTouchTarget,
+                      borderRadius: theme.radiusMd,
+                      backgroundColor: theme.colorAction,
+                      paddingHorizontal: theme.spaceLg,
+                    },
+                  ]}
                 >
-                  {retryLabel}
-                </Text>
-              </Pressable>
+                  <Spinner color={theme.colorOnAction} reduceMotion={reduceMotion} />
+                  <Text
+                    style={{
+                      marginStart: checking && !reduceMotion ? theme.spaceSm : 0,
+                      color: theme.colorOnAction,
+                      fontFamily: theme.fontFamily,
+                      fontSize: theme.fontSizeTitle,
+                      lineHeight: theme.lineHeightTitle,
+                      fontWeight: theme.fontWeightSemibold,
+                    }}
+                  >
+                    {retryLabel}
+                  </Text>
+                </Pressable>
+              ) : null}
               {hasContinue ? (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={strings.continueOffline}
-                  onPress={onContinueOffline}
+                  onPress={() => onContinueOffline?.()}
                   style={[styles.button, { minHeight: theme.sizeTouchTarget }]}
                 >
                   <Text

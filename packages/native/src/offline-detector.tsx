@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { ComponentType, ReactElement, ReactNode } from 'react';
 import { I18nManager, StyleSheet, View } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
@@ -10,6 +10,7 @@ import {
   useCheckingFeedback,
   useDismissals,
   useNetworkStatus,
+  useOfflineDetector,
   type DismissiblePiece,
   type OfflineDetectorProviderProps,
   type OfflineUiOptions,
@@ -21,7 +22,7 @@ import { FullScreen, hostContentAccessibilityProps } from './full-screen';
 import { useOfflineTheme, useReducedMotion } from './hooks';
 import { Indicator } from './indicator';
 import { resolveInsets, type Insets } from './insets';
-import type { PiecePhase } from './phase';
+import type { Phase } from './piece-types';
 import { Snackbar } from './snackbar';
 import type { OfflineTheme } from './theme';
 import { useCheckingDisplay, useExitWindow, useRecovery } from './use-timers';
@@ -56,6 +57,11 @@ export interface OfflineDetectorProps
   recoveryMs?: number;
   /** Fires when the user presses "Continue offline" on the full-screen state. */
   onContinueOffline?: () => void;
+  /**
+   * Called when the full-screen state leaves the screen, so the host can put screen reader focus
+   * back where it was (docs/design/accessibility.md, section 2).
+   */
+  onRestoreFocus?: () => void;
   children?: ReactNode;
 }
 
@@ -82,6 +88,28 @@ const IDS = {
   indicator: 'offline-detector-indicator',
   fullScreen: 'offline-detector-full-screen',
 } as const;
+
+/**
+ * A number that goes up on every status transition. It is counted by the detector's own listener,
+ * which runs when the transition happens and not when React gets round to rendering it, so a
+ * value keyed on it is stale in the very first render of the new status even if an outage began
+ * and ended between two renders.
+ */
+function useEpisode(): number {
+  const detector = useOfflineDetector();
+  const [box] = useState(() => ({ episode: 0 }));
+  const subscribe = useCallback(
+    (notify: () => void) =>
+      detector.subscribe((next, previous) => {
+        if (next.status === previous.status) return;
+        box.episode++;
+        notify();
+      }),
+    [detector, box],
+  );
+  const read = useCallback(() => box.episode, [box]);
+  return useSyncExternalStore(subscribe, read, read);
+}
 
 /** The last value seen while `visible`: a piece that fades out keeps showing what it showed. */
 function useWhileVisible<T>(value: T, visible: boolean): T {
@@ -129,7 +157,14 @@ export function OfflineDetector(props: OfflineDetectorProps): ReactElement {
 }
 
 function Shell(props: ShellProps): ReactElement {
-  const { slots, theme: themeOverrides, insets, onContinueOffline, children } = props;
+  const {
+    slots,
+    theme: themeOverrides,
+    insets,
+    onContinueOffline,
+    onRestoreFocus,
+    children,
+  } = props;
   const recoveryMs = props.recoveryMs ?? 4000;
   const state = useNetworkStatus();
   const { checkNow } = state;
@@ -143,7 +178,10 @@ function Shell(props: ShellProps): ReactElement {
   const reduceMotion = useReducedMotion(props.motion);
 
   const offline = state.status === 'offline';
-  const recovered = useRecovery(state.status, recoveryMs);
+  // An `initialStatus` hint is not a result: until a real check lands nothing has been observed,
+  // so the first result can never be a recovery.
+  const observed = state.lastChecked === null ? 'unknown' : state.status;
+  const recovered = useRecovery(observed, recoveryMs);
 
   // Retry: a user press always shows the checking state, whatever the host asked for.
   const [userRetrying, setUserRetrying] = useState(false);
@@ -167,23 +205,22 @@ function Shell(props: ShellProps): ReactElement {
   }, [retry]);
   const checking = useCheckingDisplay(userRetrying, feedback === 'brief') && offline;
 
-  // "Continue offline" hides only the full-screen state, until the status changes.
-  const [continued, setContinued] = useState(false);
-  useEffect(() => {
-    setContinued(false);
-  }, [state.status]);
+  // "Continue offline" hides only the full-screen state, until the status changes. It is stored
+  // with the episode it was pressed in, so a new episode is never read as continued (no effect,
+  // hence no frame in between).
+  const episode = useEpisode();
+  const [continuedIn, setContinuedIn] = useState<number | null>(null);
+  const continued = continuedIn === episode;
   const fullScreenOption = props.fullScreen;
   const continueEnabled =
     typeof fullScreenOption === 'object' && fullScreenOption.continueOffline === true;
   const fullScreenShown = Boolean(fullScreenOption) && offline && !continued;
   const continueOffline = useCallback(() => {
-    setContinued(true);
+    setContinuedIn(episode);
     onContinueOffline?.();
-  }, [onContinueOffline]);
+  }, [episode, onContinueOffline]);
 
-  const offlinePhase: Exclude<PiecePhase, 'recovered'> = checking
-    ? 'checking'
-    : 'offline';
+  const offlinePhase: Exclude<Phase, 'recovered'> = checking ? 'checking' : 'offline';
   const offlineText = offlineMessage(state, strings, props.distinguishReason);
 
   const showingOffline = offline && !fullScreenShown;
@@ -194,6 +231,16 @@ function Shell(props: ShellProps): ReactElement {
     indicator: showingAny && !dismissals.isDismissed('indicator'),
     fullScreen: fullScreenShown,
   };
+
+  // The bundled FullScreen reports the focus restore itself; a replacement slot cannot, so the
+  // shell does it when the state leaves.
+  const restoreFocus = useRef(onRestoreFocus);
+  restoreFocus.current = onRestoreFocus;
+  const hasFullScreenSlot = slots?.fullScreen !== undefined;
+  useEffect(() => {
+    if (!hasFullScreenSlot || !visibility.fullScreen) return undefined;
+    return () => restoreFocus.current?.();
+  }, [hasFullScreenSlot, visibility.fullScreen]);
 
   const snackbarView = useWhileVisible(
     {
@@ -218,9 +265,8 @@ function Shell(props: ShellProps): ReactElement {
     visibility.fullScreen,
   );
 
-  const dismissible = (piece: DismissiblePiece) => resolveDismissible(piece, props);
   const dismissFor = (piece: DismissiblePiece) =>
-    dismissible(piece) ? () => dismissals.dismiss(piece) : undefined;
+    resolveDismissible(piece, props) ? () => dismissals.dismiss(piece) : undefined;
 
   // Stacking: the banner owns the top inset and pushes content; a top indicator sits below it,
   // a bottom indicator above the snackbar.
@@ -242,11 +288,15 @@ function Shell(props: ShellProps): ReactElement {
   const indicatorMounted = useExitWindow(visibility.indicator, theme.durationExit);
   const fullScreenMounted = useExitWindow(visibility.fullScreen, theme.durationExit);
 
-  const snackbarAnnounces = visibility.snackbar;
-  const bannerAnnounces = !visibility.snackbar;
+  // The snackbar owns the announcement of every transition (docs/design/accessibility.md, section
+  // 1), whether or not the user has dismissed it: a dismissal is never announced, so it must not
+  // hand the announcement to the banner. After "Continue offline" the full-screen state has
+  // already spoken (it moves focus), so the snackbar that appears is silent.
+  const snackbarAnnounces = showingAny && !continued;
+  const bannerAnnounces = false;
 
   const slotProps = (
-    view: { phase: PiecePhase; message: string },
+    view: { phase: Phase; message: string },
     visible: boolean,
     actions: PieceRenderProps<OfflineTheme>['actions'],
     rootProps: Record<string, unknown>,
@@ -286,14 +336,13 @@ function Shell(props: ShellProps): ReactElement {
       ) : (
         <Banner
           testID={IDS.banner}
-          phase={bannerView.phase as Exclude<PiecePhase, 'recovered'>}
+          phase={bannerView.phase as Exclude<Phase, 'recovered'>}
           message={bannerView.message}
           strings={strings}
           position={props.banner?.position}
           overlay={props.banner?.overlay}
           visible={visibility.banner}
-          onDismiss={dismissFor('banner')}
-          dismissible={dismissible('banner')}
+          actions={{ dismiss: dismissFor('banner') }}
           announce={bannerAnnounces}
           theme={theme}
           reduceMotion={reduceMotion}
@@ -330,12 +379,12 @@ function Shell(props: ShellProps): ReactElement {
         <Indicator
           testID={IDS.indicator}
           phase={indicatorPhase}
+          message={offlineText}
           strings={strings}
           variant={indicatorVariant}
           position={props.indicator?.position}
           visible={visibility.indicator}
-          onDismiss={dismissFor('indicator')}
-          dismissible={dismissible('indicator')}
+          actions={{ dismiss: dismissFor('indicator') }}
           offsetTop={indicatorOffsetTop}
           offsetBottom={indicatorOffsetBottom}
           theme={theme}
@@ -364,10 +413,8 @@ function Shell(props: ShellProps): ReactElement {
           phase={snackbarView.phase}
           message={snackbarView.message}
           strings={strings}
-          onRetry={onRetry}
+          actions={{ retry: onRetry, dismiss: dismissFor('snackbar') }}
           visible={visibility.snackbar}
-          onDismiss={dismissFor('snackbar')}
-          dismissible={dismissible('snackbar')}
           announce={snackbarAnnounces}
           theme={theme}
           reduceMotion={reduceMotion}
@@ -390,10 +437,13 @@ function Shell(props: ShellProps): ReactElement {
         <FullScreen
           testID={IDS.fullScreen}
           phase={fullScreenView.phase}
-          title={fullScreenView.title}
+          message={fullScreenView.title}
           strings={strings}
-          onRetry={onRetry}
-          onContinueOffline={continueEnabled ? continueOffline : undefined}
+          actions={{
+            retry: onRetry,
+            continueOffline: continueEnabled ? continueOffline : undefined,
+          }}
+          onRestoreFocus={onRestoreFocus}
           visible={visibility.fullScreen}
           theme={theme}
           reduceMotion={reduceMotion}

@@ -217,6 +217,34 @@ describe('demo-native storybook: stories', () => {
     expect(helpers).toContain('dismissible: { control: ');
   });
 
+  it('gives the pieces the web props shape: actions, message, showRetry', () => {
+    const helpers = read(`${app}/.rnstorybook/helpers.tsx`);
+    expect(helpers).toContain('actions: {');
+    expect(helpers).toContain('retry: args.onRetry,');
+    expect(helpers).toContain('dismiss: args.dismissible ? args.onDismiss : undefined,');
+    expect(read(named('Banner'))).toContain('overlay showRetry />');
+    expect(read(named('FullScreen'))).toContain('message={strings.fullScreenTitle}');
+    expect(read(named('FullScreen'))).toContain('continueOffline: args.continueOffline');
+    expect(read(named('Indicator'))).toContain('actions={{ dismiss: actions.dismiss }}');
+    // The removed native props must not come back on a piece.
+    for (const piece of ['Snackbar', 'Banner', 'Indicator', 'FullScreen']) {
+      const story = read(named(piece));
+      expect(story).not.toMatch(/\b(onRetry|onDismiss|onContinueOffline)=\{/);
+      expect(story).not.toMatch(/\sdismissible=\{/);
+      expect(story).not.toMatch(/\saction\s*\/?>/);
+      expect(story).not.toContain('title={');
+    }
+  });
+
+  it('takes the hooks from the native package, the one a host installs', () => {
+    expect(read(`${app}/App.tsx`)).toMatch(
+      /import \{[^}]*useNetworkStatus[^}]*\} from '@rogeriodocarmo\/offline-detector-native'/,
+    );
+    const screens = read(`${app}/src/screens.tsx`);
+    expect(screens).toContain("} from '@rogeriodocarmo/offline-detector-native';");
+    expect(screens).not.toContain('offline-detector-react');
+  });
+
   it('imports the package by name only, never from src/ or dist/', () => {
     const all = files(`${app}/.rnstorybook`, (path) => /\.tsx?$/.test(path));
     expect(all.length).toBeGreaterThan(5);

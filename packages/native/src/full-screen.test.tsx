@@ -23,11 +23,13 @@ const mockedHandle = findNodeHandle as jest.Mock;
 
 const HIDDEN = { includeHiddenElements: true };
 
+const retry = jest.fn();
+
 const base: FullScreenProps = {
   phase: 'offline',
-  title: 'No internet',
+  message: 'No internet',
   strings: EN,
-  onRetry: jest.fn(),
+  actions: { retry },
   testID: 'full',
 };
 
@@ -58,7 +60,9 @@ describe('content', () => {
 
   it('shows Continue offline and calls its handler', async () => {
     const onContinueOffline = jest.fn();
-    await render(<FullScreen {...base} onContinueOffline={onContinueOffline} />);
+    await render(
+      <FullScreen {...base} actions={{ retry, continueOffline: onContinueOffline }} />,
+    );
     await fireEvent.press(screen.getByRole('button', { name: 'Continue offline' }));
     expect(onContinueOffline).toHaveBeenCalledTimes(1);
   });
@@ -66,7 +70,7 @@ describe('content', () => {
   it('calls onRetry from the primary button', async () => {
     await render(<FullScreen {...base} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
-    expect(base.onRetry).toHaveBeenCalledTimes(1);
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to the retry string when fullScreenRetry is empty', async () => {
@@ -75,7 +79,7 @@ describe('content', () => {
   });
 
   it('shows a reason-aware title', async () => {
-    await render(<FullScreen {...base} title="Connected, but no internet" />);
+    await render(<FullScreen {...base} message="Connected, but no internet" />);
     expect(screen.getByRole('header').props.children).toBe('Connected, but no internet');
   });
 
@@ -98,7 +102,7 @@ describe('checking', () => {
     const button = screen.getByRole('button', { name: 'Checking…' });
     expect(button.props.accessibilityState).toEqual({ busy: true, disabled: true });
     await fireEvent.press(button);
-    expect(base.onRetry).not.toHaveBeenCalled();
+    expect(retry).not.toHaveBeenCalled();
     expect(screen.queryByTestId('od-spinner', HIDDEN)).toBeTruthy();
   });
 
@@ -160,7 +164,9 @@ describe('accessibility', () => {
   });
 
   it('has 44 point targets', async () => {
-    await render(<FullScreen {...base} onContinueOffline={jest.fn()} />);
+    await render(
+      <FullScreen {...base} actions={{ retry, continueOffline: jest.fn() }} />,
+    );
     const primary = flatStyle(
       screen.getByRole('button', { name: 'Try again' }).props.style,
     );
@@ -222,7 +228,9 @@ describe('hardware back button', () => {
   it('acts as Continue offline and consumes the event', async () => {
     const back = stubBack();
     const onContinueOffline = jest.fn();
-    await render(<FullScreen {...base} onContinueOffline={onContinueOffline} />);
+    await render(
+      <FullScreen {...base} actions={{ retry, continueOffline: onContinueOffline }} />,
+    );
     expect(back.add).toHaveBeenCalledWith('hardwareBackPress', expect.any(Function));
     expect(back.press()).toBe(true);
     expect(onContinueOffline).toHaveBeenCalledTimes(1);
@@ -236,14 +244,22 @@ describe('hardware back button', () => {
 
   it('stops listening on unmount', async () => {
     const back = stubBack();
-    const view = await render(<FullScreen {...base} onContinueOffline={jest.fn()} />);
+    const view = await render(
+      <FullScreen {...base} actions={{ retry, continueOffline: jest.fn() }} />,
+    );
     await view.unmount();
     expect(back.remove).toHaveBeenCalledTimes(1);
   });
 
   it('does not listen while hidden', async () => {
     const back = stubBack();
-    await render(<FullScreen {...base} onContinueOffline={jest.fn()} visible={false} />);
+    await render(
+      <FullScreen
+        {...base}
+        actions={{ retry, continueOffline: jest.fn() }}
+        visible={false}
+      />,
+    );
     expect(back.add).not.toHaveBeenCalled();
   });
 });
@@ -302,7 +318,9 @@ describe('layout', () => {
   });
 
   it('styles the primary button as a solid action and the secondary as text', async () => {
-    await render(<FullScreen {...base} onContinueOffline={jest.fn()} />);
+    await render(
+      <FullScreen {...base} actions={{ retry, continueOffline: jest.fn() }} />,
+    );
     expect(
       flatStyle(screen.getByRole('button', { name: 'Try again' }).props.style),
     ).toMatchObject({ backgroundColor: '#0b5fd1', borderRadius: 8 });

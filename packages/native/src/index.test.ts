@@ -15,13 +15,28 @@ describe('@rogeriodocarmo/offline-detector-native', () => {
       'createNativeAdapter',
       'createTheme',
       'darkTheme',
-      'defaultInsets',
-      'hostContentAccessibilityProps',
       'lightTheme',
       'packageName',
+      'useCheckingFeedback',
+      'useNetworkStatus',
+      'useOfflineDetector',
       'useOfflineTheme',
+      'useRecheckOnReturn',
       'useReducedMotion',
-      'useSwipeDismiss',
     ]);
+  });
+
+  it.each([
+    'useSwipeDismiss',
+    'defaultInsets',
+    'hostContentAccessibilityProps',
+    'SWIPE_DISTANCE_RATIO',
+    'SWIPE_VELOCITY',
+    'SWIPE_AXIS_LOCK',
+    'useSettledChecking',
+    'resolveInsets',
+    'usePieceTransition',
+  ])('keeps the internal %s private', (name) => {
+    expect(name in api).toBe(false);
   });
 });
