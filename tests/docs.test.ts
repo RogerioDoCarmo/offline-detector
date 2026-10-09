@@ -564,7 +564,11 @@ describe('pages workflow', () => {
   });
 
   it('uses the repo node and pnpm setup and turns Turborepo telemetry off', () => {
-    expect(wf().env).toEqual({ TURBO_TELEMETRY_DISABLED: '1' });
+    expect(wf().env).toEqual({
+      TURBO_TELEMETRY_DISABLED: '1',
+      NEXT_TELEMETRY_DISABLED: '1',
+      STORYBOOK_DISABLE_TELEMETRY: '1',
+    });
     const node = wf().jobs.build.steps.find((s: Step) =>
       s.uses?.startsWith('actions/setup-node'),
     );

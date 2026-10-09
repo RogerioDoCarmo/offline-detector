@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
-  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -138,7 +137,7 @@ describe('checkPacked', () => {
       },
     },
     dependencies: { [scoped('core')]: '0.1.0' },
-    peerDependencies: { react: '>=18.0.0' },
+    peerDependencies: { react: '^18.0.0 || ^19.0.0' },
   });
   const pack = (over: Record<string, unknown> = {}) => ({
     manifest: manifest(),
@@ -472,39 +471,158 @@ describe('CI checks the tarballs on every PR, not only at release time', () => {
 });
 
 describe('release documentation', () => {
-  it('RELEASING.md gives the whole flow, the first manual publish and the npm settings', () => {
-    expect(existsSync(join(root, 'docs/RELEASING.md'))).toBe(true);
-    const doc = flat(read('docs/RELEASING.md'));
-    for (const phrase of [
+  const releasing = () => read('docs/RELEASING.md');
+  const owner = () => read('docs/OWNER-ACTIONS.md');
+  const at = (text: string, needle: string): number => {
+    const index = text.indexOf(needle);
+    expect({ needle, found: index >= 0 }).toEqual({ needle, found: true });
+    return index;
+  };
+
+  it('RELEASING.md makes the environment step 0, before any tag, and the tag step comes after', () => {
+    const doc = releasing();
+    const step0 = at(doc, '## Step 0: before the first tag is ever pushed');
+    const every = at(doc, '## Every release');
+    const first = at(doc, '## The first release (manual, once)');
+    expect(step0).toBeLessThan(every);
+    expect(every).toBeLessThan(first);
+    const zero = doc.slice(step0, every);
+    // The four things to do first, in this order.
+    const order = [
+      'Create the `npm-publish` environment',
+      '**Protect `main`**',
+      'tag ruleset for `v*`',
+      '**Wait for the first CodeQL scan**',
+    ].map((needle) => at(zero, needle));
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(zero).toContain('without anyone approving it');
+  });
+
+  it('RELEASING.md lists the release steps in order, with their commands', () => {
+    const doc = releasing();
+    const every = doc.slice(
+      at(doc, '## Every release'),
+      at(doc, '## What the workflow refuses'),
+    );
+    const order = [
+      'pnpm changeset`.',
+      'git switch -c release/0.2.0 develop',
       'pnpm changeset version',
-      'git tag -a v',
-      'git push origin v',
-      'release.yml',
-      'npm-publish',
-      'pnpm publish --access public',
-      'provenance is generated automatically',
-      'workspace:',
-      'Trusted publishing',
-      'Allowed actions',
-      'npm publish',
+      'Merge that PR into `main`',
+      'git tag -a v0.2.0',
+      'git push origin v0.2.0',
+      'Approve the publish',
       'git merge origin/main',
-      'never rebase',
-      'rerun',
+      'npm view @rogeriodocarmo/offline-detector-core version',
+    ].map((needle) => at(every, needle));
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it('RELEASING.md publishes the first release with the changeset command, not a hand loop', () => {
+    const doc = releasing();
+    const first = doc.slice(
+      at(doc, '## The first release (manual, once)'),
+      at(doc, '## Tested with'),
+    );
+    expect(first).toContain('pnpm changeset publish --no-git-tag');
+    expect(first).toContain('from the repository root');
+    expect(first).toContain('Git Bash');
+    expect(first).toContain('PowerShell 5.1');
+    expect(first).toContain('`&&`');
+    expect(first).toContain('parse error');
+    // The loop that kept going after a failure, and the per-package publish, are gone as commands.
+    expect(doc).not.toContain('for p in core react web native');
+    expect(doc).not.toMatch(/^\s*pnpm publish/m);
+    expect(first).toContain('stops after a batch with a failure');
+    expect(first).toContain('Allowed actions');
+    expect(first).toContain('tick `npm publish`');
+  });
+
+  it('RELEASING.md says the release comes from main and Git Flow branches, and never rebase', () => {
+    const doc = flat(releasing());
+    expect(doc).toContain('`release/*` and `hotfix/*`');
+    expect(doc).toContain('git merge origin/main');
+    expect(doc).toContain('Never rebase: merge `main` back into `develop`');
+    expect(doc).toContain('only plain `vX.Y.Z` is accepted');
+    expect(doc).not.toContain('build metadata `+x` is ignored');
+  });
+
+  it('RELEASING.md records what the peer ranges were actually tested with', () => {
+    const doc = flat(releasing());
+    expect(doc).toContain('`react` `^18.0.0 || ^19.0.0`');
+    expect(doc).toContain('React 19, React Native 0.86 and 0.87, NetInfo 12');
+    expect(doc).toContain('**Not run:** React 18, React Native 0.73 to 0.85, NetInfo 11');
+  });
+
+  it('CLAUDE.md lets main take release and hotfix branches as well as develop', () => {
+    const doc = flat(read('CLAUDE.md'));
+    expect(doc).toContain(
+      '`main` receives merges from `develop` and from `release/*` and `hotfix/*`',
+    );
+    expect(doc).not.toContain('`main` receives merges from `develop` only');
+  });
+
+  it('OWNER-ACTIONS.md orders the environment first and no longer creates the repository', () => {
+    const doc = owner();
+    expect(doc).not.toContain('## Create the GitHub repository');
+    expect(doc).not.toContain('gh repo create');
+    const order = [
+      '## Create the npm-publish environment',
+      '## Protect main',
+      '## Restrict who can create release tags',
+      '## Enable CodeQL default setup',
+      '## Enable Dependabot alerts and security updates',
+      '## Publish the first release by hand',
+      '## Configure npm trusted publishing',
+    ].map((heading) => at(doc, heading));
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(doc).toContain('environments/npm-publish');
+    expect(doc).toContain("-f name='v*.*.*' -f type=tag");
+    expect(doc).toContain('"required_reviewers"');
+  });
+
+  it('OWNER-ACTIONS.md protects main and the release tags with rulesets', () => {
+    const doc = owner();
+    expect(doc).toContain('"include": ["refs/heads/main"]');
+    expect(doc).toContain('"context": "Build, lint, typecheck and test"');
+    expect(doc).toContain('"include": ["refs/tags/v*"]');
+    for (const rule of [
+      'creation',
+      'update',
+      'deletion',
+      'non_fast_forward',
+      'pull_request',
     ]) {
-      expect({ phrase, found: doc.includes(phrase) }).toEqual({ phrase, found: true });
+      expect(doc).toContain(`"type": "${rule}"`);
     }
   });
 
-  it('OWNER-ACTIONS.md lists the environment, the first publish and the trusted publishers', () => {
-    const doc = flat(read('docs/OWNER-ACTIONS.md'));
-    for (const heading of [
-      '## Create the npm-publish environment',
-      '## Publish the first release by hand',
-      '## Configure npm trusted publishing',
-    ]) {
-      expect(doc).toContain(heading);
-    }
-    expect(doc).toContain('environments/npm-publish');
-    expect(doc).toContain('v*.*.*');
+  it('OWNER-ACTIONS.md turns on Dependabot alerts and security updates and waits for CodeQL', () => {
+    const doc = owner();
+    expect(doc).toContain(
+      '-X PUT repos/RogerioDoCarmo/offline-detector/vulnerability-alerts',
+    );
+    expect(doc).toContain(
+      '-X PUT repos/RogerioDoCarmo/offline-detector/automated-security-fixes',
+    );
+    expect(doc).toContain('Wait for the first scan to finish on `main` before tagging');
+    expect(doc).toContain('code-scanning/analyses');
+  });
+
+  it('OWNER-ACTIONS.md gives the first publish as the one changeset command', () => {
+    const doc = owner();
+    expect(doc).toContain('pnpm changeset publish --no-git-tag');
+    expect(doc).not.toContain('pnpm publish --access public');
+    expect(doc).toContain('Git Bash');
+  });
+
+  it('NPM-SETUP.md points at OWNER-ACTIONS.md instead of repeating the settings', () => {
+    const doc = flat(read('NPM-SETUP.md'));
+    expect(doc).toContain('docs/OWNER-ACTIONS.md');
+    expect(doc).toContain(
+      '"Create the npm-publish environment" **first**, before any tag',
+    );
+    expect(doc).not.toContain('(do this later, when the repo has a CI release)');
+    expect(doc).not.toContain('Not needed today');
   });
 });
