@@ -219,11 +219,40 @@ describe('demo-native: Maestro', () => {
   describe('workflow', () => {
     const workflow = parse(read('.github/workflows/maestro.yml'));
 
-    it('runs on push to main and develop and on manual dispatch only', () => {
-      expect(Object.keys(workflow.on).sort()).toEqual(['push', 'workflow_dispatch']);
+    it('runs on push to main and develop, manually, and on PRs that touch it or the flows', () => {
+      expect(Object.keys(workflow.on).sort()).toEqual([
+        'pull_request',
+        'push',
+        'workflow_dispatch',
+      ]);
       expect(workflow.on.push.branches).toEqual(['main', 'develop']);
-      expect(workflow.on).not.toHaveProperty('pull_request');
+      // The emulator is slow, so a pull request runs it only when the workflow file or the flows
+      // themselves change: that is what lets a change to this file be verified on its own PR.
+      expect(workflow.on.pull_request).toEqual({
+        paths: ['.github/workflows/maestro.yml', 'apps/demo-native/.maestro/**'],
+      });
       expect(workflow.on).not.toHaveProperty('pull_request_target');
+    });
+
+    it('installs a pinned Maestro verified by checksum, never a piped install script', () => {
+      const text = read('.github/workflows/maestro.yml');
+      expect(text).not.toContain('get.maestro.mobile.dev');
+      expect(text).not.toMatch(/\|\s*(ba)?sh\b/);
+      expect(workflow.env.MAESTRO_VERSION).toBe('2.11.0');
+      expect(workflow.env.MAESTRO_SHA256).toBe(
+        '5384593cb4e7a106489e75a821d157dd43f4e438df6bc308b72e82c685e1283a',
+      );
+      expect(text).toContain(
+        'https://github.com/mobile-dev-inc/maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip',
+      );
+      expect(text).toContain('sha256sum --check');
+    });
+
+    it('fails if the installed Maestro is not the pinned version', () => {
+      const steps: Array<{ name?: string; run?: string }> = workflow.jobs.android.steps;
+      const check = steps.find((step) => step.name === 'Check the Maestro version');
+      expect(check?.run).toContain('maestro --version');
+      expect(check?.run).toContain('${MAESTRO_VERSION}');
     });
 
     it('uses the pinned emulator runner and prebuilds in CI', () => {
