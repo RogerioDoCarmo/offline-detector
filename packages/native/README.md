@@ -58,7 +58,7 @@ warning. Pass your own `adapter` (see `createNativeAdapter`) to take full contro
 
 ### Safe-area insets
 
-Pass `insets` from `useSafeAreaInsets()`. The default is `defaultInsets()`: the Android status bar
+Pass `insets` from `useSafeAreaInsets()`. Without it the pieces assume the Android status bar
 height on top and zero elsewhere, which is wrong on notched iPhones, so pass insets there.
 
 ## Props
