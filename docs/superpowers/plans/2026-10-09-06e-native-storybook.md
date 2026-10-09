@@ -33,15 +33,16 @@ is off, `withStorybook` swaps Storybook modules for empty ones, so the demo bund
 
 - `withStorybook` replaces `config.resolver.resolveRequest` with a wrapper that calls the previous
   one; the single-React rule must survive. Proven by both bundles.
-- The generated `storybook.requires.ts` is committed so a clean checkout type-checks; a meta-test
-  checks it against the story files.
+- The generated `storybook.requires.js` is committed so a clean checkout type-checks. It is JS so
+  the generated `require` calls pass the lint rules, with a hand-written `.d.ts`. A meta-test
+  checks that it globs the whole stories folder.
 
 ## Tests
 
 - **Unit / meta (root Jest, `tests/demo-native-storybook.test.ts`)**: pinned Storybook
   dependency versions, scripts, the flag name, metro integration keys, the `index.ts` switch, no
   story imports from `src/` or `dist/`, the stories cover every phase and state,
-  `storybook.requires.ts` lists every story file.
+  `storybook.requires.js` globs the whole stories folder.
 - **Property**: not applicable (config and stories only).
 - **E2E**: no emulator here. A Storybook-mode Maestro flow needs its own APK build and the
   workflow is owned by another PR, so none is added; the manual command is documented.

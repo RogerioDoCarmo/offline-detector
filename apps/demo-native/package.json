@@ -11,7 +11,10 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "bundle": "expo export --platform android",
-    "bundle:ios": "expo export --platform ios"
+    "bundle:ios": "expo export --platform ios",
+    "storybook": "cross-env EXPO_PUBLIC_STORYBOOK=true expo start",
+    "storybook:generate": "sb-rn-get-stories --use-js --config-path .rnstorybook",
+    "bundle:storybook": "cross-env EXPO_PUBLIC_STORYBOOK=true expo export --platform android"
   },
   "dependencies": {
     "@react-native-community/netinfo": "12.0.1",

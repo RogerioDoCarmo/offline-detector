@@ -84,3 +84,66 @@ and the generated `android/` and `ios/` folders are never committed.
 
 **Not verified.** The flows have not been run: they were written without an emulator, a device or
 Maestro available. Expect to adjust timeouts or the swipe direction on the first real run.
+
+## Storybook on the device
+
+An on-device [Storybook for React Native](https://github.com/storybookjs/react-native) 10 lives in
+this app, in [`.rnstorybook/`](./.rnstorybook). It shows the pieces and the `<OfflineDetector>`
+states, imported from `@rogeriodocarmo/offline-detector-native` by name, with a fake adapter and a
+fake probe, so nothing touches the network.
+
+| Script               | What it does                                                         |
+| -------------------- | -------------------------------------------------------------------- |
+| `storybook`          | `expo start` with `EXPO_PUBLIC_STORYBOOK=true`: Storybook, not demo  |
+| `storybook:generate` | `sb-rn-get-stories`: rewrites `.rnstorybook/storybook.requires.js`   |
+| `bundle:storybook`   | `expo export --platform android` with the flag on (a bundling proof) |
+
+**One app, two modes, no native code.** `index.ts` registers the demo or the Storybook root from
+`process.env.EXPO_PUBLIC_STORYBOOK === 'true'`, which Metro inlines at build time. With the flag
+off, `metro.config.js` runs `withStorybook({ enabled: false })`, which resolves every `@storybook/*`
+module to an empty module, so the demo bundle carries no Storybook code. Set the flag when you
+start or export; it is not a runtime toggle.
+
+```sh
+pnpm install && pnpm build
+pnpm --filter @offline-detector/demo-native storybook      # Expo Go, emulator or device
+```
+
+Stories: Snackbar, Banner, Indicator and FullScreen in every phase they have (offline, checking,
+recovered), and `OfflineDetector/States` (online, offline, offline distinguishing the reason,
+recovering, checking, full screen, dismissed, not dismissible, dark, Portuguese, Spanish with
+reduced motion). The Controls panel changes locale (en, pt-BR, es), colour scheme, reduced motion
+and `dismissible` on every story; `onRetry` and `onDismiss` report to the Actions panel.
+
+**Why the lite UI.** The default Storybook UI needs Reanimated, gesture-handler and bottom-sheet,
+which this repo does not allow. `@storybook/react-native-ui-lite` and `liteMode` replace it. pnpm
+still installs those peers into its store, so `metro.config.js` makes them unresolvable while
+Storybook is on (the controls addon falls back to plain inputs). `metro.config.js` also repeats
+liteMode's "default UI" check on a normalised path, because the check misses Windows paths.
+
+**Generated file.** Metro rewrites `.rnstorybook/storybook.requires.js` on every start with the
+flag on, unformatted. Run `pnpm format` before committing; the committed copy is formatted so a
+clean checkout type-checks.
+
+**Storybook in Maestro (manual).** Storybook mode needs its own APK, so no workflow runs it; a CI
+job for it is future work. Locally:
+
+```sh
+cd apps/demo-native
+EXPO_PUBLIC_STORYBOOK=true npx expo prebuild --platform android --clean
+EXPO_PUBLIC_STORYBOOK=true npx expo run:android --variant release
+```
+
+**Not verified.** Nothing here ran on a device or an emulator: the Storybook UI, the on-device
+controls, gestures and Expo Go compatibility are untested. Only the Android bundle was proven
+(below). The controls addon adds two community native modules (slider, date-time picker); whether
+Expo Go ships matching versions was not checked, so use a development build if Expo Go complains.
+
+### Bundling results with the flag off and on
+
+`expo export --platform android`, Windows, Expo SDK 57:
+
+| EXPO_PUBLIC_STORYBOOK | Modules | Hermes bundle | Notes                                           |
+| --------------------- | ------- | ------------- | ----------------------------------------------- |
+| off                   | 606     | 1.5 MB        | demo as before (605) plus one empty stub module |
+| `true`                | 1239    | 5.0 MB        | no Reanimated or bottom-sheet module            |
