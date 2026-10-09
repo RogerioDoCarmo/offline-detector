@@ -98,7 +98,18 @@ describe('turbo', () => {
   const turbo = () => JSON.parse(read('turbo.json'));
 
   it('builds dependencies first and caches dist', () => {
-    expect(turbo().tasks.build).toEqual({ dependsOn: ['^build'], outputs: ['dist/**'] });
+    expect(turbo().tasks.build).toEqual({
+      dependsOn: ['^build'],
+      // dist: packages and the Expo export; .next and out: Next.js; build: Docusaurus.
+      outputs: [
+        'dist/**',
+        '.next/**',
+        '!.next/cache/**',
+        'out/**',
+        'build/**',
+        'storybook-static/**',
+      ],
+    });
   });
 
   it('typechecks after dependencies are built', () => {
