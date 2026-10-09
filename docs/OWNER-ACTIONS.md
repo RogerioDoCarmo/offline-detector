@@ -37,3 +37,17 @@ Poll until the status reads `built`, then compare the live bytes against the loc
 In GitHub: Settings, Environments, New environment `npm-publish`, add the owner as required
 reviewer. Trusted publishing for each package is configured on npmjs.com after its first manual
 publish; see `NPM-SETUP.md`.
+
+## Set up SonarCloud
+
+The CI scan step is already wired and skips itself until all of this exists. None of it can be
+done from the repository.
+
+1. On sonarcloud.io, open the organisation `rogeriodocarmo`, choose Analyze new project and import
+   `RogerioDoCarmo/offline-detector`. The project key must be `RogerioDoCarmo_offline-detector`.
+2. In the project's Administration, Analysis Method, turn Automatic Analysis OFF. It conflicts
+   with the CI-based scan and the second analysis is rejected.
+3. Generate a token (My Account, Security) and add it as the repository secret `SONAR_TOKEN`
+   (Settings, Secrets and variables, Actions).
+
+The scan is non-blocking by design: a SonarCloud outage never turns the `verify` check red.
