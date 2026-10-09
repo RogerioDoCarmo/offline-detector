@@ -1,4 +1,5 @@
-import { useReducedMotion, useSettledChecking } from './hooks';
+import { useRef } from 'react';
+import { useFocusReturn, useReducedMotion, useSettledChecking } from './hooks';
 import type { ReactElement } from 'react';
 import { DotGlyph } from './icons';
 import { indicatorName } from '@rogeriodocarmo/offline-detector-react';
@@ -37,11 +38,13 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
     checkingMinMs = CHECKING_MIN_MS,
   } = props;
 
+  const ref = useRef(null as HTMLDivElement | null);
   const reduced = useReducedMotion(motion);
   const dismissible = actions?.dismiss !== undefined;
+  const dismissWith = useFocusReturn(ref);
   const swipe = useSwipeDismiss({
     enabled: dismissible && visible,
-    onDismiss: () => actions?.dismiss?.(),
+    onDismiss: () => dismissWith(actions?.dismiss),
     reducedMotion: reduced,
   });
   const checking = useSettledChecking(
@@ -71,6 +74,7 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
 
   return (
     <div
+      ref={ref}
       className={`od-indicator od-pos-${position}${className ? ` ${className}` : ''}`}
       data-od-phase={shown}
       data-od-motion={motion}

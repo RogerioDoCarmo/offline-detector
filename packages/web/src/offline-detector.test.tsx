@@ -280,6 +280,7 @@ describe('OfflineDetector: recovery', () => {
     await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Back online');
     await view.goOffline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('No internet');
     expect(banner()).not.toBeNull();
     await advance(10_000);
@@ -423,6 +424,7 @@ describe('OfflineDetector: copy', () => {
     expect(snackbar()).toHaveTextContent('Sem internet');
     expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument();
     await view.goOnline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Conexão restabelecida');
   });
 
@@ -433,6 +435,7 @@ describe('OfflineDetector: copy', () => {
     expect(snackbar()).toHaveTextContent('Sin internet');
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
     await view.goOnline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Conexión restablecida');
   });
 

@@ -62,6 +62,34 @@ export function useAnnouncedText(text: string, announces: boolean): string {
   return ready ? text : '';
 }
 
+/**
+ * Focus handling for a piece the user can dismiss (docs/design/components.md, "Dismissal"): when a
+ * dismissed piece held focus, focus goes back to the element that had it before the piece
+ * appeared, if that element is still in the document, otherwise the body. Returns `dismissWith`,
+ * which wraps the provider's dismiss action. A piece that goes away for any other reason leaves
+ * focus alone.
+ */
+export function useFocusReturn(ref: RefObject<HTMLElement | null>) {
+  const before = useRef(null as Element | null);
+  const holdsFocus = useRef(false);
+
+  useEffect(() => {
+    before.current = document.activeElement;
+    return () => {
+      if (!holdsFocus.current) return;
+      holdsFocus.current = false;
+      const target = before.current as HTMLElement | null;
+      if (target && target !== document.body && target.isConnected) target.focus();
+      else document.body.focus();
+    };
+  }, []);
+
+  return (dismiss: (() => void) | undefined) => {
+    holdsFocus.current = ref.current?.contains(document.activeElement) ?? false;
+    dismiss?.();
+  };
+}
+
 /** Resolves the `motion` option to a boolean. `auto` follows the OS; SSR starts at false. */
 export function useReducedMotion(motion: 'auto' | 'reduced' | 'full' = 'auto'): boolean {
   const [osReduced, setOsReduced] = useState(false);

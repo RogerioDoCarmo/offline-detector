@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import type { ReactElement } from 'react';
 import {
   useAnnouncedText,
+  useFocusReturn,
   usePublishHeight,
   useReducedMotion,
   useSettledChecking,
@@ -42,9 +43,10 @@ export function Banner(props: BannerProps): ReactElement {
   const text = useAnnouncedText(message, announce);
   const reduced = useReducedMotion(motion);
   const dismissible = actions?.dismiss !== undefined;
+  const dismissWith = useFocusReturn(ref);
   const swipe = useSwipeDismiss({
     enabled: dismissible && visible,
-    onDismiss: () => actions?.dismiss?.(),
+    onDismiss: () => dismissWith(actions?.dismiss),
     reducedMotion: reduced,
     keys: ['Escape'],
   });
