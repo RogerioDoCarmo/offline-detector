@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { FullScreen } from './fullscreen';
 import { EN } from '../test-utils';
@@ -221,6 +222,71 @@ describe('FullScreen: focus management', () => {
   });
 });
 
+describe('FullScreen: focus return under StrictMode', () => {
+  /** A browser blurs the focused element when `inert` lands on it or an ancestor. */
+  let setAttribute: typeof Element.prototype.setAttribute;
+  beforeEach(() => {
+    setAttribute = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function patched(name: string, value: string) {
+      setAttribute.call(this, name, value);
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        name === 'inert' &&
+        active &&
+        active !== document.body &&
+        this.contains(active)
+      ) {
+        active.blur();
+      }
+    };
+  });
+  afterEach(() => {
+    Element.prototype.setAttribute = setAttribute;
+    document.body.innerHTML = '';
+  });
+
+  it('returns focus to the element that had it before the screen appeared', () => {
+    const app = document.createElement('div');
+    const outside = document.createElement('button');
+    outside.textContent = 'host button';
+    app.append(outside);
+    const mount = document.createElement('div');
+    document.body.append(app, mount);
+    outside.focus();
+
+    const { unmount } = render(
+      <StrictMode>
+        <FullScreen phase="offline" message="x" strings={EN} actions={{ retry }} />
+      </StrictMode>,
+      { container: mount },
+    );
+    expect(screen.getByRole('heading')).toHaveFocus();
+    unmount();
+    expect(outside).toHaveFocus();
+  });
+
+  it('returns focus after the exit too (visible turning false)', () => {
+    const outside = document.createElement('button');
+    const mount = document.createElement('div');
+    document.body.append(outside, mount);
+    outside.focus();
+    const ui = (visible: boolean) => (
+      <StrictMode>
+        <FullScreen
+          phase="offline"
+          message="x"
+          strings={EN}
+          actions={{ retry }}
+          visible={visible}
+        />
+      </StrictMode>
+    );
+    const { rerender } = render(ui(true), { container: mount });
+    rerender(ui(false));
+    expect(outside).toHaveFocus();
+  });
+});
+
 describe('FullScreen: inert host', () => {
   function host() {
     const app = document.createElement('div');
@@ -259,6 +325,47 @@ describe('FullScreen: inert host', () => {
     expect(sibling).not.toHaveAttribute('aria-hidden');
     expect(other).not.toHaveAttribute('inert');
     expect(other).toHaveAttribute('aria-hidden', 'false');
+  });
+
+  it('also makes siblings that appear after it inert (a toast or modal injected later)', async () => {
+    const { app } = host();
+    const mount = document.createElement('div');
+    app.append(mount);
+    const { unmount } = render(
+      <FullScreen phase="offline" message="x" strings={EN} actions={{ retry }} />,
+      { container: mount },
+    );
+    const lateInApp = document.createElement('aside');
+    const lateInBody = document.createElement('div');
+    const lateScript = document.createElement('script');
+    app.append(lateInApp);
+    document.body.append(lateInBody, lateScript);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    for (const el of [lateInApp, lateInBody]) {
+      expect(el).toHaveAttribute('inert', '');
+      expect(el).toHaveAttribute('aria-hidden', 'true');
+    }
+    expect(lateScript).not.toHaveAttribute('inert');
+
+    unmount();
+    for (const el of [lateInApp, lateInBody]) {
+      expect(el).not.toHaveAttribute('inert');
+      expect(el).not.toHaveAttribute('aria-hidden');
+    }
+  });
+
+  it('stops watching for new siblings once it is gone', async () => {
+    host();
+    const { unmount } = renderFullScreen();
+    unmount();
+    const late = document.createElement('div');
+    document.body.append(late);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(late).not.toHaveAttribute('inert');
   });
 
   it('restores a sibling that was already inert to its own value', () => {

@@ -45,6 +45,23 @@ export function useSettledChecking(
   return shown || (active && delayMs <= 0);
 }
 
+/**
+ * Text for a live region. Screen readers skip a live region that is mounted together with its
+ * text (docs/design/accessibility.md, section 1), so a piece that owns the announcement mounts
+ * the region empty and receives the text one frame later. Once the text is there, changes pass
+ * through at once. A piece that is not the announcer gets its text immediately, and one that
+ * becomes the announcer later keeps what it shows.
+ */
+export function useAnnouncedText(text: string, announces: boolean): string {
+  const [ready, setReady] = useState(!announces);
+  useEffect(() => {
+    if (ready) return undefined;
+    const frame = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(frame);
+  }, [ready]);
+  return ready ? text : '';
+}
+
 /** Resolves the `motion` option to a boolean. `auto` follows the OS; SSR starts at false. */
 export function useReducedMotion(motion: 'auto' | 'reduced' | 'full' = 'auto'): boolean {
   const [osReduced, setOsReduced] = useState(false);
@@ -106,8 +123,12 @@ export function useInteraction(onChange?: (active: boolean) => void) {
     callback.current = onChange;
   });
 
+  const stopWatching = useRef(null as (() => void) | null);
+
   useEffect(
     () => () => {
+      stopWatching.current?.();
+      stopWatching.current = null;
       // A piece that goes away mid-interaction must not leave the timer paused.
       if (last.current) callback.current?.(false);
     },
@@ -122,6 +143,24 @@ export function useInteraction(onChange?: (active: boolean) => void) {
     callback.current?.(active);
   };
 
+  const touchEnd = () => {
+    stopWatching.current?.();
+    stopWatching.current = null;
+    set('touch', false);
+  };
+
+  const touchStart = () => {
+    set('touch', true);
+    if (stopWatching.current) return;
+    // The release may land outside the piece (a mouse let go elsewhere): the window hears it.
+    window.addEventListener('pointerup', touchEnd);
+    window.addEventListener('pointercancel', touchEnd);
+    stopWatching.current = () => {
+      window.removeEventListener('pointerup', touchEnd);
+      window.removeEventListener('pointercancel', touchEnd);
+    };
+  };
+
   return {
     onMouseEnter: () => set('hover', true),
     onMouseLeave: () => set('hover', false),
@@ -130,7 +169,7 @@ export function useInteraction(onChange?: (active: boolean) => void) {
       if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
       set('focus', false);
     },
-    touchStart: () => set('touch', true),
-    touchEnd: () => set('touch', false),
+    touchStart,
+    touchEnd,
   };
 }

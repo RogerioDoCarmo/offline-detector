@@ -18,9 +18,9 @@ function block(css: string, selector: string): Record<string, string> {
   return out;
 }
 
-const LIGHT_SELECTOR = ":root,\n[data-od-root],\n[data-od-theme='light']";
+const LIGHT_SELECTOR = ":where(:root, [data-od-root], [data-od-theme='light'])";
 const DARK_SELECTOR =
-  ":root[data-od-theme='dark'],\n[data-od-root][data-od-theme='dark'],\n[data-od-theme='dark']";
+  ":where(:root[data-od-theme='dark'], [data-od-root][data-od-theme='dark'], [data-od-theme='dark'])";
 
 describe('light tokens (docs/design/tokens.md)', () => {
   const light = block(offlineTokensCss, LIGHT_SELECTOR);
@@ -134,10 +134,30 @@ describe('dark tokens', () => {
 
   it('applies under prefers-color-scheme: dark unless the theme is forced light', () => {
     const media =
-      ":root:not([data-od-theme='light']),\n[data-od-root]:not([data-od-theme='light'])";
+      ":where(:root:not([data-od-theme='light']), [data-od-root]:not([data-od-theme='light']))";
     const at = offlineTokensCss.indexOf('@media (prefers-color-scheme: dark)');
     expect(at).toBeGreaterThan(0);
     expect(block(offlineTokensCss.slice(at), media)).toEqual(expected);
+  });
+});
+
+describe('host overrides', () => {
+  it('declares every token under :where(), so any host rule wins whatever its order', () => {
+    const selectors = [...offlineTokensCss.matchAll(/^([^\n{}@][^{}]*?) \{$/gm)].map(
+      (match) => match[1],
+    );
+    expect(selectors).toHaveLength(3);
+    for (const selector of selectors) {
+      expect(selector).toMatch(/^:where\(.*\)$/s);
+      // Nothing outside the :where() that would add specificity.
+      expect(selector.replace(/^:where\(/, '').replace(/\)$/, '')).not.toContain(
+        ':where',
+      );
+    }
+  });
+
+  it('keeps the light-token selector free of a bare :root', () => {
+    expect(offlineTokensCss).not.toMatch(/^:root/m);
   });
 });
 

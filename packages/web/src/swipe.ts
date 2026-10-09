@@ -91,6 +91,7 @@ interface Gesture {
   width: number;
   axis: Axis | null;
   captured: boolean;
+  element: HTMLElement;
 }
 
 type Timer = ReturnType<typeof setTimeout>;
@@ -139,8 +140,12 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     onDismissRef.current = options.onDismiss;
   });
 
+  const stopListening = useRef(null as (() => void) | null);
+
   useEffect(
     () => () => {
+      stopListening.current?.();
+      stopListening.current = null;
       if (exitTimer.current) clearTimeout(exitTimer.current);
       if (clickTimer.current) clearTimeout(clickTimer.current);
     },
@@ -177,22 +182,26 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     exitTimer.current = null;
     dismissedRef.current = false;
     gesture.current = null;
+    stopListening.current?.();
+    stopListening.current = null;
     setView(REST);
   }, []);
 
-  const finish = (event: PointerEvent<HTMLElement>, cancelled: boolean) => {
+  const finish = (end: { pointerId: number; clientX: number }, cancelled: boolean) => {
     const g = gesture.current;
-    if (!g || g.pointerId !== event.pointerId) return;
+    if (!g || g.pointerId !== end.pointerId) return;
     gesture.current = null;
+    stopListening.current?.();
+    stopListening.current = null;
     if (g.captured) {
-      event.currentTarget.releasePointerCapture?.(g.pointerId);
+      g.element.releasePointerCapture?.(g.pointerId);
       swallowClick.current = true;
       clickTimer.current = setTimeout(() => {
         swallowClick.current = false;
       }, 0);
     }
     if (g.axis !== 'horizontal') return;
-    const dx = event.clientX - g.startX;
+    const dx = end.clientX - g.startX;
     if (!cancelled && shouldDismiss(dx, g.width, Date.now() - g.startTime)) {
       startDismissal(dx < 0 ? -1 : 1, g.width);
       return;
@@ -213,11 +222,27 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
         width: event.currentTarget.getBoundingClientRect().width,
         axis: null,
         captured: false,
+        element: event.currentTarget,
+      };
+      // The release can happen anywhere (a mouse let go outside the piece, a drag that never
+      // locked a horizontal axis and so never took pointer capture): the window hears it.
+      const onUp = (up: globalThis.PointerEvent) => finish(up, false);
+      const onCancel = (up: globalThis.PointerEvent) => finish(up, true);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onCancel);
+      stopListening.current = () => {
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onCancel);
       };
     };
     props.onPointerMove = (event) => {
       const g = gesture.current;
       if (!g || g.pointerId !== event.pointerId) return;
+      // A move with nothing pressed means the release was missed: the gesture is over.
+      if (event.buttons === 0) {
+        finish(event, true);
+        return;
+      }
       const dx = event.clientX - g.startX;
       if (g.axis === null) {
         g.axis = lockAxis(dx, event.clientY - g.startY);

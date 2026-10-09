@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Snackbar } from './snackbar';
-import { EN, layout, pointer } from '../test-utils';
+import { EN, FRAME, layout, pointer } from '../test-utils';
 
 const retry = () => Promise.resolve({} as never);
 
@@ -16,6 +16,9 @@ function renderSnackbar(props: Partial<React.ComponentProps<typeof Snackbar>> = 
   );
 }
 
+/** Lets the live region receive its text (it mounts empty and is filled one frame later). */
+const frame = () => act(() => void jest.advanceTimersByTime(FRAME));
+
 beforeEach(() => {
   jest.useFakeTimers();
   jest.setSystemTime(0);
@@ -24,9 +27,54 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
+describe('Snackbar: the live region exists before its text (accessibility.md, section 1)', () => {
+  it('mounts the empty status region first and sets the text one frame later', () => {
+    renderSnackbar();
+    const status = screen.getByRole('status');
+    expect(status.querySelector('.od-msg')).toHaveTextContent('');
+    expect(status).not.toHaveTextContent('No internet');
+
+    act(() => void jest.advanceTimersByTime(FRAME));
+    expect(status.querySelector('.od-msg')).toHaveTextContent('No internet');
+    expect(screen.getByRole('status')).toBe(status); // the same element, not a new mount
+  });
+
+  it('announces a later message change at once, without another empty frame', () => {
+    const { rerender } = renderSnackbar();
+    act(() => void jest.advanceTimersByTime(FRAME));
+    rerender(
+      <Snackbar
+        phase="offline"
+        message="Connected, but no internet"
+        strings={EN}
+        actions={{ retry }}
+      />,
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Connected, but no internet');
+  });
+
+  it('does not delay the text when it is not the announcer', () => {
+    renderSnackbar({ announce: false });
+    expect(screen.getByText('No internet')).toBeInTheDocument();
+  });
+
+  it('keeps the text when it becomes the announcer after mounting silent', () => {
+    const { rerender } = renderSnackbar({ announce: false });
+    rerender(<Snackbar phase="offline" message="No internet" strings={EN} />);
+    expect(screen.getByRole('status')).toHaveTextContent('No internet');
+  });
+
+  it('cancels the pending frame when unmounted before it fires', () => {
+    const { unmount } = renderSnackbar();
+    unmount();
+    expect(() => act(() => void jest.advanceTimersByTime(100))).not.toThrow();
+  });
+});
+
 describe('Snackbar: offline', () => {
   it('is a polite status region (role=status, never alert) showing the message', () => {
     renderSnackbar();
+    frame();
     const status = screen.getByRole('status');
     expect(status).toHaveTextContent('No internet');
     expect(status.className).toBe('od-snackbar');
@@ -84,6 +132,7 @@ describe('Snackbar: offline', () => {
 
   it('marks the exit state when not visible, and keeps its content', () => {
     renderSnackbar({ visible: false });
+    frame();
     const root = screen.getByRole('status');
     expect(root).toHaveAttribute('data-od-state', 'exit');
     expect(root).toHaveTextContent('No internet');
@@ -98,6 +147,7 @@ describe('Snackbar: offline', () => {
 describe('Snackbar: recovery', () => {
   it('shows the message and a check icon, with no Retry', () => {
     const { container } = renderSnackbar({ phase: 'recovered', message: 'Back online' });
+    frame();
     expect(screen.getByRole('status')).toHaveTextContent('Back online');
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
     expect(container.querySelector('svg path')).toHaveAttribute(
@@ -252,6 +302,26 @@ describe('Snackbar: dismissal', () => {
     pointer(root, 'pointerup', { x: 290, y: 10 });
     act(() => void jest.advanceTimersByTime(1000));
     expect(dismiss).not.toHaveBeenCalled();
+  });
+
+  it('stops reporting a touch when the pointer is released outside the snackbar', () => {
+    const onInteractionChange = jest.fn();
+    renderSnackbar({ onInteractionChange, actions: { retry, dismiss: jest.fn() } });
+    const root = screen.getByRole('status');
+    layout(root, 300);
+    pointer(root, 'pointerdown', { x: 200, y: 10, pointerType: 'mouse' });
+    expect(onInteractionChange).toHaveBeenLastCalledWith(true);
+    pointer(document.body, 'pointerup', { x: 600, y: 600, pointerType: 'mouse' });
+    expect(onInteractionChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('stops reporting a touch when the pointer is cancelled outside the snackbar', () => {
+    const onInteractionChange = jest.fn();
+    renderSnackbar({ onInteractionChange, actions: { retry, dismiss: jest.fn() } });
+    const root = screen.getByRole('status');
+    pointer(root, 'pointerdown', { x: 200, y: 10 });
+    pointer(document.body, 'pointercancel', { x: 600, y: 600 });
+    expect(onInteractionChange).toHaveBeenLastCalledWith(false);
   });
 
   it('still lets a tap on Retry through', () => {

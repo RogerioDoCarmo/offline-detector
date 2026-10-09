@@ -66,6 +66,28 @@ describe('Indicator: names and roles', () => {
     renderIndicator({ strings: { ...EN, indicatorAccessibleName: 'Estado: {status}' } });
     expect(screen.getByRole('img', { name: 'Estado: No internet' })).toBeInTheDocument();
   });
+
+  it('replaces every {status} in the template, and nothing else', () => {
+    renderIndicator({
+      strings: { ...EN, indicatorAccessibleName: '{status} - {status} ($&)' },
+    });
+    expect(
+      screen.getByRole('img', { name: 'No internet - No internet ($&)' }),
+    ).toBeInTheDocument();
+  });
+
+  it('inserts a status label containing $ patterns literally', () => {
+    renderIndicator({
+      strings: {
+        ...EN,
+        indicatorLabelOffline: 'Offline $& $1',
+        indicatorAccessibleName: 'Status: {status}',
+      },
+    });
+    expect(
+      screen.getByRole('img', { name: 'Status: Offline $& $1' }),
+    ).toBeInTheDocument();
+  });
 });
 
 describe('Indicator: variants and position', () => {

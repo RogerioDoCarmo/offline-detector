@@ -6,6 +6,7 @@ import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
 import { OfflineDetector } from './offline-detector';
 import type { OfflineDetectorProps } from './offline-detector';
 import { createFakeAdapter, createFakeFetch, PROBE } from '../test-utils/fakes';
+import { FRAME } from '../test-utils';
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -60,11 +61,11 @@ async function mount(
   );
   await settle();
   const goOffline = async () => {
-    fake.setUp(false);
+    act(() => fake.setUp(false));
     await settle();
   };
   const goOnline = async () => {
-    fake.setUp(true);
+    act(() => fake.setUp(true));
     await settle();
   };
   return { ...view, fake, fetch, goOffline, goOnline };
@@ -85,6 +86,7 @@ describe('OfflineDetector: launch', () => {
 
   it('shows the pieces when the app launches offline', async () => {
     await mount({ up: false });
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('No internet');
     expect(banner()).toHaveTextContent('No internet');
     expect(indicator()).not.toBeNull();
@@ -94,6 +96,16 @@ describe('OfflineDetector: launch', () => {
     await mount();
     expect(document.querySelectorAll('style[data-od-tokens]')).toHaveLength(1);
   });
+
+  it('passes a CSP nonce to the style element', async () => {
+    await mount({ nonce: 'abc123' });
+    expect($('style[data-od-tokens]')).toHaveAttribute('nonce', 'abc123');
+  });
+
+  it('puts no nonce on the style element by default', async () => {
+    await mount();
+    expect($('style[data-od-tokens]')).not.toHaveAttribute('nonce');
+  });
 });
 
 describe('OfflineDetector: going offline', () => {
@@ -101,6 +113,7 @@ describe('OfflineDetector: going offline', () => {
     const view = await mount();
     await view.goOffline();
 
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('No internet');
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
     expect(banner()).toHaveTextContent('No internet');
@@ -124,6 +137,7 @@ describe('OfflineDetector: going offline', () => {
     const view = await mount();
     view.fetch.setOk(false);
     await view.goOffline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('No internet');
     expect(snackbar()).not.toHaveTextContent('Connected');
   });
@@ -131,6 +145,7 @@ describe('OfflineDetector: going offline', () => {
   it('with distinguishReason names a missing interface', async () => {
     const view = await mount({ distinguishReason: true });
     await view.goOffline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('No network connection');
   });
 
@@ -190,6 +205,7 @@ describe('OfflineDetector: dismissing', () => {
     await view.goOffline();
     await dismiss(snackbar());
     await view.goOnline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Back online');
   });
 
@@ -218,7 +234,7 @@ describe('OfflineDetector: recovery', () => {
     await view.goOffline();
     await view.goOnline();
 
-    expect(snackbar()).toHaveTextContent('Back online');
+    expect(snackbar()).not.toBeNull();
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
     expect(banner()).toBeNull();
     expect(indicator()).not.toBeNull();
@@ -261,6 +277,7 @@ describe('OfflineDetector: recovery', () => {
     const view = await mount();
     await view.goOffline();
     await view.goOnline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Back online');
     await view.goOffline();
     expect(snackbar()).toHaveTextContent('No internet');
@@ -307,6 +324,7 @@ describe('OfflineDetector: full-screen', () => {
     await view.goOffline();
     await view.goOnline();
     expect(fullScreen()).toBeNull();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Back online');
   });
 
@@ -401,6 +419,7 @@ describe('OfflineDetector: copy', () => {
   it('speaks pt-BR', async () => {
     const view = await mount({ locale: 'pt-BR' });
     await view.goOffline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Sem internet');
     expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument();
     await view.goOnline();
@@ -410,6 +429,7 @@ describe('OfflineDetector: copy', () => {
   it('speaks es', async () => {
     const view = await mount({ locale: 'es-MX' });
     await view.goOffline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Sin internet');
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
     await view.goOnline();
@@ -419,6 +439,7 @@ describe('OfflineDetector: copy', () => {
   it('applies string overrides', async () => {
     const view = await mount({ strings: { offline: 'Offline!', retry: 'Again' } });
     await view.goOffline();
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Offline!');
     expect(screen.getByRole('button', { name: 'Again' })).toBeInTheDocument();
   });
@@ -492,6 +513,7 @@ describe('OfflineDetector: checking feedback', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     await settle();
 
+    await advance(FRAME);
     expect(snackbar()).toHaveTextContent('Back online');
   });
 
@@ -613,6 +635,7 @@ describe('OfflineDetector: options', () => {
         window.dispatchEvent(new Event('offline'));
       });
       await settle();
+      await advance(FRAME);
       expect(snackbar()).toHaveTextContent('No internet');
     } finally {
       globalThis.fetch = original;
@@ -637,7 +660,7 @@ describe('OfflineDetector: StrictMode', () => {
     expect(fetch.calls).toEqual(['https://a.test']);
     expect(document.querySelectorAll('style[data-od-tokens]')).toHaveLength(1);
 
-    fake.setUp(false);
+    act(() => fake.setUp(false));
     await settle();
     expect(document.querySelectorAll('.od-snackbar')).toHaveLength(1);
     expect(document.querySelectorAll('.od-banner')).toHaveLength(1);

@@ -1,6 +1,7 @@
 import { useReducedMotion, useSettledChecking } from './hooks';
 import type { ReactElement } from 'react';
 import { DotGlyph } from './icons';
+import { indicatorName } from '@rogeriodocarmo/offline-detector-react';
 import type { IndicatorPosition } from '@rogeriodocarmo/offline-detector-react';
 import { CHECKING_DELAY_MS, CHECKING_MIN_MS } from './piece-types';
 import type { PieceProps } from './piece-types';
@@ -59,7 +60,7 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
       : dot === 'checking'
         ? strings.indicatorLabelChecking
         : strings.indicatorLabelOffline;
-  const name = strings.indicatorAccessibleName.replace('{status}', label);
+  const name = indicatorName(strings, label);
 
   const labelled = {
     role: 'img',

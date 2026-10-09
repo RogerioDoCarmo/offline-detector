@@ -1,6 +1,11 @@
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
-import { usePublishHeight, useReducedMotion, useSettledChecking } from './hooks';
+import {
+  useAnnouncedText,
+  usePublishHeight,
+  useReducedMotion,
+  useSettledChecking,
+} from './hooks';
 import { CheckIcon, CloseIcon, Spinner, WifiOffIcon } from './icons';
 import { CHECKING_DELAY_MS, CHECKING_MIN_MS } from './piece-types';
 import type { PieceProps } from './piece-types';
@@ -34,6 +39,7 @@ export function Banner(props: BannerProps): ReactElement {
   } = props;
 
   const ref = useRef(null as HTMLDivElement | null);
+  const text = useAnnouncedText(message, announce);
   const reduced = useReducedMotion(motion);
   const dismissible = actions?.dismiss !== undefined;
   const swipe = useSwipeDismiss({
@@ -77,7 +83,7 @@ export function Banner(props: BannerProps): ReactElement {
       {...rootProps}
     >
       {icon}
-      <span className="od-msg">{message}</span>
+      <span className="od-msg">{text}</span>
       {showRetry && retry && phase !== 'recovered' && (
         <button
           type="button"

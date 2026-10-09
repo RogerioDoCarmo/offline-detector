@@ -39,13 +39,22 @@ export function createFakeFetch() {
   let ok = true;
   let held: (() => void)[] | null = null;
   const calls: string[] = [];
+  // Unreachable is a rejected request (any completed response counts as reachable), so a failing
+  // probe rejects like a dropped connection does.
   const fetchFn: ProbeFetch = (url) => {
     calls.push(url);
-    const outcome = () => ({ ok });
-    if (held === null) return Promise.resolve(outcome());
+    const outcome = (
+      settle: (value: { ok: boolean }) => void,
+      fail: (e: Error) => void,
+    ) => (ok ? settle({ ok: true }) : fail(new TypeError('Failed to fetch')));
+    if (held === null) {
+      return new Promise((settle: (value: { ok: boolean }) => void, fail) =>
+        outcome(settle, fail),
+      );
+    }
     const waiting = held;
-    return new Promise((resolve: (value: { ok: boolean }) => void) => {
-      waiting.push(() => resolve(outcome()));
+    return new Promise((settle: (value: { ok: boolean }) => void, fail) => {
+      waiting.push(() => outcome(settle, fail));
     });
   };
   return Object.assign(fetchFn, {

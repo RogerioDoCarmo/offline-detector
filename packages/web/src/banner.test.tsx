@@ -1,12 +1,15 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Banner } from './banner';
-import { EN, layout, pointer } from '../test-utils';
+import { EN, FRAME, layout, pointer } from '../test-utils';
 
 const retry = () => Promise.resolve({} as never);
 
 function renderBanner(props: Partial<React.ComponentProps<typeof Banner>> = {}) {
   return render(<Banner phase="offline" message="No internet" strings={EN} {...props} />);
 }
+
+/** Lets the live region receive its text (it mounts empty and is filled one frame later). */
+const frame = () => act(() => void jest.advanceTimersByTime(FRAME));
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -16,9 +19,28 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
+describe('Banner: the live region exists before its text (accessibility.md, section 1)', () => {
+  it('mounts the empty status region first and sets the text one frame later', () => {
+    renderBanner();
+    const status = screen.getByRole('status');
+    expect(status.querySelector('.od-msg')).toHaveTextContent('');
+    act(() => void jest.advanceTimersByTime(FRAME));
+    expect(status.querySelector('.od-msg')).toHaveTextContent('No internet');
+    expect(screen.getByRole('status')).toBe(status);
+  });
+
+  it('shows the text at once when it is a labelled region rather than the announcer', () => {
+    renderBanner({ announce: false });
+    expect(screen.getByRole('region', { name: 'No internet' })).toHaveTextContent(
+      'No internet',
+    );
+  });
+});
+
 describe('Banner: roles', () => {
   it('is the announcer by default: role=status, never alert, no aria-label', () => {
     renderBanner();
+    frame();
     const status = screen.getByRole('status');
     expect(status).toHaveTextContent('No internet');
     expect(status).not.toHaveAttribute('aria-label');
@@ -34,6 +56,7 @@ describe('Banner: roles', () => {
 
   it('shows the reason-aware message it is given', () => {
     renderBanner({ message: 'Connected, but no internet' });
+    frame();
     expect(screen.getByRole('status')).toHaveTextContent('Connected, but no internet');
   });
 
@@ -66,6 +89,7 @@ describe('Banner: anatomy', () => {
 
   it('swaps the icon for a spinner while checking is shown, keeping the text', () => {
     const { container } = renderBanner({ phase: 'checking', checkingDelayMs: 0 });
+    frame();
     expect(container.querySelector('.od-spinner')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('No internet');
   });
