@@ -11,15 +11,14 @@ const { join } = require('node:path');
 
 /**
  * Returns the problems with releasing `tag` over the packages at `versions` ({ name: version }).
- * Build metadata (`+suffix`) is dropped before comparing: it sorts equal to the version. A
- * `-suffix` is a pre-release, which sorts before the version, so it is refused.
+ * Only plain vX.Y.Z is accepted: a `-suffix` is a pre-release and a `+suffix` is build metadata,
+ * and neither names a version the packages could carry.
  */
 function checkTag(tag, versions) {
-  const match = /^v(\d+\.\d+\.\d+)(\+[0-9A-Za-z.-]+)?$/.exec(tag);
+  const match = /^v(\d+\.\d+\.\d+)$/.exec(tag);
   if (!match) {
     return [
-      `Tag "${tag}" must look like v1.2.3 (build metadata such as +rc.1 is allowed); ` +
-        'pre-release tags are not published.',
+      `Tag "${tag}" must look like v1.2.3: pre-release and build-metadata suffixes are not published.`,
     ];
   }
   const entries = Object.entries(versions);

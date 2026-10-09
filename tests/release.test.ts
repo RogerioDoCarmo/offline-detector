@@ -20,13 +20,45 @@ describe('versions and the first changeset', () => {
     expect(config.baseBranch).toBe('develop');
   });
 
-  it('has exactly one pending changeset: the first release, a minor bump of every package', () => {
-    const pending = readdirSync(join(root, '.changeset')).filter(
+  const pending = (): string[] =>
+    readdirSync(join(root, '.changeset')).filter(
       (file) => file.endsWith('.md') && file !== 'README.md',
     );
-    expect(pending).toEqual(['initial-release.md']);
-    const text = read('.changeset/initial-release.md');
-    for (const name of NAMES) expect(text).toContain(`'${scoped(name)}': minor`);
+  const versions = (): string[] =>
+    NAMES.map((name) => JSON.parse(read(`packages/${name}/package.json`)).version);
+
+  it('lets every pending changeset name only the four packages', () => {
+    // Later PRs add changesets and `changeset version` deletes them, so the list is not fixed.
+    for (const file of pending()) {
+      const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(read(`.changeset/${file}`));
+      expect({ file, hasFrontmatter: front !== null }).toEqual({
+        file,
+        hasFrontmatter: true,
+      });
+      const lines = (front?.[1] ?? '').split(/\r?\n/).filter(Boolean);
+      const named = lines.map(
+        (line) => /^'([^']+)':\s*(major|minor|patch)$/.exec(line)?.[1],
+      );
+      expect({ file, lines: lines.length > 0 }).toEqual({ file, lines: true });
+      for (const name of named) {
+        expect({ file, name, known: NAMES.map(scoped).includes(name ?? '') }).toEqual({
+          file,
+          name,
+          known: true,
+        });
+      }
+    }
+  });
+
+  it('requires the first-release changeset only while the packages are at 0.0.0', () => {
+    if (versions().every((version) => version === '0.0.0')) {
+      expect(pending()).toContain('initial-release.md');
+      const text = read('.changeset/initial-release.md');
+      for (const name of NAMES) expect(text).toContain(`'${scoped(name)}': minor`);
+    } else {
+      // `changeset version` consumed it; it must not come back.
+      expect(pending()).not.toContain('initial-release.md');
+    }
   });
 
   it.each(NAMES)('ships the license text inside the %s package', (name) => {
@@ -41,10 +73,6 @@ describe('checkTag', () => {
     expect(checkTag('v0.1.0', same)).toEqual([]);
   });
 
-  it('ignores build metadata, as the owner does in morse_app', () => {
-    expect(checkTag('v0.1.0+rc.1', same)).toEqual([]);
-  });
-
   it('names each package that disagrees with the tag', () => {
     expect(checkTag('v0.1.1', same)).toEqual([
       `${scoped('core')} is at 0.1.0 but the tag says 0.1.1.`,
@@ -56,7 +84,16 @@ describe('checkTag', () => {
   });
 
   it('refuses pre-release tags, tags without the v, and anything else that is not semver', () => {
-    for (const tag of ['v0.1.0-rc1', '0.1.0', 'v1.2', 'release-1', 'v1.2.3.4', '']) {
+    for (const tag of [
+      'v0.1.0-rc1',
+      'v0.1.0+x',
+      'v0.1.0+rc.1',
+      '0.1.0',
+      'v1.2',
+      'release-1',
+      'v1.2.3.4',
+      '',
+    ]) {
       const problems: string[] = checkTag(tag, same);
       expect({ tag, count: problems.length }).toEqual({ tag, count: 1 });
       expect(problems[0]).toContain('must look like v1.2.3');
