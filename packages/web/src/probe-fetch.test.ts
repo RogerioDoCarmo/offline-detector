@@ -17,6 +17,7 @@ describe('createWebProbeFetch', () => {
     await createWebProbeFetch(impl as never)('https://cp.cloudflare.com/generate_204', {
       method: 'HEAD',
       signal,
+      credentials: 'omit',
     });
     expect(calls).toEqual([
       {
@@ -55,14 +56,22 @@ describe('createWebProbeFetch', () => {
     const response = { ok: false, type: 'opaque', status: 0 };
     const { impl } = fakeFetch(response);
     expect(
-      await createWebProbeFetch(impl as never)('u', { method: 'HEAD', signal }),
+      await createWebProbeFetch(impl as never)('u', {
+        method: 'HEAD',
+        signal,
+        credentials: 'omit',
+      }),
     ).toBe(response);
   });
 
   it('lets a rejection propagate', async () => {
     const impl = () => Promise.reject(new TypeError('Failed to fetch'));
     await expect(
-      createWebProbeFetch(impl as never)('u', { method: 'HEAD', signal }),
+      createWebProbeFetch(impl as never)('u', {
+        method: 'HEAD',
+        signal,
+        credentials: 'omit',
+      }),
     ).rejects.toThrow('Failed to fetch');
   });
 
@@ -72,7 +81,7 @@ describe('createWebProbeFetch', () => {
     globalThis.fetch = spy as never;
     try {
       const probe = createWebProbeFetch();
-      await probe('https://x.test/', { method: 'HEAD', signal });
+      await probe('https://x.test/', { method: 'HEAD', signal, credentials: 'omit' });
       expect(spy).toHaveBeenCalledTimes(1);
     } finally {
       globalThis.fetch = original;

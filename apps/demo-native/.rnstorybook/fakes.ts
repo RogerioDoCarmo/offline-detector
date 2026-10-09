@@ -1,8 +1,4 @@
-import type {
-  PlatformAdapter,
-  ProbeFetch,
-  ProbeResponse,
-} from '@rogeriodocarmo/offline-detector-core';
+import type { PlatformAdapter, ProbeFetch } from '@rogeriodocarmo/offline-detector-core';
 
 /** An in-memory adapter driven by hand. It never reads NetInfo or listens to the app state. */
 export function createFakeAdapter(initialUp = true) {
@@ -37,21 +33,29 @@ export function createFakeAdapter(initialUp = true) {
 }
 
 /**
- * A probe that never leaves the device: it answers `ok` or not on demand, and `hold()` keeps the
- * answer pending so a story can sit in the "checking" state until `release()`.
+ * A probe that never leaves the device: it answers or fails on demand, and `hold()` keeps the
+ * answer pending so a story can sit in the "checking" state until `release()`. A completed request
+ * of any kind means "reachable", so "not ok" is a failed request: it rejects.
  */
 export function createFakeFetch(initialOk = true) {
   let ok = initialOk;
   let held: Array<() => void> | null = null;
   const calls: string[] = [];
+  const settle = (
+    resolve: (value: unknown) => void,
+    reject: (error: Error) => void,
+  ): void => {
+    if (ok) resolve({ ok: true });
+    else reject(new TypeError('Network request failed'));
+  };
   const fetchFn: ProbeFetch = (url) => {
     calls.push(url);
-    const answer = (): ProbeResponse => ({ ok });
-    if (held === null) return Promise.resolve(answer());
-    const waiting = held;
-    return new Promise<ProbeResponse>((resolve) => {
-      waiting.push(() => resolve(answer()));
-    });
+    return new Promise(
+      (resolve: (value: unknown) => void, reject: (error: Error) => void) => {
+        if (held === null) settle(resolve, reject);
+        else held.push(() => settle(resolve, reject));
+      },
+    );
   };
   return Object.assign(fetchFn, {
     calls,

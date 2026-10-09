@@ -40,9 +40,17 @@ export function makeNet(initial: { up?: boolean; reachable?: boolean } = {}) {
   net.fetch = () => {
     net.fetchCalls++;
     if (net.hold) {
-      return new Promise((resolve: (response: { ok: boolean }) => void) => {
-        net.held.push((ok) => resolve({ ok }));
-      });
+      // Any completed response is "reachable"; a failed request is what rejects.
+      return new Promise(
+        (
+          resolve: (response: { ok: boolean }) => void,
+          reject: (error: Error) => void,
+        ) => {
+          net.held.push((ok) =>
+            ok ? resolve({ ok: true }) : reject(new Error('unreachable')),
+          );
+        },
+      );
     }
     return net.reachable
       ? Promise.resolve({ ok: true })
