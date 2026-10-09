@@ -54,12 +54,12 @@ export function useRecheckOnReturn(options: RecheckOnReturnOptions = {}): boolea
     };
   }, [core, brief]);
 
-  return isOnline(
-    useSyncExternalStore(
-      core.store.subscribe,
-      core.store.getSnapshot,
-      core.store.getServerSnapshot,
-    ),
+  // Subscribe to the boolean itself, so a checking flip that leaves the answer unchanged does not
+  // re-render the screen.
+  return useSyncExternalStore(
+    core.store.subscribe,
+    () => isOnline(core.store.getSnapshot()),
+    () => isOnline(core.store.getServerSnapshot()),
   );
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactElement } from 'react';
 import { createOfflineDetector, isOnline } from '@rogeriodocarmo/offline-detector-core';
 import type {
-  OfflineDetector,
+  OfflineDetectorInstance,
   OfflineState,
 } from '@rogeriodocarmo/offline-detector-core';
 import { CoreContext, useCore } from './context';
@@ -53,7 +53,7 @@ function createCore(props: OfflineDetectorProviderProps): ProviderCore {
   const reportError = (error: unknown) => latest.current.onError?.(error);
 
   // Callbacks are forwarded through `latest`, so a new function prop never restarts anything.
-  const detector: OfflineDetector =
+  const detector: OfflineDetectorInstance =
     props.detector ??
     createOfflineDetector({
       adapter: props.adapter,
@@ -140,6 +140,6 @@ export function useNetworkStatus(): UseNetworkStatusResult {
 }
 
 /** The underlying core detector, for advanced use. */
-export function useOfflineDetector(): OfflineDetector {
+export function useOfflineDetector(): OfflineDetectorInstance {
   return useCore('useOfflineDetector').detector;
 }

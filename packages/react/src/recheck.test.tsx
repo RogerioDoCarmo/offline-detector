@@ -24,7 +24,10 @@ const settle = () =>
     await jest.advanceTimersByTimeAsync(0);
   });
 
-function Recheck(props: RecheckOnReturnOptions & { label?: string }) {
+function Recheck(
+  props: RecheckOnReturnOptions & { label?: string; onRender?: () => void },
+) {
+  props.onRender?.();
   const online = useRecheckOnReturn(props);
   return (
     <span data-testid={props.label ?? 'recheck'}>{online ? 'online' : 'offline'}</span>
@@ -106,6 +109,39 @@ describe('useRecheckOnReturn: subscription', () => {
   });
 });
 
+describe('useRecheckOnReturn: renders', () => {
+  it('re-renders only when the boolean it returns changes, not on every checking flip', async () => {
+    const { adapter, fetch, tree } = setup();
+    let renders = 0;
+    const view = render(
+      tree(
+        <Recheck
+          onRender={() => {
+            renders++;
+          }}
+        />,
+      ),
+    );
+    await settle();
+    expect(view.getByTestId('recheck').textContent).toBe('online');
+    const settled = renders;
+
+    // checking flips true then false and lastChecked changes, yet the answer stays online.
+    await act(async () => adapter.foreground());
+    await settle();
+    await act(async () => adapter.foreground());
+    await settle();
+    expect(fetch.calls).toHaveLength(3);
+    expect(renders).toBe(settled);
+
+    fetch.setOk(false);
+    await act(async () => adapter.foreground());
+    await settle();
+    expect(view.getByTestId('recheck').textContent).toBe('offline');
+    expect(renders).toBe(settled + 1);
+  });
+});
+
 describe('useRecheckOnReturn: checking and results', () => {
   it('re-probes on a foreground return and reports the outcome', async () => {
     const { adapter, fetch, tree } = setup();
@@ -127,6 +163,25 @@ describe('useRecheckOnReturn: checking and results', () => {
     await settle();
     expect(onResult.mock.calls).toEqual([[false], [true]]);
     expect(view.getByTestId('recheck').textContent).toBe('online');
+  });
+
+  it('reports the overtaking result when an online event lands during the return check', async () => {
+    const { adapter, fetch, tree } = setup();
+    const onResult = jest.fn();
+    render(tree(<Recheck onResult={onResult} />));
+    await settle();
+    fetch.setOk(false);
+    await act(async () => adapter.foreground());
+    await settle();
+    expect(onResult.mock.calls).toEqual([[false]]);
+
+    fetch.setOk(true);
+    await act(async () => {
+      adapter.foreground();
+      adapter.setUp(true);
+    });
+    await settle();
+    expect(onResult.mock.calls).toEqual([[false], [true]]);
   });
 
   it('does not re-probe on return when no hook is mounted', async () => {
