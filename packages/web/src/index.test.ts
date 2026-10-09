@@ -1,3 +1,9 @@
+import {
+  useCheckingFeedback,
+  useNetworkStatus,
+  useOfflineDetector,
+  useRecheckOnReturn,
+} from '@rogeriodocarmo/offline-detector-react';
 import * as api from './index';
 
 describe('@rogeriodocarmo/offline-detector-web', () => {
@@ -5,34 +11,30 @@ describe('@rogeriodocarmo/offline-detector-web', () => {
     expect(api.packageName).toBe('@rogeriodocarmo/offline-detector-web');
   });
 
-  it('exports exactly the public runtime API', () => {
+  it('exports exactly the public runtime API, and none of the internals', () => {
     expect(Object.keys(api).sort()).toEqual([
       'Banner',
       'FullScreen',
       'Indicator',
       'OfflineDetector',
       'OfflineTokens',
-      'SWIPE_RULES',
       'Snackbar',
       'createWebAdapter',
       'createWebProbeFetch',
-      'lockAxis',
       'offlineCss',
       'offlineTokensCss',
       'packageName',
-      'shouldDismiss',
-      'useReducedMotion',
-      'useSettledChecking',
-      'useSwipeDismiss',
+      'useCheckingFeedback',
+      'useNetworkStatus',
+      'useOfflineDetector',
+      'useRecheckOnReturn',
     ]);
   });
 
-  it('keeps the swipe thresholds at the design values', () => {
-    expect(api.SWIPE_RULES).toEqual({
-      distanceRatio: 0.3,
-      velocity: 0.5,
-      axisLockPx: 8,
-      exitMs: 150,
-    });
+  it('re-exports the react hooks themselves, not copies', () => {
+    expect(api.useNetworkStatus).toBe(useNetworkStatus);
+    expect(api.useRecheckOnReturn).toBe(useRecheckOnReturn);
+    expect(api.useOfflineDetector).toBe(useOfflineDetector);
+    expect(api.useCheckingFeedback).toBe(useCheckingFeedback);
   });
 });

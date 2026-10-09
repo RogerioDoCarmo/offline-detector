@@ -150,7 +150,7 @@ describe('host overrides', () => {
     for (const selector of selectors) {
       expect(selector).toMatch(/^:where\(.*\)$/s);
       // Nothing outside the :where() that would add specificity.
-      expect(selector.replace(/^:where\(/, '').replace(/\)$/, '')).not.toContain(
+      expect((selector ?? '').replace(/^:where\(/, '').replace(/\)$/, '')).not.toContain(
         ':where',
       );
     }

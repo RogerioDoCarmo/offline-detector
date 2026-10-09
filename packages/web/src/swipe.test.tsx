@@ -1,6 +1,17 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { lockAxis, shouldDismiss, useSwipeDismiss } from './swipe';
+import { SWIPE_RULES, lockAxis, shouldDismiss, useSwipeDismiss } from './swipe';
 import { layout, pointer } from '../test-utils';
+
+describe('SWIPE_RULES', () => {
+  it('keeps the swipe thresholds at the design values', () => {
+    expect(SWIPE_RULES).toEqual({
+      distanceRatio: 0.3,
+      velocity: 0.5,
+      axisLockPx: 8,
+      exitMs: 150,
+    });
+  });
+});
 
 describe('lockAxis', () => {
   it.each([
