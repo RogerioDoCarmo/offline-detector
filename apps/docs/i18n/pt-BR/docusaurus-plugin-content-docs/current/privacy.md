@@ -7,8 +7,9 @@ sidebar_position: 12
 # Privacidade
 
 **O único tráfego de rede que o offline-detector cria é a sonda de alcance configurável.** Nada mais
-é coletado, armazenado ou enviado a qualquer lugar. Não há análise de uso, relatório de falhas, conta,
-cookie nem armazenamento persistente: até a dispensa fica só na memória.
+é coletado, armazenado ou enviado a qualquer lugar. Não há análise de uso, relatório de falhas nem
+conta, e os pacotes não definem cookie nem gravam nada em armazenamento: até a dispensa fica só na
+memória.
 
 ## O que a sonda contata
 
@@ -83,11 +84,24 @@ Nesse modo, `fetch` nunca é chamado e nenhum temporizador é agendado. O custo 
 conectada sem internet (um portal cativo, um roteador sem saída) parece online; portanto o motivo
 `no-internet` nunca ocorre.
 
+## React Native: o que o NetInfo faz
+
+No React Native você passa um módulo NetInfo (`@react-native-community/netinfo`) ao componente. Ele
+não faz parte do offline-detector, e o offline-detector não controla nem vê o que ele requisita.
+Segundo a documentação dele, em plataformas sem alcance de internet nativo, ou quando
+`useNativeReachability` é desligado, o NetInfo faz a sua própria requisição periódica: por padrão uma
+requisição `HEAD` para `https://clients3.google.com/generate_204`, a cada 5 segundos quando a internet
+não estava acessível e a cada 60 segundos quando estava. Mude ou desative isso com o `configure()` do
+NetInfo. Os sistemas operacionais móveis também fazem as suas próprias verificações de conectividade,
+independentes de qualquer app.
+
 ## A situação deste site de documentação
 
 Este site de documentação é estático. Não define cookies, não carrega análise de uso e não busca
-fontes nem scripts de outros hosts. A demonstração ao vivo tem um controle de simular offline que
-aciona uma sonda de mentira; assim, dá para testá-la sem nenhuma requisição de rede.
+fontes nem scripts de outros hosts. Ele pode guardar preferências de interface, como o tema claro ou
+escuro que você escolher, no armazenamento local do navegador; elas ficam no seu dispositivo e nunca
+são enviadas. A demonstração ao vivo tem um controle de simular offline que aciona uma sonda de
+mentira; assim, dá para testá-la sem nenhuma requisição de rede.
 
 A página da política de privacidade do projeto é publicada ao lado deste site em
 `/privacy-policy.html`, e o `PRIVACY.md` do repositório contém a mesma política.

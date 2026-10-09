@@ -8,7 +8,8 @@ sidebar_position: 12
 
 **El único tráfico de red que crea offline-detector es la sonda de alcance configurable.** No se
 recopila, almacena ni envía nada más a ningún sitio. No hay analíticas, ni informes de fallos, ni
-cuentas, ni cookies, ni almacenamiento persistente: incluso el descarte se guarda solo en memoria.
+cuentas, y los paquetes no definen cookies ni escriben nada en el almacenamiento: incluso el descarte
+se guarda solo en memoria.
 
 ## A quién contacta la sonda
 
@@ -84,11 +85,24 @@ En este modo `fetch` nunca se llama y no se programa ningún temporizador. El co
 una red conectada sin internet (un portal cautivo, un router sin salida) parece estar en línea; por
 eso el motivo `no-internet` nunca ocurre.
 
+## React Native: qué hace NetInfo
+
+En React Native pasas un módulo NetInfo (`@react-native-community/netinfo`) al componente. No forma
+parte de offline-detector, y offline-detector no controla ni ve lo que solicita. Según su
+documentación, en plataformas sin alcance de internet nativo, o cuando `useNativeReachability` está
+desactivado, NetInfo hace su propia petición periódica: por defecto una petición `HEAD` a
+`https://clients3.google.com/generate_204`, cada 5 segundos cuando internet no era alcanzable y cada
+60 segundos cuando sí lo era. Cámbialo o desactívalo con el `configure()` de NetInfo. Los sistemas
+operativos móviles también hacen sus propias comprobaciones de conectividad, independientes de
+cualquier app.
+
 ## Cómo está este sitio de documentación
 
 Este sitio de documentación es estático. No define cookies, no carga analíticas y no obtiene fuentes
-ni scripts de otros hosts. La demo en vivo tiene un control de simular sin conexión que acciona una
-sonda simulada; así se puede probar sin ninguna petición de red.
+ni scripts de otros hosts. Puede guardar preferencias de interfaz, como el tema claro u oscuro que
+elijas, en el almacenamiento local del navegador; se quedan en tu dispositivo y nunca se envían. La
+demo en vivo tiene un control de simular sin conexión que acciona una sonda simulada; así se puede
+probar sin ninguna petición de red.
 
 La página de la política de privacidad del proyecto se publica junto a este sitio en
 `/privacy-policy.html`, y el `PRIVACY.md` del repositorio contiene la misma política.
