@@ -35,6 +35,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # The tarballs as they would be published: no source, no workspace: ranges, every file present.
+      - run: node scripts/verify-pack.cjs
       - run: pnpm typecheck
       - run: pnpm typecheck:tests
       - run: pnpm lint

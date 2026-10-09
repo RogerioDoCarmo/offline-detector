@@ -13,9 +13,11 @@ describe.each(names)('package %s', (name) => {
     expect(manifest().name).toBe(`@rogeriodocarmo/offline-detector-${name}`);
   });
 
-  it('is public MIT with provenance', () => {
+  it('is public MIT, and leaves provenance to npm trusted publishing', () => {
+    // npm generates provenance automatically for trusted publishing from a public repository. Setting
+    // publishConfig.provenance would make the owner's first publish from a laptop fail.
     expect(manifest().license).toBe('MIT');
-    expect(manifest().publishConfig).toEqual({ access: 'public', provenance: true });
+    expect(manifest().publishConfig).toEqual({ access: 'public' });
   });
 
   it('ships ESM, CJS and types through a dual exports map', () => {

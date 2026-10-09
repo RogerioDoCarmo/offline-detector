@@ -56,9 +56,50 @@ The two numbers must match. Check `/demo/` the same way against `apps/demo-web/o
 
 ## Create the npm-publish environment
 
-In GitHub: Settings, Environments, New environment `npm-publish`, add the owner as required
-reviewer. Trusted publishing for each package is configured on npmjs.com after its first manual
-publish; see `NPM-SETUP.md`.
+The release workflow's publish job runs in this environment, so nothing reaches npm until you
+approve it. Two settings matter: you are the required reviewer, and only `v*.*.*` tags can deploy
+to it.
+
+```bash
+gh api -X PUT repos/RogerioDoCarmo/offline-detector/environments/npm-publish --input - <<EOF
+{
+  "reviewers": [{ "type": "User", "id": $(gh api users/RogerioDoCarmo --jq .id) }],
+  "prevent_self_review": false,
+  "deployment_branch_policy": { "protected_branches": false, "custom_branch_policies": true }
+}
+EOF
+gh api -X POST repos/RogerioDoCarmo/offline-detector/environments/npm-publish/deployment-branch-policies \
+  -f name='v*.*.*' -f type=tag
+```
+
+`prevent_self_review` is false on purpose: you are the only reviewer and also the person who pushes
+the tag, so true would make the job impossible to approve.
+
+## Publish the first release by hand
+
+Once, because npm only lets you configure trusted publishing on a package that already exists.
+The exact steps are in `docs/RELEASING.md`, section "The first release". The short version: log in
+to npm with two-factor authentication and run `pnpm publish --access public` in each package,
+dependencies first (core, react, web, native). Use pnpm, never plain npm, so the `workspace:`
+ranges are rewritten. Confirm your npm username is exactly `rogeriodocarmo` first (`NPM-SETUP.md`).
+
+## Configure npm trusted publishing
+
+For each of the four packages, on npmjs.com: Packages, the package, Settings, Trusted publishing,
+GitHub Actions.
+
+| Field                | Value              |
+| -------------------- | ------------------ |
+| Organization or user | `RogerioDoCarmo`   |
+| Repository           | `offline-detector` |
+| Workflow filename    | `release.yml`      |
+| Environment name     | `npm-publish`      |
+| Allowed actions      | tick `npm publish` |
+
+The last row is easy to miss: configs created after 3 September 2026 allow only staged publish by
+default, and the workflow publishes directly, so without the tick the first automated release
+fails with a permissions error. A connection cannot be edited afterwards; delete and recreate it
+to change a field.
 
 ## Set up SonarCloud
 

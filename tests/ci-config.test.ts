@@ -24,6 +24,7 @@ describe('ci workflow', () => {
     expect(runs).toEqual([
       'pnpm install --frozen-lockfile',
       'pnpm build',
+      'node scripts/verify-pack.cjs',
       'pnpm typecheck',
       'pnpm typecheck:tests',
       'pnpm lint',
