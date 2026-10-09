@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>offline-detector — Privacy Policy</title>
+    <meta
+      name="description"
+      content="Privacy Policy for offline-detector, open-source libraries that tell a React or React Native app whether it has internet. The libraries collect no data; they make one small connectivity request that you can change or switch off."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1a1a1a;
+        --muted: #5a5a5a;
+        --accent: #00694a;
+        --card: #f6f8fb;
+        --border: #e3e8ef;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0e1116;
+          --fg: #e6e6e6;
+          --muted: #9aa4b2;
+          --accent: #2ee6a6;
+          --card: #161b22;
+          --border: #262d36;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.7 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+      }
+      header {
+        border-bottom: 4px solid var(--accent);
+        padding-bottom: 16px;
+        margin-bottom: 8px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 2rem;
+      }
+      h2 {
+        margin-top: 36px;
+        font-size: 1.2rem;
+      }
+      .updated {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .lede {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin: 24px 0;
+      }
+      a {
+        color: var(--accent);
+      }
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin: 6px 0;
+      }
+      footer {
+        margin-top: 48px;
+        color: var(--muted);
+        font-size: 0.85rem;
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Privacy Policy</h1>
+        <div class="updated">offline-detector · Last updated: 9 October 2026</div>
+      </header>
+
+      <p class="lede">
+        <strong>Short version:</strong> offline-detector is a set of open-source libraries
+        that tell an app whether it has internet. They collect, store and send
+        <strong>no</strong> personal data: no accounts, analytics, advertising, cookies or
+        identifiers, and no servers of ours. They do make one kind of network request, a
+        small connectivity check to a public address (by default Cloudflare, then Google),
+        which, like any web request, lets that address see the device's IP address. You
+        can change the addresses, point them at your own server, or switch the check off
+        entirely.
+      </p>
+
+      <h2>1. Who we are</h2>
+      <p>
+        offline-detector ("the project", "we", "us") is a set of open-source packages for
+        React and React Native (<code>@rogeriodocarmo/offline-detector-core</code>,
+        <code>-react</code>, <code>-web</code> and <code>-native</code>), maintained by
+        Rogério do Carmo, together with the documentation site and the demo app published
+        with them. The packages run inside other developers' apps, on those apps' users'
+        devices. This policy explains what the packages and our sites do with information.
+        An app built with the packages has its own privacy policy, written by its own
+        developer (see section 10).
+      </p>
+
+      <h2>2. Information we collect</h2>
+      <p>
+        <strong>None.</strong> The project runs no server that receives data from the
+        packages, and the published packages contain no analytics, advertising, crash
+        reporting, tracking or telemetry. They do not read or store contacts, location,
+        identifiers, photos, files or credentials. The only network activity the packages
+        perform is the connectivity check in section 3, plus whatever the NetInfo module
+        does on React Native (section 4).
+      </p>
+
+      <h2>3. The connectivity check</h2>
+      <p>This is the one request the packages make, and the reason this policy exists.</p>
+      <ul>
+        <li>
+          <strong>What is sent:</strong> an HTTP request (<code>HEAD</code> by default)
+          with no body to an address that answers with an empty response. In a browser it
+          is sent in <code>no-cors</code> mode with caching off, so the page can tell that
+          an answer arrived but cannot read it. The packages add no cookies, custom
+          headers or identifiers; the platform's HTTP stack adds its normal headers, such
+          as the user agent.
+        </li>
+        <li>
+          <strong>Where, by default:</strong> two addresses, tried in order, the second
+          only if the first fails:
+          <code>https://cp.cloudflare.com/generate_204</code> (Cloudflare) and
+          <code>https://www.gstatic.com/generate_204</code> (Google).
+        </li>
+        <li>
+          <strong>What the address operators can see:</strong> as with any web request,
+          the device's IP address, the time and the standard request headers. Their own
+          privacy policies apply to that. We receive none of it.
+        </li>
+        <li>
+          <strong>When:</strong> when the app starts, when the device reports a network
+          change, every 30 seconds while the connection is up, and, while it is down,
+          retrying after 1, 2, 4, 8 and 16 seconds and then every 30 seconds. It also runs
+          when the user presses Retry, and when the app has chosen to re-check as the user
+          returns to it. Each attempt times out after 5 seconds.
+        </li>
+        <li>
+          <strong>What the packages do with the result:</strong> they keep "online" or
+          "offline" in memory to show the notice and to call the app's callbacks. The
+          result is not sent anywhere, stored or logged.
+        </li>
+        <li>
+          <strong>Your control:</strong> a developer can change the addresses (including
+          to your own server), the interval, the timeout and the method, or choose the
+          <code>interface-only</code> mode, in which the packages send no request at all
+          and rely only on what the device reports about its network interface.
+        </li>
+      </ul>
+
+      <h2>4. Native apps and NetInfo</h2>
+      <p>
+        On React Native, the native package asks a NetInfo module that the app developer
+        supplies (<code>@react-native-community/netinfo</code>) whether the device has a
+        network connection. That module is not part of this project. According to its
+        documentation, on platforms without native internet reachability, or when the app
+        turns native reachability off, it makes its own periodic request: by default a
+        <code>HEAD</code> request to
+        <code>https://clients3.google.com/generate_204</code>, every 5 seconds when the
+        internet was not reachable and every 60 seconds when it was. The app developer can
+        change or disable this with NetInfo's <code>configure()</code>. Mobile operating
+        systems also run their own connectivity checks, independent of any app. This
+        project controls none of these and does not receive their results.
+      </p>
+
+      <h2>5. Device language and data kept on the device</h2>
+      <p>
+        On React Native the package reads the device's language through
+        <code>I18nManager</code>, locally, to choose between English, Portuguese and
+        Spanish. In a browser it does not read the browser's language unless the developer
+        passes one. The connection status and which notices you dismissed are kept in
+        memory only: the packages write nothing to storage and set no cookies, and the
+        state is gone when the app closes.
+      </p>
+
+      <h2>6. Documentation site and demo</h2>
+      <p>
+        The documentation site and the web demo are hosted on GitHub Pages. As the host,
+        GitHub may log visitor data such as the IP address under its own privacy
+        statement; we do not receive that data. The sites set no cookies, run no analytics
+        or advertising, and load no third-party scripts, fonts or images. The
+        documentation site may keep interface preferences, such as the light or dark theme
+        you pick, in your browser's local storage; they stay on your device and are never
+        sent. The demo uses a simulated connectivity check by default; if you tick "Use
+        the real network probe", it sends the check described in section 3 from your
+        browser. Links to other sites are governed by those sites' policies.
+      </p>
+
+      <h2>7. Data sharing and selling</h2>
+      <p>
+        Because the project collects no data, there is nothing to share, sell or disclose.
+        The operators of a connectivity address (section 3) and of NetInfo's address
+        (section 4) receive the requests described there, as with any web request.
+      </p>
+
+      <h2>8. Data retention and security</h2>
+      <p>
+        The project stores no personal data, so there is nothing to retain, delete or
+        secure on a server. The packages hold the connection status in memory only.
+      </p>
+
+      <h2>9. Children's privacy</h2>
+      <p>
+        The project collects no data from anyone, including children. The packages contain
+        no ads, no purchases and no tracking.
+      </p>
+
+      <h2>10. If you build an app with these packages</h2>
+      <p>
+        You decide what your app does with the check, and you are responsible for your own
+        app's privacy policy and any store data-safety declarations. Points to consider
+        mentioning: your app makes a connectivity request to the address you configured
+        (by default Cloudflare's and Google's public addresses), which reveals the
+        device's IP address to that operator; whether you pass NetInfo, and how you
+        configured it; and what your own code does with the online or offline status. To
+        avoid contacting any third party, point the check at your own server or use the
+        <code>interface-only</code> mode. This section is practical guidance, not legal
+        advice.
+      </p>
+
+      <h2>11. Changes to this policy</h2>
+      <p>
+        If this policy changes, the updated version will be posted at this same URL with a
+        revised "Last updated" date. A change to what the packages send over the network
+        is made in the same commit as the policy change.
+      </p>
+
+      <h2>12. Contact</h2>
+      <p>
+        Questions about this policy? Contact
+        <a href="mailto:contact@rogeriodocarmo.com">contact@rogeriodocarmo.com</a>.
+      </p>
+
+      <footer>
+        © 2026 Rogério do Carmo. This page is the official privacy policy for the
+        offline-detector project.
+      </footer>
+    </main>
+  </body>
+</html>

@@ -8,7 +8,8 @@ sidebar_position: 12
 
 **The only network traffic offline-detector creates is the configurable reachability probe.**
 Nothing else is collected, stored or sent anywhere. There is no analytics, no crash reporting, no
-account, no cookie and no persistent storage: even dismissal is kept in memory only.
+account, and the packages set no cookie and write nothing to storage: even dismissal is kept in
+memory only.
 
 ## What the probe contacts
 
@@ -82,11 +83,23 @@ In this mode `fetch` is never called and no timers are scheduled. The cost is ac
 network without internet (a captive portal, a dead router) looks online, so the `no-internet`
 reason never occurs.
 
+## React Native: what NetInfo does
+
+On React Native you pass a NetInfo module (`@react-native-community/netinfo`) to the component. It is
+not part of offline-detector, and offline-detector neither controls nor sees what it requests.
+According to its documentation, on platforms without native internet reachability, or when
+`useNativeReachability` is turned off, NetInfo makes its own periodic request: by default a `HEAD`
+request to `https://clients3.google.com/generate_204`, every 5 seconds when the internet was not
+reachable and every 60 seconds when it was. Change or disable it with NetInfo's `configure()`.
+Mobile operating systems also run their own connectivity checks, independent of any app.
+
 ## Where the documentation site stands
 
 This documentation site is static. It sets no cookies, loads no analytics and fetches no fonts or
-scripts from other hosts. The live demo has a simulate-offline control that drives a stub probe, so
-it can be tried without any network request.
+scripts from other hosts. It may keep interface preferences, such as the light or dark theme you
+pick, in your browser's local storage; they stay on your device and are never sent. The live demo
+has a simulate-offline control that drives a stub probe, so it can be tried without any network
+request.
 
 The project's privacy policy page is published beside this site at `/privacy-policy.html`, and
 `PRIVACY.md` in the repository holds the same policy.

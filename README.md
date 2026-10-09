@@ -15,6 +15,11 @@ ready-made snackbar, banner, indicator and full-screen UI. Web and mobile, no na
 | `@rogeriodocarmo/offline-detector-web`    | DOM UI                                 |
 | `@rogeriodocarmo/offline-detector-native` | React Native UI                        |
 
+## Privacy
+
+The libraries collect no data. They make one small connectivity request that you can change or
+switch off; see the [privacy policy](PRIVACY.md).
+
 ## License
 
 MIT
