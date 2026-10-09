@@ -52,7 +52,13 @@ funciona igual: nada se ejecuta hasta que la página está en un navegador. La
 ## Política de seguridad de contenido
 
 `<OfflineDetector>` renderiza un elemento `<style>` en línea con los tokens `--od-*` y los estilos
-de las piezas, y no acepta una prop `nonce`. Un `style-src` estricto, sin `unsafe-inline`, lo
-bloquea por tanto. Los bloques de construcción se exportan por si necesitas armar el tuyo:
-`OfflineTokens` (acepta un `nonce`), `offlineTokensCss` y `offlineCss` (el CSS como cadenas).
-Consulta la [referencia web](./reference/web.md). Este camino no se ha probado con una política real.
+de las piezas. Bajo un `style-src` estricto, sin `unsafe-inline`, pasa el nonce que usan tus otros
+estilos en línea:
+
+```tsx
+<OfflineDetector nonce={nonce}>{children}</OfflineDetector>
+```
+
+Los bloques de construcción se exportan por si necesitas armar el tuyo: `OfflineTokens` (también
+acepta un `nonce`) y las constantes `offlineTokensCss` y `offlineCss` (el CSS como cadenas). Consulta
+la [referencia web](./reference/web.md). Este camino no se ha probado con una política real.

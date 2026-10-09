@@ -80,8 +80,8 @@ snackbar `offsetBottom`; na tela cheia `onRestoreFocus`).
 
 `actions` é `{ retry?, dismiss?, continueOffline? }`. Uma peça é dispensável exatamente quando
 `actions.dismiss` está presente, e a tela cheia mostra "Continuar offline" exatamente quando
-`actions.continueOffline` está. As antigas props `onRetry`, `onDismiss`, `dismissible` e `title`
-sumiram: `message` é o título da tela cheia. Uma peça deslizada para fora volta ao repouso quando
+`actions.continueOffline` está. Não há props separadas de tentar de novo, dispensar ou título:
+use `actions` e `message` (o título da tela cheia). Uma peça deslizada para fora volta ao repouso quando
 `visible` volta a ser true, então ela reaparece na próxima transição. `PieceIcons` tipa os glifos
 substituíveis. Um slot recebe o contrato `PieceRenderProps`, com `theme` preenchido.
 

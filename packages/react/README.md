@@ -1,7 +1,7 @@
 # @rogeriodocarmo/offline-detector-react
 
 Part of [offline-detector](https://github.com/RogerioDoCarmo/offline-detector). The React layer
-over the [core engine](../core/README.md): a provider, hooks, dismissal state, bundled strings
+over the [core engine](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/core/README.md): a provider, hooks, dismissal state, bundled strings
 and the shared types that the web and native UI packages build on.
 
 It has no DOM and no React Native imports, so one copy works on both. A **platform adapter**

@@ -82,8 +82,8 @@ de extras nativos (`announce`, `reduceMotion`, `insets`, `icons`, `style`, `test
 
 `actions` es `{ retry?, dismiss?, continueOffline? }`. Una pieza es descartable exactamente cuando
 `actions.dismiss` está presente, y la pantalla completa muestra "Continuar sin conexión" exactamente
-cuando `actions.continueOffline` lo está. Las antiguas props `onRetry`, `onDismiss`, `dismissible` y
-`title` ya no existen: `message` es el título de la pantalla completa. Una pieza deslizada fuera
+cuando `actions.continueOffline` lo está. No hay props separadas de reintentar, descartar ni título:
+usa `actions` y `message` (el título de la pantalla completa). Una pieza deslizada fuera
 vuelve al reposo cuando `visible` pasa a ser true otra vez, así que reaparece en la siguiente
 transición. `PieceIcons` tipa los glifos reemplazables. Un slot recibe el contrato
 `PieceRenderProps`, con `theme` rellenado.

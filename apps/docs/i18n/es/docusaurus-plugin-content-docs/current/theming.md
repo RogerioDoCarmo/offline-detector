@@ -23,6 +23,11 @@ en tu CSS:
 }
 ```
 
+Las declaraciones `--od-*` del propio paquete van bajo selectores `:where()`, que no pesan nada; así,
+una regla tuya `:root { ... }` como la de arriba gana dondequiera que esté en la cascada. Bajo una
+Content Security Policy, pasa el mismo nonce que usan tus otros estilos en línea:
+`<OfflineDetector nonce={nonce}>` (o `<OfflineTokens nonce={nonce} />`).
+
 Fuerza un esquema con la prop `colorScheme` (`'auto'`, `'light'` o `'dark'`). Cualquier valor
 distinto de `'auto'` envuelve el árbol en un elemento con `data-od-theme` y `display: contents`.
 También puedes definir `data-od-theme="light"` o `"dark"` en `<html>`, en un elemento

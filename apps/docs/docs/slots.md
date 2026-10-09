@@ -19,7 +19,7 @@ The keys of `slots` are `snackbar`, `banner`, `indicator` and `fullScreen`.
 
 ## What a slot receives
 
-A slot gets the `PieceRenderProps` contract from the React package:
+A slot gets the `PieceRenderProps` contract. The web and native packages export the type:
 
 | Prop        | What it is                                                                       |
 | ----------- | -------------------------------------------------------------------------------- |
@@ -35,8 +35,8 @@ A slot gets the `PieceRenderProps` contract from the React package:
 ## Web example
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
 import { OfflineDetector } from '@rogeriodocarmo/offline-detector-web';
+import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-web';
 
 function Toast({ message, phase, actions, rootProps }: PieceRenderProps) {
   return (
@@ -59,8 +59,10 @@ your own CSS. See [Theming](./theming.md).
 ## Native example
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
-import type { OfflineTheme } from '@rogeriodocarmo/offline-detector-native';
+import type {
+  OfflineTheme,
+  PieceRenderProps,
+} from '@rogeriodocarmo/offline-detector-native';
 
 function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>) {
   return (

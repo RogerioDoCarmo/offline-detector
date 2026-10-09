@@ -53,6 +53,10 @@ The swipe rules:
 - Dismissal is kept in memory only. A reload resets it. Nothing is stored.
 - Dismissing the banner reflows the content below it.
 - Dismissing by the user is not announced to screen readers: the user caused it.
+- On the web, dismissing a piece that held keyboard focus puts focus back on the element that had it
+  before the piece appeared (the page body if that element is gone).
+- A piece you assemble yourself is dismissible exactly when you pass `actions.dismiss`, on web and
+  native alike.
 
 ## Reacting to a dismissal
 
@@ -66,7 +70,9 @@ The swipe rules:
 
 ## In your own components
 
-`resolveDismissible` and `useDismissals` are exported from the React package:
+`resolveDismissible` and `useDismissals` are exported from the React package
+(`@rogeriodocarmo/offline-detector-react`, which the web and native packages depend on but do not
+re-export these two from):
 
 ```ts
 resolveDismissible('banner', { dismissible: false, banner: { dismissible: true } }); // true

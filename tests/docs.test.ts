@@ -836,7 +836,7 @@ describe('guides follow the one-package rule and the new behaviour', () => {
 
   it.each(LOCALES)('%s: theming and ssr document :where and nonce', (locale) => {
     const theming = read(docPath(locale, 'theming'));
-    expect(theming).toContain(':where(:root)');
+    expect(theming).toContain(':where()');
     expect(theming).toContain('nonce={nonce}');
     const ssr = read(docPath(locale, 'ssr'));
     expect(ssr).toContain('nonce={nonce}');

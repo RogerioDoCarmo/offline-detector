@@ -29,10 +29,10 @@ DevTools del navegador, pestaña Network, y elige Offline.
 
 ## Lee el estado en cualquier lugar
 
-Los hooks del paquete React funcionan en cualquier punto dentro de `<OfflineDetector>`:
+Los hooks funcionan en cualquier punto dentro de `<OfflineDetector>`, y el paquete web los exporta:
 
 ```tsx
-import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-react';
+import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-web';
 
 function SaveButton() {
   const { isOnline, reason, checkNow } = useNetworkStatus();
@@ -44,8 +44,9 @@ function SaveButton() {
 }
 ```
 
-`@rogeriodocarmo/offline-detector-react` se instala junto con el paquete web. Consulta la
-[referencia de react](./reference/react.md) para ver todos los hooks.
+El paquete web reexporta los hooks de la capa React, así que es el único paquete que hay que
+instalar y desde el que importar. Consulta la [referencia de react](./reference/react.md) para ver
+todos los hooks.
 
 ## Opciones comunes
 
@@ -67,6 +68,8 @@ function SaveButton() {
 | `distinguishReason` | Dice el motivo: "Sin conexión de red" o "Conectado, pero sin internet".                           |
 | `fullScreen`        | Un estado de pantalla completa opcional, con Intentar de nuevo y, si quieres, una salida.         |
 | `probe`             | URL de la sonda, tiempo de espera, intervalo, método y modo. Consulta [Privacidad](./privacy.md). |
+| `onContinueOffline` | Se llama cuando el usuario pulsa "Continuar sin conexión" (o Escape) en la pantalla completa.     |
+| `nonce`             | Nonce de CSP del elemento `<style>` en línea. Consulta [Renderizado en el servidor](./ssr.md).    |
 | `dismissible`       | Apaga el deslizar y el Cerrar en todas las piezas. Consulta [Descartar](./dismissal.md).          |
 
 La lista completa está en la [referencia web](./reference/web.md). En Next.js, lee las notas sobre

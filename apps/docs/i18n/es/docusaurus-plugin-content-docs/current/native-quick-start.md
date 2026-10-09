@@ -49,9 +49,9 @@ control total, pasa tu propio `adapter` (consulta `createNativeAdapter` en la
 
 ## Márgenes de área segura
 
-Pasa `insets` desde `useSafeAreaInsets()`. El valor por defecto es `defaultInsets()`: la altura de la
-barra de estado de Android arriba y cero en los demás lados. Eso es incorrecto en iPhones con notch;
-por eso pasa los márgenes allí.
+Pasa `insets` desde `useSafeAreaInsets()`. El valor por defecto es la altura de la barra de estado de
+Android arriba y cero en los demás lados. Eso es incorrecto en iPhones con notch; por eso pasa los
+márgenes allí.
 
 ## Volver a comprobar al regresar
 
@@ -59,7 +59,7 @@ Reintentar siempre muestra "Verificando…" al instante. Una nueva comprobación
 volver a la app solo la muestra cuando una pantalla lo activa:
 
 ```tsx
-import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-react';
+import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-native';
 
 function Checkout() {
   useRecheckOnReturn({ checkingFeedback: 'brief' });
@@ -67,7 +67,8 @@ function Checkout() {
 }
 ```
 
-Consulta [Comprobar al volver](./recheck-on-return.md).
+El paquete nativo reexporta los hooks de la capa React, así que es el único paquete que hay que
+instalar y desde el que importar. Consulta [Comprobar al volver](./recheck-on-return.md).
 
 ## No verificado en un dispositivo
 

@@ -94,8 +94,8 @@ um botão.
 
 `OfflineTokens` renderiza os tokens e os estilos em um elemento `<style>` (aceita um `nonce`).
 `offlineTokensCss` e `offlineCss` são constantes: os tokens como string, e os tokens mais os estilos
-das quatro peças. Os tokens são declarados sob `:where(:root)`, então uma regra sua
-`:root { --od-... }` prevalece.
+das quatro peças. Os tokens são declarados sob seletores `:where(...)`, que não têm especificidade, então uma regra
+sua `:root { --od-... }` prevalece.
 Veja [Temas](../theming.md).
 
 ## Hooks e tipos do pacote react

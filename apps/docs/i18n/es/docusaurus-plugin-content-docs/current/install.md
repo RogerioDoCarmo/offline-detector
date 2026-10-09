@@ -6,7 +6,8 @@ sidebar_position: 2
 
 # Instalación
 
-Elige el paquete de interfaz de tu plataforma. Trae consigo la capa React y el motor core.
+Elige el paquete de interfaz de tu plataforma e instala solo ese. Trae consigo la capa React y el
+motor core, y reexporta los hooks y tipos que necesitas, así que lo importas todo desde él.
 
 ## Web
 
@@ -23,7 +24,7 @@ y yarn instalan por ti.
 ## React Native y Expo
 
 ```bash
-npm install @rogeriodocarmo/offline-detector-native @rogeriodocarmo/offline-detector-react
+npm install @rogeriodocarmo/offline-detector-native
 # opcional, para detección instantánea cuando la interfaz se cae:
 npm install @react-native-community/netinfo
 # opcional, para los márgenes de área segura:
@@ -34,7 +35,8 @@ En Expo, usa `npx expo install @react-native-community/netinfo react-native-safe
 que Expo elija las versiones que corresponden a tu SDK. En React Native sin Expo, instala los mismos
 paquetes y ejecuta `pod install` en iOS.
 
-Requiere React 18 o superior y React Native 0.73 o superior. No hay código nativo propio, ni
+El paquete nativo depende de la capa React y del core, así que no hay nada más que añadir. Requiere
+React 18 o superior y React Native 0.73 o superior. No hay código nativo propio, ni
 Reanimated, ni dependencia de gesture-handler; por eso nada exige un development build más allá de
 lo que ya exige el propio NetInfo.
 

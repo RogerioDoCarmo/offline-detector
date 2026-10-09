@@ -48,8 +48,8 @@ pass your own `adapter` (see `createNativeAdapter` in the [native reference](./r
 
 ## Safe-area insets
 
-Pass `insets` from `useSafeAreaInsets()`. The default is `defaultInsets()`: the Android status bar
-height on top and zero elsewhere. That is wrong on notched iPhones, so pass insets there.
+Pass `insets` from `useSafeAreaInsets()`. The default is the Android status bar height on top and
+zero elsewhere. That is wrong on notched iPhones, so pass insets there.
 
 ## Re-checking on return
 
@@ -57,7 +57,7 @@ Retry always shows "Checking…" at once. A background re-check when the user re
 shows it only when a screen opts in:
 
 ```tsx
-import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-react';
+import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-native';
 
 function Checkout() {
   useRecheckOnReturn({ checkingFeedback: 'brief' });
@@ -65,7 +65,8 @@ function Checkout() {
 }
 ```
 
-See [Re-check on return](./recheck-on-return.md).
+The native package re-exports the hooks of the React layer, so it is the only package to install
+and import from. See [Re-check on return](./recheck-on-return.md).
 
 ## Not verified on a device
 

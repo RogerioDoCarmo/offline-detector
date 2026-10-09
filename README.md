@@ -3,7 +3,8 @@
 Detect and show when a React or React Native app has no internet: a headless hook, callbacks, and
 ready-made snackbar, banner, indicator and full-screen UI. Web and mobile, no native code.
 
-> Work in progress. The design is in
+> Status: pre-release. The four packages are built and tested, but their version is still 0.0.0 and
+> nothing has been published to npm yet; the first release is pending. The design is in
 > [`docs/superpowers/specs/2026-10-07-offline-detector-design.md`](docs/superpowers/specs/2026-10-07-offline-detector-design.md).
 
 ## Packages

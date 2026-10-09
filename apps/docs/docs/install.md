@@ -6,7 +6,8 @@ sidebar_position: 2
 
 # Install
 
-Pick the UI package for your platform. It brings the React layer and the core engine with it.
+Pick the UI package for your platform and install only that one. It brings the React layer and the
+core engine with it, and re-exports the hooks and types you need, so you import everything from it.
 
 ## Web
 
@@ -23,7 +24,7 @@ npm and yarn install for you.
 ## React Native and Expo
 
 ```bash
-npm install @rogeriodocarmo/offline-detector-native @rogeriodocarmo/offline-detector-react
+npm install @rogeriodocarmo/offline-detector-native
 # optional, for instant detection when the interface drops:
 npm install @react-native-community/netinfo
 # optional, for safe-area insets:
@@ -34,7 +35,8 @@ On Expo, use `npx expo install @react-native-community/netinfo react-native-safe
 Expo picks the versions that match your SDK. On bare React Native, install the same packages and
 run `pod install` on iOS.
 
-Requires React 18 or newer and React Native 0.73 or newer. There is no custom native code, no
+The native package depends on the React layer and the core, so there is nothing else to add. It
+requires React 18 or newer and React Native 0.73 or newer. There is no custom native code, no
 Reanimated and no gesture-handler dependency, so nothing needs a development build beyond what
 NetInfo itself needs.
 
