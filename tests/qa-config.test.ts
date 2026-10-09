@@ -103,6 +103,12 @@ describe('stryker', () => {
     expect(flat.testPathIgnorePatterns).toContain('ssr\\.test\\.tsx$');
   });
 
+  it("declares the jsdom package that Stryker's jsdom environment wraps", () => {
+    // Stryker's own environment requires jest-environment-jsdom from the root; without it the
+    // dry run fails with MODULE_NOT_FOUND before a single mutant runs.
+    expect(pkg().devDependencies['jest-environment-jsdom']).toMatch(/^\^30\./);
+  });
+
   it("restores Node's setImmediate in the jsdom environment, which core's test helpers use", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const flat = require('../jest.stryker.config.cjs');
