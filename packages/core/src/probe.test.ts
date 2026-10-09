@@ -104,6 +104,22 @@ describe('probeAny', () => {
     expect(fetch.calls).toEqual(['https://a.test']);
   });
 
+  it('leaves a finished request alone when stop is signalled afterwards', async () => {
+    const clock = createClock();
+    const fetch = createFetch(() => 'ok');
+    const outer = new AbortController();
+    await probeAny(['https://a.test'], {
+      fetch,
+      method: 'HEAD',
+      timeoutMs: 5000,
+      setTimeout: clock.setTimeout,
+      clearTimeout: clock.clearTimeout,
+      signal: outer.signal,
+    });
+    outer.abort();
+    expect(fetch.inits[0]?.signal.aborted).toBe(false);
+  });
+
   it('does not call fetch at all when the stop signal is already aborted', async () => {
     const clock = createClock();
     const fetch = createFetch(() => 'ok');
