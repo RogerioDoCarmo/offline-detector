@@ -5,8 +5,10 @@ Source of truth: `docs/superpowers/specs/2026-10-07-offline-detector-design.md`.
 
 ## Git
 
-- Git Flow, strictly. `main` receives merges from `develop` only. Work happens on `feature/*`,
-  `fix/*` or `chore/*` branches cut from `develop`; PRs target `develop`.
+- Git Flow, strictly. `main` receives merges from `develop` and from `release/*` and `hotfix/*`
+  branches, never from anything else. Work happens on `feature/*`, `fix/*` or `chore/*` branches
+  cut from `develop`; PRs target `develop`. Releases are cut on `release/*` (see
+  `docs/RELEASING.md`).
 - Never rebase. Bring a branch up to date with `git merge origin/develop`. To fix something
   committed, make another commit.
 

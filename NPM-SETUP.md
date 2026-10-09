@@ -79,18 +79,20 @@ npm view @rogeriodocarmo/offline-detector-native name
 Because they live in your own scope, collisions are only possible if you
 already published something with these names.
 
-### 5. Prepare automated publishing (do this later, when the repo has a CI release)
+### 5. Prepare automated publishing
 
-Not needed today. When we get to the release workflow, the plan is **npm
-trusted publishing (OIDC)**, which needs no long-lived token:
+Releases use **npm trusted publishing (OIDC)**, which needs no long-lived
+token. The package page only exists **after the first publish**, so the very
+first version of each package is published once by hand (with 2FA), then
+switched to trusted publishing.
 
-- [ ] On npmjs.com, open each package -> _Settings -> Trusted Publisher_ and
-      link `RogerioDoCarmo/offline-detector` and the release workflow file name.
-      The package page only exists **after the first publish**, so the very first
-      version of each package is published once by hand (with 2FA), then switched
-      to trusted publishing.
-- [ ] In GitHub, create a protected **Environment** named `npm-publish` with
-      you as a required reviewer, so nothing ships without your approval.
+The exact settings are easy to get wrong (the environment name, the
+"Allowed actions: `npm publish`" tick, the order of the steps), so they are not
+repeated here. Follow `docs/OWNER-ACTIONS.md`:
+
+- [ ] "Create the npm-publish environment" **first**, before any tag.
+- [ ] "Publish the first release by hand".
+- [ ] "Configure npm trusted publishing", for each of the four packages.
 
 Do **not** paste an npm token into chat, into a file in this repo, or into a
 workflow. If a token is ever needed, it goes in GitHub _Settings -> Secrets_
