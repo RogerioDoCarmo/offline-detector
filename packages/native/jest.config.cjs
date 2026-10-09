@@ -15,10 +15,8 @@ module.exports = {
   haste: rnPreset.haste,
   moduleNameMapper: {
     ...rnPreset.moduleNameMapper,
-    // Test against the react package's source: its published dist is built with the classic JSX
-    // transform and calls an unimported `React.createElement`, which fails with "React is not
-    // defined". The source needs no build step and is transformed like our own.
-    '^@rogeriodocarmo/offline-detector-react$': join(__dirname, '../react/src/index.ts'),
+    // Workspace packages (core, react) resolve from source, as in every other project.
+    ...base.moduleNameMapper,
   },
   resolver: rnPreset.resolver,
   setupFiles: rnPreset.setupFiles,

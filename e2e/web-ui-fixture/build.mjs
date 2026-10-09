@@ -20,6 +20,10 @@ const compiler = rspack({
     // Bundle the sibling package from source, so the fixture does not depend on how (or whether)
     // it was built.
     alias: {
+      '@rogeriodocarmo/offline-detector-core': join(
+        here,
+        '../../packages/core/src/index.ts',
+      ),
       '@rogeriodocarmo/offline-detector-react': join(
         here,
         '../../packages/react/src/index.ts',
