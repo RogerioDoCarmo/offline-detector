@@ -231,7 +231,7 @@ describe('pages and translations', () => {
 /** Names exported by a package entry point, values and types, read from its index.ts. */
 function exportedNames(pkg: string): string[] {
   const source = read(`packages/${pkg}/src/index.ts`);
-  const names = new Set<string>();
+  const names: Set<string> = new Set();
   for (const match of source.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g)) {
     for (const part of (match[1] ?? '').split(',')) {
       const name = part
@@ -275,10 +275,10 @@ describe('reference pages match the real exports', () => {
     expect(exportedNames('native')).toEqual(
       expect.arrayContaining(['createNativeAdapter', 'lightTheme', 'FullScreen']),
     );
-    expect(exportedNames('core')).toHaveLength(16);
-    expect(exportedNames('react')).toHaveLength(23);
-    expect(exportedNames('web')).toHaveLength(31);
-    expect(exportedNames('native')).toHaveLength(36);
+    expect(exportedNames('core')).toHaveLength(17);
+    expect(exportedNames('react')).toHaveLength(24);
+    expect(exportedNames('web')).toHaveLength(33);
+    expect(exportedNames('native')).toHaveLength(31);
   });
 
   for (const pkg of ['core', 'react', 'web', 'native']) {
@@ -332,7 +332,7 @@ describe('reference pages match the real exports', () => {
       (m) => m[0],
     );
     const tokens = [...new Set(css)].filter((t) => t !== '--od-');
-    expect(tokens).toHaveLength(62);
+    expect(tokens).toHaveLength(65);
     const themeBlock = /export type OfflineTheme = \{([\s\S]*?)\n\};/.exec(
       read('packages/native/src/theme.ts'),
     )?.[1];
@@ -372,12 +372,16 @@ describe('brand layer contrast', () => {
       ['light', 'muted', 'paper', 6.57, true],
       ['light', 'signal', 'paper', 6.44, true],
       ['light', 'signal', 'paperRaised', 5.88, true],
+      ['light', 'ink', 'paperRaised', 14.49, true],
+      ['light', 'muted', 'paperRaised', 6, true],
       ['light', 'onSignal', 'signal', 6.44, true],
       ['light', 'lost', 'paper', 6.25, true],
       ['dark', 'ink', 'canvas', 17.03, true],
       ['dark', 'muted', 'canvas', 8.47, true],
       ['dark', 'signal', 'canvas', 11.69, true],
       ['dark', 'signal', 'canvasRaised', 10.68, true],
+      ['dark', 'ink', 'canvasRaised', 15.55, true],
+      ['dark', 'muted', 'canvasRaised', 7.73, true],
       ['dark', 'onSignal', 'signal', 11.69, true],
       ['dark', 'lost', 'canvas', 6.77, true],
     ]);
