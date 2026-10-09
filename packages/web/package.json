@@ -36,5 +36,23 @@
   "scripts": {
     "build": "rslib build",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rogeriodocarmo/offline-detector-core": "workspace:*",
+    "@rogeriodocarmo/offline-detector-react": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "axe-core": "^4.14.0",
+    "jest-environment-jsdom": "^30.5.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

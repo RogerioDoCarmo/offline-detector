@@ -7,4 +7,6 @@ module.exports = {
   displayName: 'react',
   rootDir: __dirname,
   roots: [join(__dirname, 'src')],
+  // Hooks are tested in jsdom; SSR tests opt back into node with a per-file docblock.
+  testEnvironment: 'jsdom',
 };

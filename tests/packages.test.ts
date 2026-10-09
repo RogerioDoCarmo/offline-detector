@@ -31,8 +31,42 @@ describe.each(names)('package %s', (name) => {
     expect(manifest().sideEffects).toBe(false);
   });
 
-  it('has no runtime dependencies yet', () => {
-    expect(manifest().dependencies).toBeUndefined();
+  it('depends only on the workspace packages below it, and declares its peers', () => {
+    const wanted = {
+      core: { dependencies: undefined, peerDependencies: undefined },
+      react: {
+        dependencies: { '@rogeriodocarmo/offline-detector-core': 'workspace:*' },
+        peerDependencies: { react: '>=18.0.0' },
+      },
+      web: {
+        dependencies: {
+          '@rogeriodocarmo/offline-detector-core': 'workspace:*',
+          '@rogeriodocarmo/offline-detector-react': 'workspace:*',
+        },
+        peerDependencies: { react: '>=18.0.0', 'react-dom': '>=18.0.0' },
+      },
+      native: {
+        dependencies: {
+          '@rogeriodocarmo/offline-detector-core': 'workspace:*',
+          '@rogeriodocarmo/offline-detector-react': 'workspace:*',
+        },
+        peerDependencies: {
+          react: '>=18.0.0',
+          'react-native': '>=0.73.0',
+          '@react-native-community/netinfo': '>=11.0.0',
+        },
+      },
+    }[name];
+    expect(manifest().dependencies).toEqual(wanted.dependencies);
+    expect(manifest().peerDependencies).toEqual(wanted.peerDependencies);
+  });
+
+  it('marks NetInfo as an optional peer on native only', () => {
+    expect(manifest().peerDependenciesMeta).toEqual(
+      name === 'native'
+        ? { '@react-native-community/netinfo': { optional: true } }
+        : undefined,
+    );
   });
 
   it('builds and typechecks through the workspace scripts', () => {

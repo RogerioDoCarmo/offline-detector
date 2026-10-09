@@ -44,6 +44,36 @@ describe('jest layout', () => {
   });
 });
 
+describe('tests do not depend on build output', () => {
+  // CI jobs that do not build (mutation, E2E) failed with "Cannot find module" because workspace
+  // packages resolved each other through dist. Tests resolve them from source instead; the
+  // built-output tests in dist-exports.test.ts cover dist separately.
+  const sourceOf = (name: string) =>
+    new RegExp(`packages[\\\\/]${name}[\\\\/]src[\\\\/]index\\.ts$`);
+
+  it.each([...names, 'stryker'])(
+    'the %s project maps core and react to their source',
+    (name) => {
+      const path =
+        name === 'stryker'
+          ? '../jest.stryker.config.cjs'
+          : `../packages/${name}/jest.config.cjs`;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mapper = require(path).moduleNameMapper;
+      expect(mapper['^@rogeriodocarmo/offline-detector-core$']).toMatch(sourceOf('core'));
+      expect(mapper['^@rogeriodocarmo/offline-detector-react$']).toMatch(
+        sourceOf('react'),
+      );
+    },
+  );
+
+  it('bundles the E2E fixture from source too', () => {
+    const build = read('e2e/web-ui-fixture/build.mjs');
+    expect(build).toContain("'@rogeriodocarmo/offline-detector-core'");
+    expect(build).toContain("'../../packages/core/src/index.ts'");
+  });
+});
+
 describe('worktree hygiene', () => {
   it('git-ignores agent worktrees and keeps linters out of them', () => {
     expect(read('.gitignore').split('\n')).toContain('.claude/worktrees');
