@@ -22,8 +22,8 @@ predeterminadas están bloqueadas. Consulta [Privacidad](./privacy.md).
 
 Cuando la interfaz se cae, es inmediato: no hace falta ninguna sonda. Cuando la interfaz sigue activa
 pero se pierde internet, decide la siguiente sonda: cada 30 segundos por defecto mientras hay
-conexión. Sin conexión, reintenta tras 1 segundo, duplicando hasta un tope de 30 segundos, y volver a
-estar en línea lo reinicia.
+conexión. Sin conexión, reintenta tras 1 segundo, duplicando hasta un tope de 30 segundos, y volver
+a estar en línea lo reinicia.
 
 ## ¿Puedo ejecutarlo sin ninguna petición de red?
 

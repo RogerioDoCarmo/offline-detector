@@ -23,10 +23,10 @@ uma no seu CSS:
 }
 ```
 
-Force um esquema com a prop `colorScheme` (`'auto'`, `'light'` ou `'dark'`). Qualquer valor diferente de
-`'auto'` envolve a árvore em um elemento com `data-od-theme` e `display: contents`. Você também pode
-definir `data-od-theme="light"` ou `"dark"` em `<html>`, em um elemento `[data-od-root]` ou em qualquer
-subárvore.
+Force um esquema com a prop `colorScheme` (`'auto'`, `'light'` ou `'dark'`). Qualquer valor
+diferente de `'auto'` envolve a árvore em um elemento com `data-od-theme` e `display: contents`.
+Você também pode definir `data-od-theme="light"` ou `"dark"` em `<html>`, em um elemento
+`[data-od-root]` ou em qualquer subárvore.
 
 Alguns tokens servem ao layout, não ao visual: `--od-offset-top` e
 `--od-offset-bottom` afastam as peças das suas próprias barras fixas, e `--od-banner-height` é

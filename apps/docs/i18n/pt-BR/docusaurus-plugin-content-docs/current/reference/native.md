@@ -49,9 +49,9 @@ O conteúdo do app fica oculto para a tecnologia assistiva enquanto o estado de 
 
 `createNativeAdapter({ netInfo?, appState? })` devolve um `PlatformAdapter`:
 
-- `netInfo` é o módulo NetInfo (`NetInfoLike`: `fetch()` e `addEventListener()`), passado pelo app. O
-  pacote nunca o importa. Sem ele, presume-se que a interface está ativa e só a sonda decide; builds
-  de desenvolvimento avisam uma vez.
+- `netInfo` é o módulo NetInfo (`NetInfoLike`: `fetch()` e `addEventListener()`), passado pelo app.
+  O pacote nunca o importa. Sem ele, presume-se que a interface está ativa e só a sonda decide;
+  builds de desenvolvimento avisam uma vez.
 - `appState` usa por padrão o `AppState` do React Native (`AppStateLike`). Um retorno ao primeiro
   plano é uma mudança de `background` ou `inactive` para `active`.
 - A interface está ativa quando `isConnected !== false`.

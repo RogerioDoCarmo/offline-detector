@@ -20,8 +20,8 @@ de dados, contam como offline.
 - O **sinal da interface**, vindo do adapter, é o rápido. Interface fora do ar significa `offline`
   com o motivo `no-interface`, sem precisar de sonda.
 - Com a interface ativa, uma **sonda** confirma o alcance real. As URLs são tentadas em ordem e o
-  primeiro sucesso vale (`online`). Se todas falharem ou esgotarem o tempo, o estado é `offline` com o
-  motivo `no-internet`.
+  primeiro sucesso vale (`online`). Se todas falharem ou esgotarem o tempo, o estado é `offline` com
+  o motivo `no-internet`.
 - Enquanto **online**, a sonda se repete a cada `intervalMs` (padrão 30000 ms).
 - Enquanto **offline**, ele tenta de novo após 1000 ms, dobrando até um teto de 30000 ms. Voltar a
   ficar online zera a espera.
@@ -120,8 +120,8 @@ interface PlatformAdapter {
 }
 ```
 
-- Um evento de interface fora do ar é aplicado na hora e se sobrepõe a qualquer sonda em andamento. Um
-  evento de interface ativa dispara uma verificação imediata.
+- Um evento de interface fora do ar é aplicado na hora e se sobrepõe a qualquer sonda em andamento.
+  Um evento de interface ativa dispara uma verificação imediata.
 - Um retorno ao primeiro plano dispara `checkNow()` somente quando `recheckOnForeground: true` é
   informado (padrão `false`). A camada React liga isso por tela com `useRecheckOnReturn`.
 - Se `isInterfaceUp()` lançar erro ou for rejeitada, trata-se como "ativa" e a sonda decide.

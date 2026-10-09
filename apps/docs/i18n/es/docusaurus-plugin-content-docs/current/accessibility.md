@@ -6,9 +6,9 @@ sidebar_position: 8
 
 # Accesibilidad
 
-El objetivo es WCAG 2.2 AA en todos los estados de todas las piezas, en modo claro y oscuro, en web y
-en nativo. El color nunca es la única señal: cada estado se comunica con palabras más una forma, y el
-color es una tercera señal, de apoyo.
+El objetivo es WCAG 2.2 AA en todos los estados de todas las piezas, en modo claro y oscuro, en web
+y en nativo. El color nunca es la única señal: cada estado se comunica con palabras más una forma, y
+el color es una tercera señal, de apoyo.
 
 ## Anuncios: una vez, y con cortesía
 

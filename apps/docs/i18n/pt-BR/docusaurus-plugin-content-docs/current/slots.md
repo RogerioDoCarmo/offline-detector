@@ -78,8 +78,8 @@ function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>
 ## Mantenha acessível
 
 - Espalhe `rootProps` na sua raiz. Ele carrega o papel e a configuração de região viva que fazem a
-  transição ser anunciada exatamente uma vez. Um slot que omite `rootProps` faz o provider recorrer a
-  um anunciador visualmente oculto; assim, a mensagem continua sendo falada.
+  transição ser anunciada exatamente uma vez. Um slot que omite `rootProps` faz o provider recorrer
+  a um anunciador visualmente oculto; assim, a mensagem continua sendo falada.
 - Coloque `aria-label` apenas em um elemento com papel que aceite nome (`role="status"`,
   `role="region"`, `role="img"`), nunca em um `div` ou `span` sem papel.
 - Mantenha os alvos com pelo menos 44 por 44 e ofereça uma forma de dispensar que não seja deslizar.

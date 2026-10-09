@@ -111,6 +111,9 @@ importers:
       '@docusaurus/module-type-aliases':
         specifier: 3.10.2
         version: 3.10.2(postcss@8.5.29)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@docusaurus/theme-classic':
+        specifier: 3.10.2
+        version: 3.10.2(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
       '@docusaurus/tsconfig':
         specifier: 3.10.2
         version: 3.10.2
