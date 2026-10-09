@@ -62,15 +62,21 @@ export function createWebAdapter(env: WebAdapterEnv = {}): PlatformAdapter {
         away = false;
         listener();
       };
+      // Focus moving into an embedded iframe (a card field, a captcha) blurs the window although
+      // the user never left the page. At blur time the iframe is already the active element.
+      const onBlur = () => {
+        if (doc?.activeElement?.tagName === 'IFRAME') return;
+        leave();
+      };
       const onVisibility = () => {
         if (doc?.visibilityState === 'hidden') leave();
         else back();
       };
-      win.addEventListener('blur', leave);
+      win.addEventListener('blur', onBlur);
       win.addEventListener('focus', back);
       doc?.addEventListener('visibilitychange', onVisibility);
       return () => {
-        win.removeEventListener('blur', leave);
+        win.removeEventListener('blur', onBlur);
         win.removeEventListener('focus', back);
         doc?.removeEventListener('visibilitychange', onVisibility);
       };

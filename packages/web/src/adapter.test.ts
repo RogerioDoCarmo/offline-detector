@@ -131,6 +131,44 @@ describe('createWebAdapter: foreground', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
+  it('ignores focus moving into an embedded iframe and back (card-field iframes)', () => {
+    const { adapter, win, doc } = setup();
+    const listener = jest.fn();
+    adapter.subscribeForeground(listener);
+    const frame = { tagName: 'IFRAME' };
+    const input = { tagName: 'INPUT' };
+    const active = (element: unknown) => {
+      (doc as unknown as { activeElement: unknown }).activeElement = element;
+    };
+
+    // Click a card number field in an iframe, then the page's own input, then the iframe again.
+    for (let round = 0; round < 3; round += 1) {
+      active(frame);
+      win.fire('blur');
+      active(input);
+      win.fire('focus');
+    }
+    expect(listener).toHaveBeenCalledTimes(0);
+
+    // A genuine departure and return still counts, exactly once.
+    (doc as unknown as { visibilityState: string }).visibilityState = 'hidden';
+    doc.fire('visibilitychange');
+    (doc as unknown as { visibilityState: string }).visibilityState = 'visible';
+    doc.fire('visibilitychange');
+    win.fire('focus');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('still counts a window blur when the focused element is not an iframe', () => {
+    const { adapter, win, doc } = setup();
+    const listener = jest.fn();
+    adapter.subscribeForeground(listener);
+    (doc as unknown as { activeElement: unknown }).activeElement = { tagName: 'BUTTON' };
+    win.fire('blur');
+    win.fire('focus');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it('works with only a window (no document)', () => {
     const win = fakeTarget();
     const adapter = createWebAdapter({ window: win as never });
