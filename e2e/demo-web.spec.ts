@@ -14,7 +14,7 @@ import { expect, test } from './fixtures/test';
 
 /**
  * The STATIC EXPORT of apps/demo-web (apps/demo-web/out) served under /offline-detector/demo/ by
- * e2e/fixtures/serve-demo.mjs. Simulate Offline drives a stub probe, so nothing here needs the
+ * e2e/fixtures/serve.mjs. Simulate Offline drives a stub probe, so nothing here needs the
  * network; the real-offline test uses the shared goOffline()/goOnline() fixtures.
  * Strings are the literals of docs/design/strings.md.
  */

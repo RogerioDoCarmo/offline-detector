@@ -13,8 +13,6 @@ import { defineConfig, devices } from '@playwright/test';
 const isCI = !!process.env.CI;
 const port = Number(process.env.PORT ?? 4173);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
-const demoPort = Number(process.env.DEMO_PORT ?? 4174);
-const demoURL = `http://127.0.0.1:${demoPort}/offline-detector/demo/`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -49,28 +47,16 @@ export default defineConfig({
     { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
   ],
 
-  // Plain node scripts, so nothing is downloaded when the tests start.
-  webServer: [
-    // The static fixture site (PLAYWRIGHT_BASE_URL points the suite elsewhere and skips it).
-    ...(process.env.PLAYWRIGHT_BASE_URL
-      ? []
-      : [
-          {
-            command: 'node e2e/fixtures/serve.mjs',
-            url: baseURL,
-            reuseExistingServer: !isCI,
-            timeout: 30_000,
-            env: { PORT: String(port) },
-          },
-        ]),
-    // The static export of apps/demo-web under its Pages base path. It builds the export first
-    // when apps/demo-web/out is missing, hence the long timeout.
-    {
-      command: 'node e2e/fixtures/serve-demo.mjs',
-      url: demoURL,
-      reuseExistingServer: !isCI,
-      timeout: 300_000,
-      env: { DEMO_PORT: String(demoPort) },
-    },
-  ],
+  // A plain node script, so nothing is downloaded when the tests start. It also serves the static
+  // export of apps/demo-web under /offline-detector/demo/ and builds that export first when it is
+  // missing (the long timeout covers a cold build of the packages and the demo).
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: 'node e2e/fixtures/serve.mjs',
+        url: baseURL,
+        reuseExistingServer: !isCI,
+        timeout: 300_000,
+        env: { PORT: String(port) },
+      },
 });

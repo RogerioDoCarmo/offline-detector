@@ -2,8 +2,8 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import { waitForHydrated } from './fixtures/stability';
 
-/** The exported demo under its GitHub Pages base path (see e2e/fixtures/serve-demo.mjs). */
-export const DEMO_URL = `http://127.0.0.1:${process.env.DEMO_PORT ?? 4174}/offline-detector/demo/`;
+/** The exported demo under its GitHub Pages base path (see e2e/fixtures/serve.mjs). */
+export const DEMO_URL = `${process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${process.env.PORT ?? 4173}`}/offline-detector/demo/`;
 
 export const snackbar = (page: Page) => page.locator('.od-snackbar');
 export const banner = (page: Page) => page.locator('.od-banner');

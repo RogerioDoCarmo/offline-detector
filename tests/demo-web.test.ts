@@ -51,6 +51,11 @@ describe('apps/demo-web package', () => {
     }
   });
 
+  it('keeps the export and the generated Next types out of Prettier', () => {
+    const lines = read('.prettierignore').split('\n');
+    expect(lines).toEqual(expect.arrayContaining(['out', 'next-env.d.ts']));
+  });
+
   it('keeps generated output out of git', () => {
     const lines = read('apps/demo-web/.gitignore').split('\n');
     expect(lines).toEqual(expect.arrayContaining(['.next', 'out', 'next-env.d.ts']));
@@ -83,21 +88,25 @@ describe('apps/demo-web client boundary', () => {
   });
 });
 
-describe('playwright config for the exported demo', () => {
-  const config = read('playwright.config.ts');
-
-  it('serves apps/demo-web/out on its own port next to the fixture server', () => {
-    expect(config).toContain('node e2e/fixtures/serve-demo.mjs');
-    expect(config).toContain('4174');
-    expect(config).toContain('node e2e/fixtures/serve.mjs');
+describe('playwright server for the exported demo', () => {
+  it('keeps the single fixture server entry and gives it time for a cold demo build', () => {
+    const config = read('playwright.config.ts');
+    expect(config).toContain("command: 'node e2e/fixtures/serve.mjs'");
+    expect(config).toContain('timeout: 300_000');
   });
 
-  it('has the serve script and the spec', () => {
-    expect(existsSync(join(root, 'e2e/fixtures/serve-demo.mjs'))).toBe(true);
+  it('serves apps/demo-web/out under the Pages base path, building it when missing', () => {
+    const serve = read('e2e/fixtures/serve.mjs');
+    expect(serve).toContain("'apps/demo-web/out'");
+    expect(serve).toContain("'/offline-detector/demo'");
+    expect(serve).toContain('--filter=@offline-detector/demo-web');
+  });
+
+  it('has the spec and points it at the same server and base path', () => {
     expect(existsSync(join(root, 'e2e/demo-web.spec.ts'))).toBe(true);
-    const serve = read('e2e/fixtures/serve-demo.mjs');
-    expect(serve).toContain('/offline-detector/demo');
-    expect(serve).toContain('apps/demo-web/out');
+    const helpers = read('e2e/demo-web-helpers.ts');
+    expect(helpers).toContain('/offline-detector/demo/');
+    expect(helpers).toContain('PLAYWRIGHT_BASE_URL');
   });
 });
 

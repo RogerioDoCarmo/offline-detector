@@ -37,5 +37,5 @@ The packages are consumed through `workspace:*` and their `dist`, so build them 
 ## Tests
 
 `e2e/demo-web.spec.ts` (Playwright) runs against the export. `playwright.config.ts` starts
-`e2e/fixtures/serve-demo.mjs`, which serves `out/` under the base path and builds it first when it
-is missing. Repo-config checks live in `tests/demo-web.test.ts`.
+`e2e/fixtures/serve.mjs`, which serves `out/` under the base path and builds it first when it is
+missing. Repo-config checks live in `tests/demo-web.test.ts`.
