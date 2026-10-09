@@ -1,7 +1,7 @@
 // A tiny host app for the E2E suite: it renders the REAL <OfflineDetector> from the web package
 // (web adapter, real detector, real react hooks) around some page content. Only the probe's
 // `fetch` is fake, so the suite never needs the network:
-//   window.__probeOk       true (default) or false: what the next probe reports.
+//   window.__probeOk       true (default) or false (the probe request fails).
 //   window.__odProps       extra JSON props for <OfflineDetector> (locale, fullScreen, ...).
 import { createRoot } from 'react-dom/client';
 import { OfflineDetector } from '../../packages/web/src/index';
@@ -12,7 +12,9 @@ window.__probeCalls = 0;
 
 const fetchStub = async () => {
   window.__probeCalls += 1;
-  return { ok: window.__probeOk !== false };
+  // Any completed request means reachable; only a failed one means not.
+  if (window.__probeOk === false) throw new TypeError('Failed to fetch');
+  return { ok: true };
 };
 
 function App() {

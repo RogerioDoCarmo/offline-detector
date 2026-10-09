@@ -125,6 +125,7 @@ export function Demo() {
             record(`onChange: ${previous.status} to ${state.status}`)
           }
           onDismiss={(piece) => record(`onDismiss: ${piece}`)}
+          onContinueOffline={() => record('onContinueOffline')}
           onError={(error) => record(`onError: ${String(error)}`)}
         >
           <Bridge controller={controller} />
@@ -393,7 +394,8 @@ export function Demo() {
           <h2 id="log-heading">Callbacks</h2>
           <p>
             <code>onOffline</code>, <code>onOnline</code>, <code>onChange</code>,{' '}
-            <code>onDismiss</code> and <code>onError</code> write here, newest first.
+            <code>onDismiss</code>, <code>onContinueOffline</code> and{' '}
+            <code>onError</code> write here, newest first.
           </p>
           {log.length === 0 ? (
             <p className="hint">Nothing yet.</p>
