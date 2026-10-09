@@ -3,7 +3,6 @@ import type {
   OfflineDetectorOptions,
   PlatformAdapter,
   ProbeFetch,
-  ProbeResponse,
   TimerHandle,
 } from '../src/types';
 
@@ -64,25 +63,26 @@ export function createClock(start = 1_000_000) {
   return clock;
 }
 
-export type FetchBehavior = 'ok' | 'fail' | 'http-error' | 'opaque' | 'hang';
+export type FetchBehavior = 'ok' | 'fail' | 'http-error' | 'opaque' | 'empty' | 'hang';
 
 /** A fetch whose outcome per call is chosen by `behave(url, callIndex)`. */
 export function createFetch(behave: (url: string, call: number) => FetchBehavior) {
   const calls: string[] = [];
-  const inits: { method: string; signal: AbortSignal }[] = [];
+  const inits: Parameters<ProbeFetch>[1][] = [];
   const fetchFn: ProbeFetch = (url, init) => {
     const call = calls.length;
     calls.push(url);
     inits.push(init);
     const behavior = behave(url, call);
     if (behavior === 'hang') {
-      const never: Promise<ProbeResponse> = new Promise(() => {});
+      const never: Promise<unknown> = new Promise(() => {});
       return never;
     }
     if (behavior === 'fail')
       return Promise.reject(new TypeError('Network request failed'));
     if (behavior === 'http-error') return Promise.resolve({ ok: false, type: 'basic' });
     if (behavior === 'opaque') return Promise.resolve({ ok: false, type: 'opaque' });
+    if (behavior === 'empty') return Promise.resolve(undefined);
     return Promise.resolve({ ok: true, type: 'basic' });
   };
   return Object.assign(fetchFn, { calls, inits });

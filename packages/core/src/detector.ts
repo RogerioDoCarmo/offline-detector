@@ -2,7 +2,7 @@ import { backoffDelay } from './backoff';
 import { probeAny } from './probe';
 import type {
   ClearTimeoutFn,
-  OfflineDetector,
+  OfflineDetectorInstance,
   OfflineDetectorOptions,
   OfflineReason,
   OfflineState,
@@ -43,7 +43,9 @@ function resolveFetch(
   throw new TypeError('offline-detector: no fetch available; pass options.fetch');
 }
 
-export function createOfflineDetector(options: OfflineDetectorOptions): OfflineDetector {
+export function createOfflineDetector(
+  options: OfflineDetectorOptions,
+): OfflineDetectorInstance {
   const { adapter } = options;
   const probeOptions = options.probe ?? {};
   const urls = probeOptions.urls ?? DEFAULT_PROBE_URLS;
@@ -73,6 +75,8 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
   // Bumped whenever an interface event or stop() overtakes whatever check is in flight.
   let epoch = 0;
   let inflight: Promise<OfflineState> | null = null;
+  // Aborted by stop(): cancels the probe in flight and its timeout timer.
+  const probeAborts: Set<AbortController> = new Set();
   let started = false;
   let failures = 0;
   let scheduled: { handle: TimerHandle } | null = null;
@@ -82,7 +86,11 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
     try {
       fn();
     } catch (error) {
-      options.onError?.(error);
+      try {
+        options.onError?.(error);
+      } catch {
+        // A host onError that throws must never stop detection.
+      }
     }
   }
 
@@ -119,11 +127,19 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
     }
   }
 
+  /**
+   * What an overtaken run resolves with: the run that overtook it, or the settled state when
+   * nothing did (a down event or stop()), never the overtaking run's still-checking state.
+   */
+  function overtaker(): Promise<OfflineState> | OfflineState {
+    return inflight ?? state;
+  }
+
   async function runCheck(): Promise<OfflineState> {
     const myEpoch = epoch;
     commit({ ...state, checking: true });
     const interfaceUp = await readInterface();
-    if (myEpoch !== epoch) return state;
+    if (myEpoch !== epoch) return overtaker();
     if (!interfaceUp) {
       applyResult('offline', 'no-interface');
       schedule();
@@ -134,14 +150,17 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
       schedule();
       return state;
     }
+    const abort = new AbortController();
+    probeAborts.add(abort);
     const reachable = await probeAny(urls, {
       fetch: fetchFn,
       method,
       timeoutMs,
       setTimeout: setTimer,
       clearTimeout: clearTimer,
-    });
-    if (myEpoch !== epoch) return state;
+      signal: abort.signal,
+    }).finally(() => probeAborts.delete(abort));
+    if (myEpoch !== epoch) return overtaker();
     if (reachable) applyResult('online', null);
     else applyResult('offline', 'no-internet');
     schedule();
@@ -224,6 +243,8 @@ export function createOfflineDetector(options: OfflineDetectorOptions): OfflineD
       clearScheduled();
       epoch++;
       inflight = null;
+      for (const abort of probeAborts) abort.abort();
+      probeAborts.clear();
       commit({ ...state, checking: false });
     },
   };
