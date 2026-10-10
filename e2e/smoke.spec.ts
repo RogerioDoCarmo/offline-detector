@@ -66,4 +66,29 @@ test.describe('offline fixture smoke test', () => {
 
     await checkA11y();
   });
+
+  // axe reads computed colours. A scheme flip or an entrance starts a CSS transition, and judged
+  // half-way it reports a contrast failure that nobody sees once it settles; WebKit is slow enough
+  // to be caught there (it failed the full-screen demo test on CI). The transition here is long
+  // and linear so the half-way colour is the same in every engine: dark text on a mid blue that
+  // is below 4.5:1 for most of the run, ending on a pale background where it is far above it.
+  test('checkA11y waits for a running transition and judges the settled colours', async ({
+    page,
+    checkA11y,
+  }) => {
+    await page.evaluate(() => {
+      const style = document.createElement('style');
+      style.textContent =
+        '#t{color:#0b1b33;background:#1163d3;transition:background-color 800ms linear}' +
+        '#t.done{background:#f2f6ff}';
+      document.head.append(style);
+      const button = document.createElement('button');
+      button.id = 't';
+      button.textContent = 'Try again';
+      document.body.append(button);
+    });
+    await page.evaluate(() => document.getElementById('t')?.classList.add('done'));
+
+    await checkA11y();
+  });
 });
