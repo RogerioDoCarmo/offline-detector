@@ -144,6 +144,19 @@ function report(packed) {
   return problems.length > 0;
 }
 
+/** True when `<dir>/publish-plan.json` parses and lists no release of kind `publish`. */
+function planIsEmpty(dir) {
+  try {
+    const { plan } = JSON.parse(readFileSync(join(dir, 'publish-plan.json'), 'utf8'));
+    return (
+      Array.isArray(plan) &&
+      plan.flat().every((release) => release && release.kind !== 'publish')
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Checks the tarballs that `changeset pack --out-dir <dir>` wrote: the ones that get published. */
 function checkDirectory(dir, scratch) {
   const tarballs = existsSync(dir)
@@ -152,6 +165,12 @@ function checkDirectory(dir, scratch) {
         .sort()
     : [];
   if (tarballs.length === 0) {
+    // Once every version is on npm (the manual first publish) the plan has nothing to publish and
+    // `changeset pack` writes no tarballs. That is only believed when the plan says so.
+    if (planIsEmpty(dir)) {
+      console.log(`Nothing to publish: ${dir} holds a plan with no publish releases.`);
+      return false;
+    }
     console.error(`::error::No tarballs found under ${dir}.`);
     return true;
   }
