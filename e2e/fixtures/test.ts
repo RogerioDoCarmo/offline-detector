@@ -29,6 +29,26 @@ export const test = base.extend<Fixtures>({
   },
   checkA11y: async ({ page }, use) => {
     await use(async () => {
+      // axe reads computed colours, so a CSS transition still running (a colour-scheme flip, an
+      // entrance) hands it half-way colours and a contrast failure that nobody sees once it
+      // settles. Wait for every finite animation first. Infinite ones (a spinner) are skipped: they
+      // never finish. The race is only a backstop so a stuck animation cannot hang the run.
+      await page.evaluate(async () => {
+        const running = () =>
+          document
+            .getAnimations()
+            .filter(
+              (a) => a.effect && Number.isFinite(a.effect.getComputedTiming().endTime),
+            );
+        const settled = () =>
+          Promise.all(running().map((a) => a.finished.catch(() => undefined)));
+        const backstop = new Promise((resolve) => setTimeout(resolve, 5_000));
+        // getAnimations() applies pending style changes first, so a transition that has only just
+        // been triggered is already in the list; the second pass catches ones the first started.
+        await Promise.race([settled(), backstop]);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await Promise.race([settled(), backstop]);
+      });
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze();
