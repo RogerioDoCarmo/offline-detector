@@ -45,7 +45,7 @@ jobs:
       - run: pnpm turbo run build --filter=./apps/demo-web
         if: hashFiles('apps/demo-web/package.json') != ''
       - run: node apps/docs/scripts/assemble-site.cjs --docs apps/docs/build --demo apps/demo-web/out --policy docs/privacy-policy.html --out site
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request'
         with:
           path: site
