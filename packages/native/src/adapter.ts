@@ -52,14 +52,35 @@ export function createNativeAdapter(options: NativeAdapterOptions = {}): Platfor
   const appState: AppStateLike = options.appState ?? AppState;
   if (netInfo === null) warnMissingNetInfoOnce();
 
+  // What the interface was last known to be, from a read or from an event.
+  let known: boolean | undefined;
+
   return {
     isInterfaceUp() {
       if (netInfo === null) return true;
-      return netInfo.fetch().then((state) => state.isConnected !== false);
+      return netInfo.fetch().then((state) => {
+        known = state.isConnected !== false;
+        return known;
+      });
     },
     subscribeInterface(listener) {
       if (netInfo === null) return () => undefined;
-      return netInfo.addEventListener((state) => listener(state.isConnected !== false));
+      // NetInfo delivers the current state right after subscribing, and may repeat a value. The
+      // detector must hear changes only: the first delivery is a baseline (unless it already
+      // contradicts a read), and a repeat is dropped.
+      let seenFirst = false;
+      return netInfo.addEventListener((state) => {
+        const up = state.isConnected !== false;
+        const baseline = !seenFirst && (known === undefined || known === up);
+        seenFirst = true;
+        if (baseline) {
+          known = up;
+          return;
+        }
+        if (known === up) return;
+        known = up;
+        listener(up);
+      });
     },
     subscribeForeground(listener) {
       let previous = appState.currentState ?? 'active';

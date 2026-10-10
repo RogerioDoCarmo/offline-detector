@@ -33,7 +33,12 @@ ao host que responde, que é o operador dessa URL, e não os autores deste proje
 | `probe.mode`       | `'probe'`          | `'interface-only'` não faz nenhuma requisição.                            |
 
 Offline, ele tenta de novo após 1 segundo, dobrando até um teto de 30 segundos. Uma sonda conta como
-sucesso quando a resposta é `ok` ou opaca (o que uma requisição `no-cors` produz).
+alcançável quando qualquer resposta HTTP é concluída, qualquer que seja o status: um `404` ou `500`
+ainda prova que um servidor respondeu. Só uma requisição que falha (sem conexão, falha de TLS, tempo
+esgotado ou aborto) conta como inalcançável. A resposta nunca é lida.
+
+A sonda não envia cookies (`credentials: 'omit'`, então nem um endpoint de mesma origem recebe algum)
+nem o cabeçalho `Referer` (`referrerPolicy: 'no-referrer'`).
 
 ## Use o seu próprio endpoint
 
@@ -47,8 +52,9 @@ Você pode apontar a sonda para um servidor que controla, para que nenhum tercei
 
 O que o seu endpoint precisa fazer:
 
-- Responder rápido a `HEAD` e `GET` com um status de sucesso, de preferência `204 No Content` e corpo
-  vazio.
+- Responder rápido a `HEAD` e `GET`, de preferência com `204 No Content` e corpo vazio. O status não
+  é inspecionado (qualquer resposta prova que a rede funciona), mas uma resposta pequena e vazia
+  mantém a verificação barata.
 - Ser servido por HTTPS (uma página servida por HTTPS não pode chamar uma URL HTTP).
 - Não ser colocado em cache por um service worker ou CDN: o fetch de sonda da web já envia
   `cache: 'no-store'`.

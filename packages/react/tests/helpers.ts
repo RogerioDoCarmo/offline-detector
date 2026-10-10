@@ -1,5 +1,5 @@
 import type {
-  OfflineDetector,
+  OfflineDetectorInstance,
   OfflineState,
   PlatformAdapter,
   ProbeFetch,
@@ -49,19 +49,23 @@ export function createAdapter(initialUp = true) {
   };
 }
 
-/** A probe fetch that succeeds or fails on demand. `hold()` makes the next calls wait. */
+/** A probe fetch that resolves or rejects on demand. `hold()` makes the next calls wait. */
 export function createFetch() {
   let ok = true;
   let held: (() => void)[] | null = null;
   const calls: string[] = [];
   const fetchFn: ProbeFetch = (url) => {
     calls.push(url);
-    const outcome = () => (ok ? { ok: true } : { ok: false });
-    if (held === null) return Promise.resolve(outcome());
+    // A completed response means online whatever its status; only a rejection means offline.
+    const outcome = (): Promise<unknown> =>
+      ok ? Promise.resolve({ ok: true }) : Promise.reject(new TypeError('offline'));
+    if (held === null) return outcome();
     const waiting = held;
-    return new Promise((resolve: (value: { ok: boolean }) => void) => {
-      waiting.push(() => resolve(outcome()));
-    });
+    return new Promise(
+      (resolve: (value: unknown) => void, reject: (e: unknown) => void) => {
+        waiting.push(() => outcome().then(resolve, reject));
+      },
+    );
   };
   return Object.assign(fetchFn, {
     calls,
@@ -101,7 +105,7 @@ export function createFakeDetector(initial: OfflineState = INITIAL) {
   const counts = { start: 0, stop: 0, checkNow: 0 };
   let nextCheck: OfflineState | null = null;
   let rejectWith: unknown = null;
-  const detector: OfflineDetector = {
+  const detector: OfflineDetectorInstance = {
     getState: () => state,
     subscribe: (listener) => {
       listeners.add(listener);

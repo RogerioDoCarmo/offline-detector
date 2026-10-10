@@ -1,6 +1,17 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { lockAxis, shouldDismiss, useSwipeDismiss } from './swipe';
+import { SWIPE_RULES, lockAxis, shouldDismiss, useSwipeDismiss } from './swipe';
 import { layout, pointer } from '../test-utils';
+
+describe('SWIPE_RULES', () => {
+  it('keeps the swipe thresholds at the design values', () => {
+    expect(SWIPE_RULES).toEqual({
+      distanceRatio: 0.3,
+      velocity: 0.5,
+      axisLockPx: 8,
+      exitMs: 150,
+    });
+  });
+});
 
 describe('lockAxis', () => {
   it.each([
@@ -375,5 +386,107 @@ describe('useSwipeDismiss: lifecycle', () => {
     act(() => void jest.advanceTimersByTime(150));
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useSwipeDismiss: a release the piece never hears', () => {
+  // A mouse pressed on the piece and released elsewhere sends the pointerup to whatever is under
+  // the pointer. Before the fix nothing cleared the gesture, and every later interaction broke.
+
+  it('keeps swiping after a vertical drag was released outside the piece', () => {
+    const { piece, onDismiss } = setup();
+    pointer(piece, 'pointerdown', { x: 100, y: 100, pointerType: 'mouse' });
+    pointer(piece, 'pointermove', { x: 100, y: 130, pointerType: 'mouse' }); // locks vertical
+    pointer(document.body, 'pointerup', { x: 400, y: 400, pointerType: 'mouse' });
+
+    swipe(piece, 40, 10000);
+    act(() => void jest.advanceTimersByTime(150));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps swiping after a press with no movement was released outside', () => {
+    const { piece, onDismiss } = setup();
+    pointer(piece, 'pointerdown', { x: 20, y: 20, pointerType: 'mouse' });
+    pointer(document.body, 'pointerup', { x: 400, y: 400, pointerType: 'mouse' });
+
+    // 10 px from the new press: a short drag that must spring back. A gesture still anchored at
+    // the old press (x 20) would read it as 90 px and dismiss.
+    swipe(piece, 10, 10000);
+    act(() => void jest.advanceTimersByTime(1000));
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it('does not let a later hover lock the axis and swallow the next click', () => {
+    const onChildClick = jest.fn();
+    const { piece, capture } = setup({ onChildClick });
+    pointer(piece, 'pointerdown', { x: 100, y: 100, pointerType: 'mouse' });
+    // The release happened out of sight: no pointerup at all. Back over the piece, nothing held:
+    pointer(piece, 'pointermove', { x: 160, y: 120, pointerType: 'mouse', buttons: 0 });
+    expect(capture.setPointerCapture).not.toHaveBeenCalled();
+    expect(screen.getByTestId('flags')).toHaveTextContent('false|false');
+
+    fireEvent.click(screen.getByText('child'));
+    expect(onChildClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('settles a horizontal drag released outside using the same distance rule', () => {
+    const { piece, onDismiss } = setup();
+    pointer(piece, 'pointerdown', { x: 100, y: 100, pointerType: 'mouse' });
+    pointer(piece, 'pointermove', { x: 150, y: 100, pointerType: 'mouse' });
+    jest.advanceTimersByTime(10000);
+    pointer(document.body, 'pointerup', { x: 150, y: 100, pointerType: 'mouse' });
+    expect(screen.getByTestId('flags')).toHaveTextContent('false|true');
+    act(() => void jest.advanceTimersByTime(150));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('springs back when a horizontal drag is cancelled outside the piece', () => {
+    const { piece, onDismiss } = setup();
+    pointer(piece, 'pointerdown', { x: 100, y: 100 });
+    pointer(piece, 'pointermove', { x: 160, y: 100 });
+    pointer(document.body, 'pointercancel', { x: 160, y: 100 });
+    expect(screen.getByTestId('flags')).toHaveTextContent('false|false');
+    act(() => void jest.advanceTimersByTime(1000));
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it('ignores the release of another pointer', () => {
+    const { piece } = setup();
+    pointer(piece, 'pointerdown', { x: 100, y: 100, id: 1 });
+    pointer(piece, 'pointermove', { x: 150, y: 100, id: 1 });
+    pointer(document.body, 'pointerup', { x: 150, y: 100, id: 2 });
+    expect(screen.getByTestId('flags')).toHaveTextContent('true|false');
+  });
+
+  it('listens on the window only while a gesture is in progress', () => {
+    const add = jest.spyOn(window, 'addEventListener');
+    const remove = jest.spyOn(window, 'removeEventListener');
+    const count = (spy: jest.SpyInstance, type: string) =>
+      spy.mock.calls.filter(([name]) => name === type).length;
+    try {
+      const { piece } = setup();
+      expect(count(add, 'pointerup')).toBe(0);
+      pointer(piece, 'pointerdown', { x: 100, y: 100 });
+      expect(count(add, 'pointerup')).toBe(1);
+      expect(count(add, 'pointercancel')).toBe(1);
+      pointer(piece, 'pointerup', { x: 100, y: 100 });
+      expect(count(remove, 'pointerup')).toBe(1);
+      expect(count(remove, 'pointercancel')).toBe(1);
+    } finally {
+      add.mockRestore();
+      remove.mockRestore();
+    }
+  });
+
+  it('removes its window listeners when unmounted mid-gesture', () => {
+    const remove = jest.spyOn(window, 'removeEventListener');
+    try {
+      const { piece, unmount } = setup();
+      pointer(piece, 'pointerdown', { x: 100, y: 100 });
+      unmount();
+      expect(remove.mock.calls.filter(([name]) => name === 'pointerup').length).toBe(1);
+    } finally {
+      remove.mockRestore();
+    }
   });
 });

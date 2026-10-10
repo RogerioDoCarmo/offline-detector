@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import type {
   GestureResponderEvent,
   LayoutChangeEvent,
@@ -250,4 +250,55 @@ it('exposes the responder handlers to spread on the piece', async () => {
       'onResponderTerminate',
     ]),
   );
+});
+
+describe('coming back after a swipe', () => {
+  async function swipedAway(reducedMotion: boolean) {
+    const timing = mockTiming();
+    const onDismiss = jest.fn();
+    const create = jest.spyOn(PanResponder, 'create');
+    const hook = await renderHook(
+      (props: { visible: boolean }) =>
+        useSwipeDismiss({
+          enabled: true,
+          reducedMotion,
+          onDismiss,
+          visible: props.visible,
+        }),
+      { initialProps: { visible: true } },
+    );
+    const config = create.mock.calls[0]?.[0] as Config;
+    hook.result.current.onLayout({
+      nativeEvent: { layout: { width: 200, height: 48, x: 0, y: 0 } },
+    } as LayoutChangeEvent);
+    await act(async () => {
+      config.onPanResponderRelease?.(event, gesture({ dx: -150, dy: 0, vx: 0 }));
+    });
+    const translateX = () => valueOf(hook.result.current.style.transform[0].translateX);
+    const opacity = () => valueOf(hook.result.current.style.opacity);
+    return { hook, onDismiss, timing, translateX, opacity };
+  }
+
+  it.each([false, true])(
+    'puts the piece back at rest when it is visible again (reduced motion %p)',
+    async (reducedMotion) => {
+      const { hook, onDismiss, translateX, opacity } = await swipedAway(reducedMotion);
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+      expect(opacity()).toBe(0);
+      await hook.rerender({ visible: false });
+      expect(opacity()).toBe(0);
+      await hook.rerender({ visible: true });
+      expect(translateX()).toBe(0);
+      expect(opacity()).toBe(1);
+    },
+  );
+
+  it('does not move a piece that is shown for the first time', async () => {
+    const { hook, translateX, opacity } = await swipedAway(false);
+    await hook.rerender({ visible: false });
+    await hook.rerender({ visible: true });
+    await hook.rerender({ visible: true });
+    expect(translateX()).toBe(0);
+    expect(opacity()).toBe(1);
+  });
 });

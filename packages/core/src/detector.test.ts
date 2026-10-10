@@ -70,8 +70,10 @@ describe('createOfflineDetector: configuration', () => {
   it('falls back to the global fetch, Date.now and timers when none are injected', async () => {
     const original = globalThis.fetch;
     const seen: string[] = [];
-    globalThis.fetch = ((url: string) => {
+    const credentials: unknown[] = [];
+    globalThis.fetch = ((url: string, init: { credentials?: unknown }) => {
       seen.push(url);
+      credentials.push(init.credentials);
       return Promise.resolve({ ok: true, type: 'basic' });
     }) as unknown as typeof fetch;
     try {
@@ -81,6 +83,7 @@ describe('createOfflineDetector: configuration', () => {
       });
       const state = await detector.checkNow();
       expect(seen).toEqual(['https://global.test']);
+      expect(credentials).toEqual(['omit']);
       expect(state.status).toBe('online');
       expect(state.lastChecked).toBeGreaterThan(1_700_000_000_000);
     } finally {
@@ -244,6 +247,85 @@ describe('createOfflineDetector: checkNow', () => {
   });
 });
 
+describe('createOfflineDetector: an overtaken checkNow', () => {
+  /** A started detector with one check already settled, so events reach it. */
+  async function started() {
+    const h = make();
+    h.detector.start();
+    await flush();
+    return h;
+  }
+
+  it('resolves with the overtaking run result when an up event arrives mid-check', async () => {
+    const { detector, adapter } = await started();
+    const overtaken = detector.checkNow();
+    adapter.setUp(true);
+    const state = await overtaken;
+    expect(state.checking).toBe(false);
+    expect(state.status).toBe('online');
+    expect(state).toBe(detector.getState());
+    detector.stop();
+  });
+
+  it('resolves with the settled offline state when a down event overtakes it', async () => {
+    const { detector, adapter } = await started();
+    const overtaken = detector.checkNow();
+    adapter.setUp(false);
+    const state = await overtaken;
+    expect(state).toMatchObject({
+      status: 'offline',
+      reason: 'no-interface',
+      checking: false,
+    });
+    detector.stop();
+  });
+
+  it('resolves with the settled state when stop() overtakes it', async () => {
+    const { detector } = await started();
+    const overtaken = detector.checkNow();
+    detector.stop();
+    expect((await overtaken).checking).toBe(false);
+  });
+
+  it('follows a chain of overtaking events to the last run', async () => {
+    const { detector, adapter, fetch } = await started();
+    const first = detector.checkNow();
+    adapter.setUp(true);
+    adapter.setUp(true);
+    const state = await first;
+    expect(state.checking).toBe(false);
+    expect(state.status).toBe('online');
+    expect(fetch.calls).toEqual(['https://a.test', 'https://a.test']);
+    detector.stop();
+  });
+});
+
+describe('createOfflineDetector: reachable means any completed response', () => {
+  it.each(['http-error', 'opaque', 'empty'] as const)(
+    'is online when the fetch resolves with a %s response',
+    async (behavior) => {
+      const { detector } = make(() => behavior);
+      expect((await detector.checkNow()).status).toBe('online');
+    },
+  );
+
+  it('is offline with no-internet only when every request is rejected', async () => {
+    const { detector } = make(() => 'fail');
+    expect(await detector.checkNow()).toMatchObject({
+      status: 'offline',
+      reason: 'no-internet',
+    });
+  });
+
+  it('sends the method, an abort signal and no credentials', async () => {
+    const { detector, fetch } = make();
+    await detector.checkNow();
+    expect(fetch.inits).toEqual([
+      { method: 'HEAD', signal: expect.any(AbortSignal), credentials: 'omit' },
+    ]);
+  });
+});
+
 describe('createOfflineDetector: subscribers', () => {
   it('notifies subscribers with the new and previous state, checking included', async () => {
     const { detector } = make();
@@ -293,6 +375,53 @@ describe('createOfflineDetector: subscribers', () => {
       throw new Error('boom');
     });
     await expect(detector.checkNow()).resolves.toMatchObject({ status: 'online' });
+  });
+});
+
+describe('createOfflineDetector: a throwing onError', () => {
+  const boom = () => {
+    throw new Error('onError exploded');
+  };
+
+  it('does not make checkNow reject, and the state still lands', async () => {
+    const { detector } = make(() => 'ok', { onError: boom });
+    detector.subscribe(() => {
+      throw new Error('listener');
+    });
+    await expect(detector.checkNow()).resolves.toMatchObject({ status: 'online' });
+  });
+
+  it('keeps detecting: the next scheduled probe still runs', async () => {
+    const { detector, clock, fetch } = make(() => 'ok', { onError: boom });
+    detector.subscribe(() => {
+      throw new Error('listener');
+    });
+    detector.start();
+    await flush();
+    expect(fetch.calls).toHaveLength(1);
+    await clock.advance(30000);
+    expect(fetch.calls).toHaveLength(2);
+    detector.stop();
+  });
+
+  it('leaves no unhandled rejection from the fire-and-forget checks', async () => {
+    const rejections: unknown[] = [];
+    const onRejection = (reason: unknown) => rejections.push(reason);
+    process.on('unhandledRejection', onRejection);
+    try {
+      const { detector, adapter } = make(() => 'ok', { onError: boom });
+      detector.subscribe(() => {
+        throw new Error('listener');
+      });
+      detector.start();
+      adapter.setUp(true);
+      await flush();
+      await flush();
+      expect(rejections).toEqual([]);
+      detector.stop();
+    } finally {
+      process.off('unhandledRejection', onRejection);
+    }
   });
 });
 

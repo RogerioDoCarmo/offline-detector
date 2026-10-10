@@ -51,15 +51,82 @@ describe('isInterfaceUp', () => {
 });
 
 describe('subscribeInterface', () => {
-  it('forwards NetInfo changes as booleans', () => {
-    const { netInfo, listeners } = fakeNetInfo(true);
-    const adapter = createNativeAdapter({ netInfo, appState: fakeAppState().appState });
+  function subscribed(initial: boolean | null) {
+    const net = fakeNetInfo(initial);
+    const adapter = createNativeAdapter({
+      netInfo: net.netInfo,
+      appState: fakeAppState().appState,
+    });
     const seen: boolean[] = [];
     adapter.subscribeInterface((up) => seen.push(up));
-    listeners.forEach((l) => l({ isConnected: false }));
-    listeners.forEach((l) => l({ isConnected: null }));
-    listeners.forEach((l) => l({ isConnected: true }));
-    expect(seen).toEqual([false, true, true]);
+    const emit = (isConnected: boolean | null) =>
+      net.listeners.forEach((l) => l({ isConnected }));
+    return { adapter, seen, emit };
+  }
+
+  it('treats the first delivery (NetInfo sends the current state on subscribing) as a baseline', () => {
+    const { seen, emit } = subscribed(true);
+    emit(true);
+    expect(seen).toEqual([]);
+  });
+
+  it('forwards changes as booleans, null counting as up', () => {
+    const { seen, emit } = subscribed(true);
+    emit(true);
+    emit(false);
+    emit(null);
+    emit(false);
+    expect(seen).toEqual([false, true, false]);
+  });
+
+  it('drops a repeat of the value it already reported', () => {
+    const { seen, emit } = subscribed(true);
+    emit(true);
+    emit(false);
+    emit(false);
+    emit(true);
+    emit(null);
+    emit(true);
+    expect(seen).toEqual([false, true]);
+  });
+
+  it('keeps a baseline that is offline silent, then reports the recovery', () => {
+    const { seen, emit } = subscribed(false);
+    emit(false);
+    emit(false);
+    emit(true);
+    expect(seen).toEqual([true]);
+  });
+
+  it('forwards a first delivery that contradicts what a read already found', async () => {
+    const { adapter, seen, emit } = subscribed(true);
+    await adapter.isInterfaceUp();
+    emit(false);
+    expect(seen).toEqual([false]);
+  });
+
+  it('drops an event that repeats what a read already found', async () => {
+    const { adapter, seen, emit } = subscribed(false);
+    await adapter.isInterfaceUp();
+    emit(false);
+    expect(seen).toEqual([]);
+  });
+
+  it('keeps a separate baseline per subscription', () => {
+    const net = fakeNetInfo(true);
+    const adapter = createNativeAdapter({
+      netInfo: net.netInfo,
+      appState: fakeAppState().appState,
+    });
+    const first: boolean[] = [];
+    const second: boolean[] = [];
+    const stop = adapter.subscribeInterface((up) => first.push(up));
+    net.listeners.forEach((l) => l({ isConnected: true }));
+    stop();
+    adapter.subscribeInterface((up) => second.push(up));
+    net.listeners.forEach((l) => l({ isConnected: true }));
+    expect(first).toEqual([]);
+    expect(second).toEqual([]);
   });
 
   it('unsubscribes from NetInfo', () => {

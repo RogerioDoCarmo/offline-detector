@@ -15,7 +15,10 @@ nativo. A cor nunca é o único sinal: cada estado é transmitido por palavras m
 A falha a evitar é a fala duplicada: um banner e um snackbar aparecendo juntos e um leitor de tela
 lendo "Sem internet" duas vezes. Por isso **cada transição é anunciada uma única vez**. A primeira
 peça visível, nesta ordem, é dona do anúncio e as outras ficam em silêncio: snackbar, banner,
-indicador e, por fim, um anunciador visualmente oculto quando nenhuma peça visível está ativada.
+indicador. Se nenhum deles estiver ativado, nada é anunciado. Não existe anunciador oculto de
+reserva. Um slot personalizado assume o anúncio da sua peça; portanto, precisa espalhar `rootProps`
+(e, no iOS, chamar `AccessibilityInfo.announceForAccessibility` por conta própria); veja
+[Slots](./slots.md).
 
 | Peça              | Web                                            | Nativo                                                           |
 | ----------------- | ---------------------------------------------- | ---------------------------------------------------------------- |
@@ -29,6 +32,9 @@ indicador e, por fim, um anunciador visualmente oculto quando nenhuma peça vis�
   restabelecida").
 - A recuperação é anunciada uma vez. O desaparecimento do snackbar após quatro segundos não é
   anunciado.
+- Na web, a região viva é montada vazia e recebe o texto um quadro depois, porque os leitores de
+  tela ignoram uma região que aparece junto com o seu texto. Dispensar uma peça nunca é anunciado,
+  nem o snackbar que aparece depois de "Continuar offline".
 - "Verificando…" não é anunciado como mensagem própria. O controle Tentar novamente o reflete com
   `aria-busy`, e o seu nome muda.
 - Os callbacks disparam só em transições; os anúncios também. Uma nova verificação que encontra o
@@ -51,6 +57,9 @@ caminho:
 - Indicador: recebe foco quando é dispensável; Escape ou Delete o dispensa e, no nativo, ele expõe
   uma ação de acessibilidade `dismiss` descrita pelo texto `dismissHint`.
 
+Na web, ao dispensar uma peça que tinha o foco do teclado, o foco volta ao elemento que o tinha
+antes de a peça aparecer.
+
 Desligue o deslizar com `dismissible={false}`. Veja [Dispensar](./dismissal.md).
 
 ## O estado de tela cheia
@@ -62,8 +71,8 @@ A tela cheia é opcional e substitui a visão do app; por isso, deliberadamente,
 - Escape aciona "Continuar offline" quando essa ação existe. Sem `continueOffline` não há saída;
   portanto use-o, a menos que o app realmente não funcione offline.
 - Ao sair, o foco volta ao elemento que o tinha antes, se ele ainda existir.
-- No nativo, espalhe `hostContentAccessibilityProps(visible)` na sua view raiz se você renderizar a
-  peça de tela cheia por conta própria.
+- No nativo, `<OfflineDetector>` esconde o conteúdo do app para você, e a sua prop `onRestoreFocus`
+  dispara quando o estado de tela cheia sai, para você devolver o foco do leitor de tela.
 
 ## Contraste, alvos, tamanho do texto e direção
 

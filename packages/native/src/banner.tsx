@@ -1,19 +1,10 @@
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
-import { dismissAccessibilityProps, isDismissible } from './a11y';
-import type { OfflineStrings } from '@rogeriodocarmo/offline-detector-react';
-import type { PiecePhase } from './phase';
-import { Glyph, Spinner, type PieceIcons } from './glyphs';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { dismissAccessibilityProps, splitRootProps } from './a11y';
+import type { PieceProps } from './piece-types';
+import { Glyph, Spinner } from './glyphs';
 import { useIosAnnouncement, usePieceTransition } from './hooks';
-import { inlineInsets, resolveInsets, type Insets } from './insets';
-import { lightTheme, type OfflineTheme } from './theme';
+import { inlineInsets, resolveInsets } from './insets';
+import { lightTheme } from './theme';
 import { useSwipeDismiss } from './use-swipe-dismiss';
 
 const HIDDEN = {
@@ -22,33 +13,15 @@ const HIDDEN = {
   accessibilityElementsHidden: true,
 } as const;
 
-export interface BannerProps {
-  /** `checking` swaps the icon for a spinner (nothing moves under reduced motion). */
-  phase: Exclude<PiecePhase, 'recovered'>;
-  /** Already localised and reason-aware. */
-  message: string;
-  strings: OfflineStrings;
-  /** With `action`, shows a Retry text button (for hosts that turn the snackbar off). */
-  onRetry?: () => void;
-  action?: boolean;
-  onDismiss?: () => void;
-  dismissible?: boolean;
+export interface BannerProps extends PieceProps {
   /** `top` (default) or `bottom` edge. */
   position?: 'top' | 'bottom';
   /** True floats over the content; the default sits in the layout and pushes content. */
   overlay?: boolean;
-  /** False plays the exit fade and then renders nothing. Default true. */
-  visible?: boolean;
-  theme?: OfflineTheme;
-  reduceMotion?: boolean;
-  insets?: Partial<Insets>;
+  /** Adds a Retry text button, for hosts that turn the snackbar off. Needs `actions.retry`. */
+  showRetry?: boolean;
   /** Extra space on the anchored edge, for example a host app bar. Default 0. */
   offset?: number;
-  /** True when this piece owns the announcement; otherwise it is a labelled, silent view. */
-  announce?: boolean;
-  icons?: PieceIcons;
-  style?: StyleProp<ViewStyle>;
-  testID?: string;
 }
 
 /** The persistent strip shown while offline. Square, flat, in the layout by default. */
@@ -56,13 +29,12 @@ export function Banner({
   phase,
   message,
   strings,
-  onRetry,
-  action = false,
-  onDismiss,
-  dismissible: dismissibleProp,
+  actions,
+  showRetry: showRetryProp = false,
   position = 'top',
   overlay = false,
   visible = true,
+  rootProps,
   theme = lightTheme,
   reduceMotion = false,
   insets: insetsProp,
@@ -72,7 +44,10 @@ export function Banner({
   style,
   testID,
 }: BannerProps) {
-  const dismissible = isDismissible(dismissibleProp, onDismiss);
+  const onRetry = actions?.retry;
+  const onDismiss = actions?.dismiss;
+  const dismissible = typeof onDismiss === 'function';
+  const { root, announces } = splitRootProps(rootProps, announce);
   // The height tween of the design needs the JS driver; opacity alone keeps everything native.
   const transition = usePieceTransition({ visible, reduceMotion, theme });
   const swipe = useSwipeDismiss({
@@ -80,8 +55,9 @@ export function Banner({
     onDismiss: () => onDismiss?.(),
     reducedMotion: reduceMotion,
     theme,
+    visible,
   });
-  useIosAnnouncement(message, announce && visible);
+  useIosAnnouncement(message, announces && visible);
 
   if (!transition.mounted) return null;
 
@@ -90,7 +66,7 @@ export function Banner({
   const atTop = position === 'top';
   const edgeInset = (atTop ? insets.top : insets.bottom) + offset;
   const checking = phase === 'checking';
-  const showRetry = action && typeof onRetry === 'function';
+  const showRetry = showRetryProp && typeof onRetry === 'function';
   const retryLabel = checking ? strings.checking : strings.retry;
 
   return (
@@ -104,6 +80,7 @@ export function Banner({
         transition.style,
         style,
       ]}
+      {...root}
     >
       <Animated.View
         {...swipe.panHandlers}
@@ -127,32 +104,46 @@ export function Banner({
         <View
           accessible
           testID={testID ? `${testID}-message` : undefined}
-          {...(announce
+          {...(announces
             ? { accessibilityLiveRegion: 'polite' as const }
             : { accessibilityLabel: message })}
-          {...dismissAccessibilityProps(strings, dismissible, onDismiss)}
+          {...dismissAccessibilityProps(strings, onDismiss)}
           style={styles.message}
         >
           <View style={{ marginEnd: theme.spaceSm }}>
-            {checking
-              ? (icons?.checking ??
-                (reduceMotion ? (
-                  <Text
-                    {...HIDDEN}
-                    style={{ color: theme.colorStatusOffline, fontSize: theme.sizeIcon }}
-                  >
-                    {'…'}
-                  </Text>
-                ) : (
-                  <Spinner color={theme.colorStatusOffline} reduceMotion={reduceMotion} />
-                )))
-              : (icons?.offline ?? (
+            {phase === 'recovered'
+              ? (icons?.online ?? (
                   <Glyph
-                    name="offline"
-                    color={theme.colorStatusOffline}
+                    name="online"
+                    color={theme.colorStatusOnline}
                     size={theme.sizeIcon}
                   />
-                ))}
+                ))
+              : checking
+                ? (icons?.checking ??
+                  (reduceMotion ? (
+                    <Text
+                      {...HIDDEN}
+                      style={{
+                        color: theme.colorStatusOffline,
+                        fontSize: theme.sizeIcon,
+                      }}
+                    >
+                      {'…'}
+                    </Text>
+                  ) : (
+                    <Spinner
+                      color={theme.colorStatusOffline}
+                      reduceMotion={reduceMotion}
+                    />
+                  )))
+                : (icons?.offline ?? (
+                    <Glyph
+                      name="offline"
+                      color={theme.colorStatusOffline}
+                      size={theme.sizeIcon}
+                    />
+                  ))}
           </View>
           <Text
             maxFontSizeMultiplier={2}
@@ -173,7 +164,7 @@ export function Banner({
             accessibilityRole="button"
             accessibilityLabel={retryLabel}
             accessibilityState={{ busy: checking, disabled: checking }}
-            onPress={checking ? undefined : onRetry}
+            onPress={checking ? undefined : () => void onRetry?.()}
             style={[
               styles.action,
               {
@@ -202,7 +193,7 @@ export function Banner({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={strings.dismiss}
-            onPress={onDismiss}
+            onPress={() => onDismiss?.()}
             style={[
               styles.action,
               {

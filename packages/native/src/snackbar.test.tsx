@@ -14,12 +14,14 @@ import { darkTheme } from './theme';
 
 const HIDDEN = { includeHiddenElements: true };
 
+const retry = jest.fn();
+const dismiss = jest.fn();
+
 const base: SnackbarProps = {
   phase: 'offline',
   message: 'No internet',
   strings: EN,
-  onRetry: jest.fn(),
-  onDismiss: jest.fn(),
+  actions: { retry, dismiss },
   testID: 'snackbar',
 };
 
@@ -42,17 +44,17 @@ describe('offline', () => {
   it('calls onRetry when Retry is pressed', async () => {
     await render(<Snackbar {...base} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Retry' }));
-    expect(base.onRetry).toHaveBeenCalledTimes(1);
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   it('calls onDismiss when the dismiss button is pressed', async () => {
     await render(<Snackbar {...base} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('has no Retry without a handler', async () => {
-    await render(<Snackbar {...base} onRetry={undefined} />);
+    await render(<Snackbar {...base} actions={{ dismiss }} />);
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
   });
 });
@@ -91,9 +93,9 @@ describe('accessibility', () => {
     await render(<Snackbar {...base} />);
     const message = screen.getByTestId('snackbar-message');
     message.props.onAccessibilityAction({ nativeEvent: { actionName: 'activate' } });
-    expect(base.onDismiss).not.toHaveBeenCalled();
+    expect(dismiss).not.toHaveBeenCalled();
     message.props.onAccessibilityAction({ nativeEvent: { actionName: 'dismiss' } });
-    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('gives every interactive element a 44 point target', async () => {
@@ -173,7 +175,7 @@ describe('checking', () => {
   it('ignores presses while checking', async () => {
     await render(<Snackbar {...base} phase="checking" />);
     await fireEvent.press(screen.getByRole('button', { name: 'Checking…' }));
-    expect(base.onRetry).not.toHaveBeenCalled();
+    expect(retry).not.toHaveBeenCalled();
   });
 
   it('shows a spinner, and none under reduced motion', async () => {
@@ -205,7 +207,7 @@ describe('recovered', () => {
 
 describe('dismissible', () => {
   it('has no dismiss button, hint or action when dismissible is false', async () => {
-    await render(<Snackbar {...base} dismissible={false} />);
+    await render(<Snackbar {...base} actions={{ retry }} />);
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull();
     const message = screen.getByTestId('snackbar-message');
     expect(message.props.accessibilityActions).toBeUndefined();
@@ -213,7 +215,7 @@ describe('dismissible', () => {
   });
 
   it('is not dismissible without an onDismiss handler', async () => {
-    await render(<Snackbar {...base} onDismiss={undefined} />);
+    await render(<Snackbar {...base} actions={{ retry }} />);
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull();
   });
 });
@@ -323,12 +325,12 @@ describe('swipe wiring', () => {
       } as PanResponderGestureState),
     ).toBe(true);
     config().onPanResponderRelease?.(event, fling);
-    expect(base.onDismiss).toHaveBeenCalledTimes(1);
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('does not claim swipes when not dismissible', async () => {
     const config = gestureConfig();
-    await render(<Snackbar {...base} dismissible={false} />);
+    await render(<Snackbar {...base} actions={{ retry }} />);
     expect(
       config().onMoveShouldSetPanResponder?.(event, {
         dx: 40,
@@ -340,5 +342,23 @@ describe('swipe wiring', () => {
   it('renders without a testID', async () => {
     await render(<Snackbar {...base} testID={undefined} />);
     expect(screen.queryByTestId('anything')).toBeNull();
+  });
+});
+
+describe('rootProps', () => {
+  it('spreads the provider props on the root and takes the live region from them', async () => {
+    await render(
+      <Snackbar
+        {...base}
+        testID="own"
+        rootProps={{ testID: 'from-provider', accessibilityLiveRegion: 'none' }}
+      />,
+    );
+    expect(screen.getByTestId('from-provider')).toBeTruthy();
+    expect(screen.queryByTestId('own')).toBeNull();
+    expect(screen.getByTestId('own-message').props.accessibilityLiveRegion).toBe('none');
+    expect(
+      screen.getByTestId('from-provider').props.accessibilityLiveRegion,
+    ).toBeUndefined();
   });
 });

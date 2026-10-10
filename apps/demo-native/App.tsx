@@ -3,8 +3,10 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { OfflineDetector } from '@rogeriodocarmo/offline-detector-native';
-import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-react';
+import {
+  OfflineDetector,
+  useNetworkStatus,
+} from '@rogeriodocarmo/offline-detector-native';
 import { Segmented, colors } from './src/controls';
 import {
   buildProbeOptions,

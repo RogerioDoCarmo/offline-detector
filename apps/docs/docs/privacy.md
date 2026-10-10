@@ -32,8 +32,13 @@ the operator of that URL, not to the authors of this project.
 | `probe.intervalMs` | `30000`            | How often it re-probes while online.                                   |
 | `probe.mode`       | `'probe'`          | `'interface-only'` makes no request at all.                            |
 
-While offline, it retries after 1 second, doubling up to a cap of 30 seconds. A probe counts as a
-success when the response is `ok` or opaque (what a `no-cors` request produces).
+While offline, it retries after 1 second, doubling up to a cap of 30 seconds. A probe counts as
+reachable when any HTTP response completes, whatever its status: a `404` or `500` still proves that
+a server answered. Only a request that fails (no connection, a TLS failure, a timeout or an abort)
+counts as unreachable. The response is never read.
+
+The probe sends no cookies (`credentials: 'omit'`, so even a same-origin endpoint receives none) and
+no `Referer` header (`referrerPolicy: 'no-referrer'`).
 
 ## Use your own endpoint
 
@@ -47,8 +52,9 @@ You can point the probe at a server you control, so no third party sees the requ
 
 What your endpoint must do:
 
-- Answer `HEAD` and `GET` quickly with a success status, ideally `204 No Content` and an empty
-  body.
+- Answer `HEAD` and `GET` quickly, ideally with `204 No Content` and an empty body. The status is
+  not inspected (any answer proves the network works), but a small empty response keeps the check
+  cheap.
 - Be served over HTTPS (a page served over HTTPS cannot call an HTTP URL).
 - Not be cached by a service worker or CDN: the web probe fetch already sends `cache: 'no-store'`.
 - Be reachable from where your users are. If you serve a different origin from your page, a content

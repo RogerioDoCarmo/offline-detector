@@ -55,6 +55,10 @@ Las reglas del deslizamiento:
 - El descarte se guarda solo en memoria. Recargar lo reinicia. No se almacena nada.
 - Descartar el banner reorganiza el contenido que está debajo.
 - Lo que el usuario descarta no se anuncia a los lectores de pantalla: lo provocó él.
+- En web, al descartar una pieza que tenía el foco del teclado, el foco vuelve al elemento que lo
+  tenía antes de que apareciera la pieza (al cuerpo de la página si ese elemento ya no está).
+- Una pieza que armas por tu cuenta es descartable exactamente cuando pasas `actions.dismiss`, tanto
+  en web como en nativo.
 
 ## Reaccionar a un descarte
 
@@ -68,7 +72,7 @@ Las reglas del deslizamiento:
 
 ## En tus propios componentes
 
-`resolveDismissible` y `useDismissals` se exportan desde el paquete React:
+`resolveDismissible` y `useDismissals` se exportan desde los paquetes web y nativo:
 
 ```ts
 resolveDismissible('banner', { dismissible: false, banner: { dismissible: true } }); // true

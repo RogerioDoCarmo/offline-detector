@@ -1,5 +1,5 @@
 import type {
-  OfflineDetector,
+  OfflineDetectorInstance,
   OfflineState,
   PlatformAdapter,
   ProbeFetch,
@@ -39,7 +39,7 @@ export interface OfflineDetectorProviderProps {
    * Test seam: use this detector instead of creating one. The provider still starts and stops it,
    * but the callback props are not wired to it (they belong to the detector the provider builds).
    */
-  detector?: OfflineDetector;
+  detector?: OfflineDetectorInstance;
   children: ReactNode;
 }
 

@@ -67,15 +67,19 @@ describe('sonarcloud', () => {
     const index = steps.findIndex((s: { uses?: string }) =>
       s.uses?.startsWith('SonarSource/sonarqube-scan-action'),
     );
-    expect(steps[index].uses).toBe('SonarSource/sonarqube-scan-action@v8');
+    expect(steps[index].uses).toBe(
+      'SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9',
+    );
     expect(steps[index]['continue-on-error']).toBe(true);
     expect(steps[index].if).toBe(
       "github.actor != 'dependabot[bot]' && " +
         'github.event.pull_request.head.repo.fork != true && ' +
-        "env.SONAR_TOKEN != ''",
+        "steps.sonar.outputs.present == 'true'",
     );
-    expect(steps[index - 1].run).toBe('pnpm test:ci');
-    expect(ci().jobs.verify.env).toEqual({ SONAR_TOKEN: '${{ secrets.SONAR_TOKEN }}' });
+    // The secret reaches the scan step and the gate step before it, never the whole job.
+    expect(steps[index - 2].run).toBe('pnpm test:ci');
+    expect(steps[index].env).toEqual({ SONAR_TOKEN: '${{ secrets.SONAR_TOKEN }}' });
+    expect(ci().jobs.verify.env).toBeUndefined();
     expect(steps[0].with).toEqual({ 'fetch-depth': 0 });
   });
 
@@ -187,7 +191,10 @@ describe('stryker', () => {
     it('mutates only the sources the PR touches, mapping tests back to sources', () => {
       const script: string = step('Find the mutated source this PR touches').run;
       expect(script).toContain('git diff --name-only --diff-filter=ACMR');
-      expect(script).toContain('github.event.pull_request.base.sha');
+      expect(script).toContain('"$BASE"');
+      expect(step('Find the mutated source this PR touches').env).toEqual({
+        BASE: '${{ github.event.pull_request.base.sha }}',
+      });
       expect(script).toContain('packages/core/src packages/react/src');
       expect(script).toContain("sed -E 's/\\.test\\.(ts|tsx)$/.\\1/'");
     });
@@ -195,9 +202,8 @@ describe('stryker', () => {
     it('passes the scope without a double dash and uploads the report', () => {
       const stryker = step('Stryker');
       expect(stryker.if).toBe("steps.scope.outputs.run == 'true'");
-      expect(stryker.run).toBe(
-        'pnpm mutation --mutate "${{ steps.scope.outputs.mutate }}"',
-      );
+      expect(stryker.run).toBe('pnpm mutation --mutate "$MUTATE"');
+      expect(stryker.env).toEqual({ MUTATE: '${{ steps.scope.outputs.mutate }}' });
       expect(step('Upload mutation report').with.path).toBe('reports/mutation/');
     });
   });
@@ -307,7 +313,11 @@ describe('e2e workflow', () => {
   });
 
   it('disables Turborepo telemetry and reads the repository only', () => {
-    expect(e2e().env).toEqual({ TURBO_TELEMETRY_DISABLED: '1' });
+    expect(e2e().env).toEqual({
+      TURBO_TELEMETRY_DISABLED: '1',
+      NEXT_TELEMETRY_DISABLED: '1',
+      STORYBOOK_DISABLE_TELEMETRY: '1',
+    });
     expect(e2e().permissions).toEqual({ contents: 'read' });
   });
 

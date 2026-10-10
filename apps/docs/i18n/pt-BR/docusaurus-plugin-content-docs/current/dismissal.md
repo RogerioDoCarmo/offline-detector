@@ -55,6 +55,10 @@ As regras do deslize:
 - A dispensa fica apenas na memória. Recarregar a página a reinicia. Nada é armazenado.
 - Dispensar o banner reorganiza o conteúdo que está abaixo dele.
 - Dispensar pelo usuário não é anunciado aos leitores de tela: foi o usuário quem fez.
+- Na web, ao dispensar uma peça que tinha o foco do teclado, o foco volta ao elemento que o tinha
+  antes de a peça aparecer (ao corpo da página, se esse elemento sumiu).
+- Uma peça que você monta por conta própria é dispensável exatamente quando você passa
+  `actions.dismiss`, tanto na web quanto no nativo.
 
 ## Reagir a uma dispensa
 
@@ -68,7 +72,7 @@ As regras do deslize:
 
 ## Nos seus próprios componentes
 
-`resolveDismissible` e `useDismissals` são exportados pelo pacote React:
+`resolveDismissible` e `useDismissals` são exportados pelos pacotes web e nativo:
 
 ```ts
 resolveDismissible('banner', { dismissible: false, banner: { dismissible: true } }); // true

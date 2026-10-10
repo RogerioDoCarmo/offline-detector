@@ -19,7 +19,7 @@ As chaves de `slots` são `snackbar`, `banner`, `indicator` e `fullScreen`.
 
 ## O que um slot recebe
 
-Um slot recebe o contrato `PieceRenderProps` do pacote React:
+Um slot recebe o contrato `PieceRenderProps`. Os pacotes web e nativo exportam o tipo:
 
 | Prop        | O que é                                                                           |
 | ----------- | --------------------------------------------------------------------------------- |
@@ -35,8 +35,8 @@ Um slot recebe o contrato `PieceRenderProps` do pacote React:
 ## Exemplo para web
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
 import { OfflineDetector } from '@rogeriodocarmo/offline-detector-web';
+import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-web';
 
 function Toast({ message, phase, actions, rootProps }: PieceRenderProps) {
   return (
@@ -59,8 +59,10 @@ companhia funcionam no seu CSS. Veja [Temas](./theming.md).
 ## Exemplo para nativo
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
-import type { OfflineTheme } from '@rogeriodocarmo/offline-detector-native';
+import type {
+  OfflineTheme,
+  PieceRenderProps,
+} from '@rogeriodocarmo/offline-detector-native';
 
 function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>) {
   return (
@@ -78,8 +80,11 @@ function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>
 ## Mantenha acessível
 
 - Espalhe `rootProps` na sua raiz. Ele carrega o papel e a configuração de região viva que fazem a
-  transição ser anunciada exatamente uma vez. Um slot que omite `rootProps` faz o provider recorrer
-  a um anunciador visualmente oculto; assim, a mensagem continua sendo falada.
+  transição ser anunciada exatamente uma vez. Não há alternativa: um slot que omite `rootProps` não
+  é coberto por mais nada, então um leitor de tela não fala nada para ele. O iOS não tem região viva
+  alguma; portanto, um slot nativo também precisa chamar
+  `AccessibilityInfo.announceForAccessibility(message)` por conta própria quando aparece ou quando a
+  mensagem muda.
 - Coloque `aria-label` apenas em um elemento com papel que aceite nome (`role="status"`,
   `role="region"`, `role="img"`), nunca em um `div` ou `span` sem papel.
 - Mantenha os alvos com pelo menos 44 por 44 e ofereça uma forma de dispensar que não seja deslizar.

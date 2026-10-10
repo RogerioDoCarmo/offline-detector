@@ -210,6 +210,89 @@ test.describe('web UI pieces in a real browser', () => {
   });
 });
 
+test.describe('focus, pointer and cascade behaviour in a real browser', () => {
+  test('dismissing the snackbar from the keyboard returns focus to the host control', async ({
+    page,
+    goOffline,
+  }) => {
+    await open(page);
+    await page.locator('#host-action').focus();
+    await goOffline();
+    await expect(snackbar(page)).toBeVisible();
+
+    await snackbar(page).getByRole('button', { name: 'Dismiss' }).focus();
+    await page.keyboard.press('Enter');
+
+    await expect(snackbar(page)).toHaveCount(0);
+    await expect(page.locator('#host-action')).toBeFocused();
+  });
+
+  test('Escape inside the banner returns focus to the host control too', async ({
+    page,
+    goOffline,
+  }) => {
+    await open(page);
+    await page.locator('#host-action').focus();
+    await goOffline();
+    await expect(page.locator('.od-banner')).toBeVisible();
+
+    await page.locator('.od-banner').getByRole('button', { name: 'Dismiss' }).focus();
+    await page.keyboard.press('Escape');
+
+    await expect(page.locator('.od-banner')).toHaveCount(0);
+    await expect(page.locator('#host-action')).toBeFocused();
+  });
+
+  test('a mouse released outside the snackbar does not leave the swipe stuck', async ({
+    page,
+    goOffline,
+  }) => {
+    await open(page);
+    await goOffline();
+    await expect(snackbar(page)).toBeVisible();
+
+    const box = await snackbar(page).locator('.od-msg').boundingBox();
+    if (!box) throw new Error('message has no box');
+    await page.mouse.move(box.x + 4, box.y + 4);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 4, box.y - 150, { steps: 6 });
+    await page.mouse.move(10, 10, { steps: 6 });
+    await page.mouse.up();
+    // Nothing hears the release on the snackbar. A hover over it must not lock an axis or
+    // swallow the next click, and a swipe must still work.
+    await page.mouse.move(box.x + 30, box.y + 4, { steps: 4 });
+    await page.mouse.move(box.x + 60, box.y + 4, { steps: 4 });
+    await expect(snackbar(page)).toBeVisible();
+
+    await swipe(page, snackbar(page), 0.5);
+    await expect(snackbar(page)).toHaveCount(0);
+  });
+
+  test('a host :root override of a token beats the package defaults', async ({
+    page,
+    goOffline,
+  }) => {
+    await open(page);
+    await page.addStyleTag({
+      content: ':root { --od-color-surface-inverse: rgb(255, 0, 0); }',
+    });
+    await goOffline();
+    await expect(snackbar(page)).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+  });
+
+  test('the full-screen title follows strings.fullScreenTitle', async ({
+    page,
+    goOffline,
+  }) => {
+    await open(page, {
+      fullScreen: true,
+      strings: { fullScreenTitle: 'You are offline' },
+    });
+    await goOffline();
+    await expect(page.getByRole('heading', { name: 'You are offline' })).toBeFocused();
+  });
+});
+
 test.describe('OfflineDetector options and the probe', () => {
   const setProbe = (page: Page, ok: boolean) =>
     page.evaluate((value) => {

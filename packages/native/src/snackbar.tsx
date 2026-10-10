@@ -1,44 +1,16 @@
 import type { ReactNode } from 'react';
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
-import { dismissAccessibilityProps, isDismissible } from './a11y';
-import type { OfflineStrings } from '@rogeriodocarmo/offline-detector-react';
-import type { PiecePhase } from './phase';
-import { Glyph, Spinner, type PieceIcons } from './glyphs';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { dismissAccessibilityProps, splitRootProps } from './a11y';
+import type { PieceProps } from './piece-types';
+import { Glyph, Spinner } from './glyphs';
 import { useIosAnnouncement, usePieceTransition } from './hooks';
-import { inlineInsets, resolveInsets, type Insets } from './insets';
-import { lightTheme, type OfflineTheme } from './theme';
+import { inlineInsets, resolveInsets } from './insets';
+import { lightTheme } from './theme';
 import { useSwipeDismiss } from './use-swipe-dismiss';
 
-export interface SnackbarProps {
-  phase: PiecePhase;
-  /** Already localised and reason-aware. */
-  message: string;
-  strings: OfflineStrings;
-  /** Shows the Retry action (hidden on the recovery message). */
-  onRetry?: () => void;
-  /** Present and `dismissible` not false: swipe, dismiss button and `dismiss` action work. */
-  onDismiss?: () => void;
-  dismissible?: boolean;
-  /** False plays the exit animation and then renders nothing. Default true. */
-  visible?: boolean;
-  theme?: OfflineTheme;
-  reduceMotion?: boolean;
-  insets?: Partial<Insets>;
+export interface SnackbarProps extends PieceProps {
   /** Extra space under the snackbar, for example a tab bar. Default 0. */
   offsetBottom?: number;
-  /** True when this piece owns the announcement for the transition. Default true. */
-  announce?: boolean;
-  icons?: PieceIcons;
-  style?: StyleProp<ViewStyle>;
-  testID?: string;
 }
 
 /** The bottom-anchored message surface. Offline persists; recovery is timed by the provider. */
@@ -46,10 +18,9 @@ export function Snackbar({
   phase,
   message,
   strings,
-  onRetry,
-  onDismiss,
-  dismissible: dismissibleProp,
+  actions,
   visible = true,
+  rootProps,
   theme = lightTheme,
   reduceMotion = false,
   insets: insetsProp,
@@ -59,7 +30,10 @@ export function Snackbar({
   style,
   testID,
 }: SnackbarProps) {
-  const dismissible = isDismissible(dismissibleProp, onDismiss);
+  const onRetry = actions?.retry;
+  const onDismiss = actions?.dismiss;
+  const dismissible = typeof onDismiss === 'function';
+  const { root, announces } = splitRootProps(rootProps, announce);
   const transition = usePieceTransition({
     visible,
     reduceMotion,
@@ -71,8 +45,9 @@ export function Snackbar({
     onDismiss: () => onDismiss?.(),
     reducedMotion: reduceMotion,
     theme,
+    visible,
   });
-  useIosAnnouncement(message, announce && visible);
+  useIosAnnouncement(message, announces && visible);
 
   if (!transition.mounted) return null;
 
@@ -105,6 +80,7 @@ export function Snackbar({
         transition.style,
         style,
       ]}
+      {...root}
     >
       <Animated.View
         {...swipe.panHandlers}
@@ -126,8 +102,8 @@ export function Snackbar({
         <View
           accessible
           testID={testID ? `${testID}-message` : undefined}
-          accessibilityLiveRegion={announce ? 'polite' : 'none'}
-          {...dismissAccessibilityProps(strings, dismissible, onDismiss)}
+          accessibilityLiveRegion={announces ? 'polite' : 'none'}
+          {...dismissAccessibilityProps(strings, onDismiss)}
           style={styles.message}
         >
           <View style={{ marginEnd: theme.spaceMd }}>{icon}</View>
@@ -150,7 +126,7 @@ export function Snackbar({
             accessibilityRole="button"
             accessibilityLabel={retryLabel}
             accessibilityState={{ busy: checking, disabled: checking }}
-            onPress={checking ? undefined : onRetry}
+            onPress={checking ? undefined : () => void onRetry?.()}
             style={({ pressed }) => [
               styles.action,
               {
@@ -184,7 +160,7 @@ export function Snackbar({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={strings.dismiss}
-            onPress={onDismiss}
+            onPress={() => onDismiss?.()}
             style={[
               styles.action,
               {

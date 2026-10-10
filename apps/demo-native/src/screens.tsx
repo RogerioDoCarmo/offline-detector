@@ -2,9 +2,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   useNetworkStatus,
   useRecheckOnReturn,
+  type OfflineTheme,
   type PieceRenderProps,
-} from '@rogeriodocarmo/offline-detector-react';
-import type { OfflineTheme } from '@rogeriodocarmo/offline-detector-native';
+} from '@rogeriodocarmo/offline-detector-native';
 import { Button, Field, Section, Segmented, Toggle, colors } from './controls';
 import {
   INTERVALS,

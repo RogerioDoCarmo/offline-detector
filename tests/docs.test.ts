@@ -270,15 +270,20 @@ describe('reference pages match the real exports', () => {
       expect.arrayContaining(['useRecheckOnReturn', 'STRINGS', 'OfflineStrings']),
     );
     expect(exportedNames('web')).toEqual(
-      expect.arrayContaining(['OfflineDetector', 'createWebAdapter', 'SWIPE_RULES']),
+      expect.arrayContaining(['OfflineDetector', 'createWebAdapter', 'useNetworkStatus']),
     );
     expect(exportedNames('native')).toEqual(
-      expect.arrayContaining(['createNativeAdapter', 'lightTheme', 'FullScreen']),
+      expect.arrayContaining(['createNativeAdapter', 'lightTheme', 'useNetworkStatus']),
     );
-    expect(exportedNames('core')).toHaveLength(17);
+    expect(exportedNames('core')).toHaveLength(16);
     expect(exportedNames('react')).toHaveLength(24);
-    expect(exportedNames('web')).toHaveLength(33);
-    expect(exportedNames('native')).toHaveLength(31);
+    expect(exportedNames('web')).toHaveLength(42);
+    expect(exportedNames('native')).toHaveLength(49);
+    for (const pkg of ['web', 'native']) {
+      expect(exportedNames(pkg)).not.toEqual(
+        expect.arrayContaining(['useSwipeDismiss', 'useSettledChecking']),
+      );
+    }
   });
 
   for (const pkg of ['core', 'react', 'web', 'native']) {
@@ -564,7 +569,11 @@ describe('pages workflow', () => {
   });
 
   it('uses the repo node and pnpm setup and turns Turborepo telemetry off', () => {
-    expect(wf().env).toEqual({ TURBO_TELEMETRY_DISABLED: '1' });
+    expect(wf().env).toEqual({
+      TURBO_TELEMETRY_DISABLED: '1',
+      NEXT_TELEMETRY_DISABLED: '1',
+      STORYBOOK_DISABLE_TELEMETRY: '1',
+    });
     const node = wf().jobs.build.steps.find((s: Step) =>
       s.uses?.startsWith('actions/setup-node'),
     );
@@ -607,5 +616,278 @@ describe('docs README', () => {
     expect(readme).toContain('native-speaker review');
     expect(readme).toContain('pt-BR');
     expect(readme).toContain('es');
+  });
+});
+
+describe('the web reference is honest about banner.position', () => {
+  it('says the option is accepted and not yet applied', () => {
+    const text = read('apps/docs/docs/reference/web.md').replace(/\s+/g, ' ');
+    expect(text).toContain('`banner.position` is accepted and not yet applied');
+  });
+});
+
+describe('slots and accessibility pages do not promise a fallback announcer that does not exist', () => {
+  const flatText = (path: string): string => read(path).replace(/\s+/g, ' ');
+  const expected = {
+    en: {
+      slots: [
+        'Spread `rootProps` on your root.',
+        'There is no fallback:',
+        'a screen reader hears nothing for it',
+        'call `AccessibilityInfo.announceForAccessibility(message)` itself',
+      ],
+      accessibility: [
+        'snackbar, banner, indicator. If none of them is enabled, nothing is announced',
+        'There is no hidden fallback announcer.',
+      ],
+      banned: /announcer/gi,
+    },
+    'pt-BR': {
+      slots: [
+        'Espalhe `rootProps` na sua raiz.',
+        'Não há alternativa:',
+        'um leitor de tela não fala nada para ele',
+        'chamar `AccessibilityInfo.announceForAccessibility(message)` por conta própria',
+      ],
+      accessibility: [
+        'snackbar, banner, indicador. Se nenhum deles estiver ativado, nada é anunciado',
+        'Não existe anunciador oculto de reserva.',
+      ],
+      banned: /anunciador/gi,
+    },
+    es: {
+      slots: [
+        'Esparce `rootProps` en tu raíz.',
+        'No hay alternativa:',
+        'un lector de pantalla no lee nada para él',
+        'llamar a `AccessibilityInfo.announceForAccessibility(message)` por su cuenta',
+      ],
+      accessibility: [
+        'snackbar, banner, indicador. Si ninguno está activado, no se anuncia nada',
+        'No existe un anunciador oculto de reserva.',
+      ],
+      banned: /anunciador/gi,
+    },
+  } as const;
+
+  it.each(LOCALES)(
+    '%s: slots.md says what a slot must do and that nothing catches it',
+    (locale) => {
+      const text = flatText(docPath(locale, 'slots'));
+      for (const phrase of expected[locale].slots) expect(text).toContain(phrase);
+      expect(text).not.toMatch(expected[locale].banned);
+    },
+  );
+
+  it.each(LOCALES)(
+    '%s: accessibility.md says that with no visible piece nothing is announced',
+    (locale) => {
+      const text = flatText(docPath(locale, 'accessibility'));
+      for (const phrase of expected[locale].accessibility) expect(text).toContain(phrase);
+      // The one place the word may remain is the sentence that denies the fallback exists.
+      expect(text.match(expected[locale].banned)).toHaveLength(1);
+    },
+  );
+});
+
+describe('reference export kinds', () => {
+  const kinds = (path: string): Record<string, string> =>
+    Object.fromEntries(
+      [...read(path).matchAll(/^- `([^`]+)` \(([^)]+)\)$/gm)].map((m) => [m[1], m[2]]),
+    );
+  const word: Record<string, Record<string, string>> = {
+    en: {
+      type: 'type',
+      function: 'function',
+      constant: 'constant',
+      component: 'component',
+      hook: 'hook',
+    },
+    'pt-BR': {
+      type: 'tipo',
+      function: 'função',
+      constant: 'constante',
+      component: 'componente',
+      hook: 'hook',
+    },
+    es: {
+      type: 'tipo',
+      function: 'función',
+      constant: 'constante',
+      component: 'componente',
+      hook: 'hook',
+    },
+  };
+  const expected: Record<string, Record<string, string>> = {
+    core: {
+      createOfflineDetector: 'function',
+      DEFAULT_PROBE_URLS: 'constant',
+      OfflineDetectorInstance: 'type',
+      ProbeFetch: 'type',
+      isOnline: 'function',
+    },
+    web: {
+      offlineCss: 'constant',
+      offlineTokensCss: 'constant',
+      OfflineTokens: 'component',
+      OfflineDetector: 'component',
+      createWebAdapter: 'function',
+      useNetworkStatus: 'hook',
+      useCheckingFeedback: 'hook',
+      OfflineState: 'type',
+      STRINGS: 'constant',
+      resolveLocale: 'function',
+      resolveStrings: 'function',
+      offlineMessage: 'function',
+      indicatorName: 'function',
+      resolveDismissible: 'function',
+      useDismissals: 'hook',
+    },
+    native: {
+      createTheme: 'function',
+      lightTheme: 'constant',
+      darkTheme: 'constant',
+      useOfflineTheme: 'hook',
+      useReducedMotion: 'hook',
+      useRecheckOnReturn: 'hook',
+      createNativeAdapter: 'function',
+      FullScreen: 'component',
+      PieceProps: 'type',
+      STRINGS: 'constant',
+      resolveLocale: 'function',
+      resolveStrings: 'function',
+      offlineMessage: 'function',
+      indicatorName: 'function',
+      resolveDismissible: 'function',
+      useDismissals: 'hook',
+    },
+  };
+  for (const pkg of Object.keys(expected)) {
+    for (const locale of LOCALES) {
+      it(`labels ${pkg} exports with the right kind (${locale})`, () => {
+        const found = kinds(docPath(locale, `reference/${pkg}`));
+        for (const [name, kind] of Object.entries(expected[pkg] ?? {})) {
+          expect({ name, kind: found[name] }).toEqual({
+            name,
+            kind: word[locale]?.[kind],
+          });
+        }
+      });
+    }
+  }
+});
+
+describe('no page documents the old API', () => {
+  const STALE = [
+    'ProbeResponse',
+    'useSwipeDismiss',
+    'useSettledChecking',
+    'hostContentAccessibilityProps',
+    'defaultInsets',
+    'SWIPE_RULES',
+    'onRetry',
+    "type: 'opaque'",
+    'ok: true',
+  ];
+  const walk = (dir: string): string[] =>
+    readdirSync(join(root, dir), { recursive: true })
+      .map(String)
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => join(dir, f));
+  const pages = [
+    ...walk('apps/docs/docs'),
+    ...walk('apps/docs/i18n/pt-BR/docusaurus-plugin-content-docs/current'),
+    ...walk('apps/docs/i18n/es/docusaurus-plugin-content-docs/current'),
+  ];
+
+  it.each(STALE)('mentions %s nowhere', (needle) => {
+    const hits = pages.filter((p) => read(p).includes(needle));
+    expect(hits).toEqual([]);
+  });
+
+  it('never calls the core engine type OfflineDetector', () => {
+    for (const locale of LOCALES) {
+      expect(read(docPath(locale, 'reference/react'))).toContain(
+        '`OfflineDetectorInstance`',
+      );
+      expect(read(docPath(locale, 'reference/core'))).toContain(
+        '## `OfflineDetectorInstance`',
+      );
+      expect(read(docPath(locale, 'reference/core'))).not.toContain(
+        '## `OfflineDetector`',
+      );
+    }
+  });
+});
+
+describe('guides follow the one-package rule and the new behaviour', () => {
+  it.each(LOCALES)(
+    '%s: quick starts import hooks from the platform package',
+    (locale) => {
+      for (const id of ['web-quick-start', 'native-quick-start', 'recheck-on-return']) {
+        const text = read(docPath(locale, id));
+        expect({ id, fromReact: text.includes("offline-detector-react'") }).toEqual({
+          id,
+          fromReact: false,
+        });
+      }
+      expect(read(docPath(locale, 'web-quick-start'))).toContain(
+        "import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-web';",
+      );
+      expect(read(docPath(locale, 'native-quick-start'))).toContain(
+        "import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-native';",
+      );
+    },
+  );
+
+  it.each(LOCALES)('%s: install adds only one UI package per platform', (locale) => {
+    const text = read(docPath(locale, 'install'));
+    expect(text).toContain('npm install @rogeriodocarmo/offline-detector-native\n');
+    expect(text).not.toContain(
+      'offline-detector-native @rogeriodocarmo/offline-detector-react',
+    );
+  });
+
+  it.each(LOCALES)('%s: theming and ssr document :where and nonce', (locale) => {
+    const theming = read(docPath(locale, 'theming'));
+    expect(theming).toContain(':where()');
+    expect(theming).toContain('nonce={nonce}');
+    const ssr = read(docPath(locale, 'ssr'));
+    expect(ssr).toContain('nonce={nonce}');
+    expect(ssr).not.toContain('does not take a `nonce`');
+  });
+
+  it.each(LOCALES)(
+    '%s: the core reference says any completed response is reachable',
+    (locale) => {
+      const core = read(docPath(locale, 'reference/core'));
+      expect(core).toContain("credentials: 'omit'");
+      expect(core).toContain('Promise<unknown>');
+      expect(core).toContain('readonly string[]');
+    },
+  );
+
+  it.each(LOCALES)('%s: web and native references list the new props', (locale) => {
+    const web = read(docPath(locale, 'reference/web'));
+    expect(web).toContain('| `onContinueOffline`');
+    expect(web).toContain('| `nonce`');
+    expect(web).toContain("referrerPolicy: 'no-referrer'");
+    const native = read(docPath(locale, 'reference/native'));
+    expect(native).toContain('`onRestoreFocus`');
+    expect(native).toContain('actions.dismiss');
+  });
+});
+
+describe('repository READMEs', () => {
+  it('root README no longer says work in progress', () => {
+    expect(read('README.md')).not.toMatch(/work in progress/i);
+  });
+
+  it('react README links the core README by an absolute URL', () => {
+    const text = read('packages/react/README.md');
+    expect(text).not.toContain('../core/README.md');
+    expect(text).toContain(
+      '(https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/core/README.md)',
+    );
   });
 });

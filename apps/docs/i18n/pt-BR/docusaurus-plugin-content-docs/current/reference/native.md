@@ -31,6 +31,7 @@ sem gesture-handler. Exige React 18 ou mais recente e React Native 0.73 ou mais 
 | `distinguishReason` | `true` diz "Sem conexão com a rede" ou "Conectado, mas sem internet".                              |
 | `fullScreen`        | `true`, ou `{ continueOffline: true }` para a saída. Desligado por padrão.                         |
 | `onContinueOffline` | Dispara quando "Continuar offline" é tocado.                                                       |
+| `onRestoreFocus`    | Dispara quando o estado de tela cheia sai, para o app devolver o foco do leitor de tela.           |
 | `snackbar`          | Opções por peça: `dismissible`.                                                                    |
 | `banner`            | Opções por peça: `dismissible`, `position`, `overlay`.                                             |
 | `indicator`         | Opções por peça: `dismissible`, `position`, `variant`.                                             |
@@ -64,29 +65,40 @@ o tema resolvido dentro de um componente. Todas as chaves estão em [Temas](../t
 
 ## Margens de área segura
 
-`Insets` é `{ top, right, bottom, left }` em dp. `defaultInsets()` devolve a altura da barra de
-status do Android no topo e zero nos demais lados. Passe as margens reais (por exemplo, de
-`useSafeAreaInsets()`), principalmente em iPhones com notch.
+`Insets` é `{ top, right, bottom, left }` em dp. O padrão é a altura da barra de status do Android
+no topo e zero nos demais lados, o que está errado em iPhones com notch: passe as margens reais
+(por exemplo, de `useSafeAreaInsets()`).
 
 ## Peças
 
 `Snackbar`, `Banner`, `Indicator` e `FullScreen` são exportados com `SnackbarProps`, `BannerProps`,
-`IndicatorProps` e `FullScreenProps`. `FullScreen` recebe `phase`, `title`, `strings`, `onRetry` e,
-opcionalmente, `onContinueOffline`, `onRestoreFocus`, `visible`, `theme`, `reduceMotion`, `insets`,
-`icons`, `style` e `testID`. `PieceIcons` tipa os glifos substituíveis. Um slot recebe o contrato
-`PieceRenderProps`, com `theme` preenchido.
+`IndicatorProps` e `FullScreenProps`. Recebem as mesmas props das peças web: `phase`, `message`,
+`strings`, e opcionalmente `state`, `actions`, `visible`, `rootProps` e `theme`, além de extras
+nativos (`announce`, `reduceMotion`, `insets`, `icons`, `style`, `testID`; no banner `position`,
+`overlay`, `showRetry`, `offset`; no indicador `variant`, `position`, `offsetTop`, `offsetBottom`; no
+snackbar `offsetBottom`; na tela cheia `onRestoreFocus`).
 
-`hostContentAccessibilityProps(fullScreenVisible)` devolve as props que escondem o conteúdo do seu
-app da tecnologia assistiva enquanto o estado de tela cheia está visível (`no-hide-descendants` no
-Android, `accessibilityElementsHidden` no iOS). Espalhe-as na sua view raiz quando montar as peças
-por conta própria.
+`actions` é `{ retry?, dismiss?, continueOffline? }`. Uma peça é dispensável exatamente quando
+`actions.dismiss` está presente, e a tela cheia mostra "Continuar offline" exatamente quando
+`actions.continueOffline` está. Não há props separadas de tentar de novo, dispensar ou título:
+use `actions` e `message` (o título da tela cheia). Uma peça deslizada para fora volta ao repouso quando
+`visible` volta a ser true, então ela reaparece na próxima transição. `PieceIcons` tipa os glifos
+substituíveis. Um slot recebe o contrato `PieceRenderProps`, com `theme` preenchido.
 
-## Hooks
+O hook de deslizar, as regras de deslize e de tempo e o auxiliar de acessibilidade que esconde o
+conteúdo do app são internos e não são exportados; `<OfflineDetector>` esconde o conteúdo do app
+para você enquanto o estado de tela cheia aparece.
+
+## Hooks e tipos
 
 - `useReducedMotion(motion?)` é `true` quando o movimento deve ser reduzido; `'auto'` lê a
   configuração do sistema.
-- `useSwipeDismiss({ enabled, onDismiss, reducedMotion, theme? })` devolve `panHandlers`, `onLayout`
-  e um `style` animado. Usa `PanResponder` e a API `Animated` nativa do React Native.
+- `useOfflineTheme(...)` devolve o tema resolvido dentro dos seus próprios componentes.
+- O pacote nativo reexporta a API do react, então um app instala um único pacote: os hooks
+  `useNetworkStatus`, `useRecheckOnReturn`, `useOfflineDetector` e `useCheckingFeedback`, e os tipos
+  `OfflineState`, `OfflineStrings`, `OfflineUiOptions`, `PieceRenderProps`, `DismissiblePiece`,
+  `Locale`, `IndicatorPosition`, `RecheckOnReturnOptions` e `UseNetworkStatusResult`. Veja a
+  [referência do react](./react.md). O pacote web reexporta a mesma lista.
 
 ## Índice de exportações {#export-index}
 
@@ -98,32 +110,50 @@ Tudo o que o pacote exporta, valores e tipos.
 - `Banner` (componente)
 - `BannerProps` (tipo)
 - `Bezier` (tipo)
-- `createNativeAdapter` (função)
-- `createTheme` (constante)
-- `darkTheme` (constante)
-- `defaultInsets` (função)
+- `DismissiblePiece` (tipo)
 - `FullScreen` (componente)
 - `FullScreenProps` (tipo)
-- `hostContentAccessibilityProps` (função)
 - `Indicator` (componente)
+- `IndicatorPosition` (tipo)
 - `IndicatorProps` (tipo)
 - `Insets` (tipo)
-- `lightTheme` (constante)
+- `Locale` (tipo)
 - `NativeAdapterOptions` (tipo)
 - `NetInfoLike` (tipo)
 - `OfflineDetector` (componente)
 - `OfflineDetectorProps` (tipo)
 - `OfflineDetectorSlot` (tipo)
 - `OfflineDetectorSlots` (tipo)
+- `OfflineState` (tipo)
+- `OfflineStrings` (tipo)
 - `OfflineTheme` (tipo)
-- `packageName` (constante)
+- `OfflineUiOptions` (tipo)
+- `Phase` (tipo)
 - `PieceIcons` (tipo)
+- `PieceProps` (tipo)
+- `PieceRenderProps` (tipo)
+- `RecheckOnReturnOptions` (tipo)
+- `STRINGS` (constante)
 - `ShadowStyle` (tipo)
 - `Snackbar` (componente)
 - `SnackbarProps` (tipo)
-- `useOfflineTheme` (constante)
+- `UseNetworkStatusResult` (tipo)
+- `createNativeAdapter` (função)
+- `createTheme` (função)
+- `darkTheme` (constante)
+- `indicatorName` (função)
+- `lightTheme` (constante)
+- `offlineMessage` (função)
+- `packageName` (constante)
+- `resolveDismissible` (função)
+- `resolveLocale` (função)
+- `resolveStrings` (função)
+- `useCheckingFeedback` (hook)
+- `useDismissals` (hook)
+- `useNetworkStatus` (hook)
+- `useOfflineDetector` (hook)
+- `useOfflineTheme` (hook)
+- `useRecheckOnReturn` (hook)
 - `useReducedMotion` (hook)
-- `useSwipeDismiss` (hook)
-- `UseSwipeDismissOptions` (tipo)
 
 <!--/EXPORTS-->

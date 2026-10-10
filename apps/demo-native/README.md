@@ -113,7 +113,8 @@ Stories: Snackbar, Banner, Indicator and FullScreen in every phase they have (of
 recovered), and `OfflineDetector/States` (online, offline, offline distinguishing the reason,
 recovering, checking, full screen, dismissed, not dismissible, dark, Portuguese, Spanish with
 reduced motion). The Controls panel changes locale (en, pt-BR, es), colour scheme, reduced motion
-and `dismissible` on every story; `onRetry` and `onDismiss` report to the Actions panel.
+and `dismissible` on every story (a piece is dismissible exactly when it gets `actions.dismiss`);
+`onRetry` and `onDismiss` report to the Actions panel.
 
 **Why the lite UI.** The default Storybook UI needs Reanimated, gesture-handler and bottom-sheet,
 which this repo does not allow. `@storybook/react-native-ui-lite` and `liteMode` replace it. pnpm

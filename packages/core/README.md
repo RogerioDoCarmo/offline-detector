@@ -43,37 +43,40 @@ unsubscribe();
 
 ## API
 
-### `createOfflineDetector(options): OfflineDetector`
+### `createOfflineDetector(options): OfflineDetectorInstance`
 
-| Option                                       | Default                                                                              | Notes                                                                |
-| -------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `adapter`                                    | required                                                                             | A `PlatformAdapter`.                                                 |
-| `probe.urls`                                 | `['https://cp.cloudflare.com/generate_204', 'https://www.gstatic.com/generate_204']` | Tried in order. Must not be empty unless `mode` is `interface-only`. |
-| `probe.timeoutMs`                            | `5000`                                                                               | Per URL. The request is aborted at the timeout.                      |
-| `probe.intervalMs`                           | `30000`                                                                              | Re-probe period while online.                                        |
-| `probe.method`                               | `'HEAD'`                                                                             | `'HEAD'` or `'GET'`.                                                 |
-| `probe.mode`                                 | `'probe'`                                                                            | `'interface-only'` never calls `fetch` and schedules no timers.      |
-| `onOffline(state)`                           | none                                                                                 | See "Callbacks".                                                     |
-| `onOnline(state)`                            | none                                                                                 | See "Callbacks".                                                     |
-| `onChange(state, previous)`                  | none                                                                                 | See "Callbacks".                                                     |
-| `onError(error)`                             | none                                                                                 | Receives exceptions thrown by listeners and callbacks.               |
-| `fetch`, `now`, `setTimeout`, `clearTimeout` | the globals (`fetch`, `Date.now`, timers)                                            | Injectable for tests. On web, wrap `fetch` to add `mode: 'no-cors'`. |
+| Option                                       | Default                                                                              | Notes                                                                                       |
+| -------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `adapter`                                    | required                                                                             | A `PlatformAdapter`.                                                                        |
+| `probe.urls`                                 | `['https://cp.cloudflare.com/generate_204', 'https://www.gstatic.com/generate_204']` | A `readonly string[]`, tried in order. Must not be empty unless `mode` is `interface-only`. |
+| `probe.timeoutMs`                            | `5000`                                                                               | Per URL. The request is aborted at the timeout.                                             |
+| `probe.intervalMs`                           | `30000`                                                                              | Re-probe period while online.                                                               |
+| `probe.method`                               | `'HEAD'`                                                                             | `'HEAD'` or `'GET'`.                                                                        |
+| `probe.mode`                                 | `'probe'`                                                                            | `'interface-only'` never calls `fetch` and schedules no timers.                             |
+| `onOffline(state)`                           | none                                                                                 | See "Callbacks".                                                                            |
+| `onOnline(state)`                            | none                                                                                 | See "Callbacks".                                                                            |
+| `onChange(state, previous)`                  | none                                                                                 | See "Callbacks".                                                                            |
+| `onError(error)`                             | none                                                                                 | Receives exceptions thrown by listeners and callbacks. If it throws too, that is swallowed. |
+| `fetch`, `now`, `setTimeout`, `clearTimeout` | the globals (`fetch`, `Date.now`, timers)                                            | Injectable for tests. On web, wrap `fetch` to add `mode: 'no-cors'`.                        |
 
 Creating a detector in probe mode with no `fetch` available, or with an empty `urls`
 list, throws.
 
-A probe succeeds when `fetch` resolves with `ok: true` or `type: 'opaque'` (what `no-cors`
-produces). A rejection, a non-ok response or a timeout counts as a failure.
+A probe succeeds when `fetch` resolves with **anything**: the resolved value is ignored, so any
+completed HTTP response (a 404, a 500, a `no-cors` opaque response) means the network is
+reachable. Only a rejection (network error, TLS failure, abort) or a timeout counts as a failure.
+The request is made as `fetch(url, { method, signal, credentials: 'omit' })`, so it sends no
+cookies. `ProbeFetch` is `(url, init) => Promise<unknown>`.
 
-### `OfflineDetector`
+### `OfflineDetectorInstance`
 
-| Member                              | Behavior                                                                                                                                                                                     |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getState(): OfflineState`          | The current state. A new object on every change.                                                                                                                                             |
-| `subscribe(listener)`               | `listener(state, previous)` runs on **every** state change (including `checking` flips and new timestamps). Returns an unsubscribe function.                                                 |
-| `start()`                           | Subscribes to the adapter, runs a check now and schedules the rest. Calling it twice is a no-op.                                                                                             |
-| `stop()`                            | Clears the timer, unsubscribes from the adapter, discards any in-flight probe result and clears `checking`. Safe to call repeatedly, and to `start()` again afterwards.                      |
-| `checkNow(): Promise<OfflineState>` | Forces a check now and resolves with the new state. While a check is in flight, concurrent calls share it (exactly one probe). Works without `start()`. The react layer calls this directly. |
+| Member                              | Behavior                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getState(): OfflineState`          | The current state. A new object on every change.                                                                                                                                                                                                                                                                                    |
+| `subscribe(listener)`               | `listener(state, previous)` runs on **every** state change (including `checking` flips and new timestamps). Returns an unsubscribe function.                                                                                                                                                                                        |
+| `start()`                           | Subscribes to the adapter, runs a check now and schedules the rest. Calling it twice is a no-op.                                                                                                                                                                                                                                    |
+| `stop()`                            | Clears the timer, unsubscribes from the adapter, aborts the in-flight request and clears its timeout timer, discards its result and clears `checking`. Safe to call repeatedly, and to `start()` again afterwards.                                                                                                                  |
+| `checkNow(): Promise<OfflineState>` | Forces a check now and resolves with the new state. While a check is in flight, concurrent calls share it (exactly one probe). If an interface-up event overtakes the check, the promise resolves with the overtaking check's result, never a still-`checking` state. Works without `start()`. The react layer calls this directly. |
 
 ### `OfflineState`
 

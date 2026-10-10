@@ -20,6 +20,8 @@ concurrency:
 
 env:
   TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+  STORYBOOK_DISABLE_TELEMETRY: '1'
   EXPO_NO_TELEMETRY: '1'
   # Pinned: the release that passed on 2026-10-09. The checksum is the SHA-256 GitHub publishes for
   # that release's maestro.zip. To upgrade, change both together (the digest is on the release's
@@ -70,7 +72,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Run the flows
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: 34
           arch: x86_64

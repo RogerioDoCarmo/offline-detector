@@ -10,7 +10,7 @@ No native code, no Reanimated, no gesture-handler. Requires React 18+ and React 
 ## Install
 
 ```sh
-npm install @rogeriodocarmo/offline-detector-native @rogeriodocarmo/offline-detector-react
+npm install @rogeriodocarmo/offline-detector-native
 # optional, for instant detection when the interface drops:
 npm install @react-native-community/netinfo
 # optional, for safe-area insets:
@@ -58,7 +58,7 @@ warning. Pass your own `adapter` (see `createNativeAdapter`) to take full contro
 
 ### Safe-area insets
 
-Pass `insets` from `useSafeAreaInsets()`. The default is `defaultInsets()`: the Android status bar
+Pass `insets` from `useSafeAreaInsets()`. Without it the pieces assume the Android status bar
 height on top and zero elsewhere, which is wrong on notched iPhones, so pass insets there.
 
 ## Props
@@ -74,6 +74,7 @@ height on top and zero elsewhere, which is wrong on notched iPhones, so pass ins
 | `distinguishReason`                            | `true` says "No network connection" or "Connected, but no internet".                           |
 | `fullScreen`                                   | `true`, or `{ continueOffline: true }` for the escape hatch. Off by default.                   |
 | `onContinueOffline`                            | Fires when "Continue offline" is pressed.                                                      |
+| `onRestoreFocus`                               | Fires when the full-screen state leaves, so the host can put screen reader focus back.         |
 | `snackbar`, `banner`, `indicator`              | Per-piece options: `dismissible`, `banner.position`/`overlay`, `indicator.position`/`variant`. |
 | `dismissible`, `onDismiss`                     | Pieces can be swiped away (default); a dismissed piece returns on the next transition.         |
 | `motion`, `colorScheme`                        | `auto`, `reduced`, `full`; `auto`, `light`, `dark`.                                            |
@@ -84,13 +85,22 @@ height on top and zero elsewhere, which is wrong on notched iPhones, so pass ins
 
 The host content is hidden from assistive technology while the full-screen state shows.
 
+### Announcements
+
+Each transition is spoken once, by the snackbar: a polite live region on Android,
+`AccessibilityInfo.announceForAccessibility` on iOS. The banner and the indicator stay silent next
+to it. Dismissing a piece is never announced, and neither is the snackbar that appears after
+"Continue offline" (the full-screen state already moved focus). "Back online" is announced when the
+network returns. An `initialStatus` hint is not an observation: if the first real result is online,
+nothing is shown or announced.
+
 ## Checking feedback
 
 Retry always shows "Checking…" at once. A background re-check on returning to the app shows it only
 when a screen opts in:
 
 ```tsx
-useRecheckOnReturn({ checkingFeedback: 'brief' }); // from the react package
+useRecheckOnReturn({ checkingFeedback: 'brief' }); // re-exported by this package
 ```
 
 ## Slots
@@ -100,8 +110,10 @@ A slot replaces its piece and receives the `PieceRenderProps` contract: `state`,
 `rootProps`.
 
 ```tsx
-import type { PieceRenderProps } from '@rogeriodocarmo/offline-detector-react';
-import type { OfflineTheme } from '@rogeriodocarmo/offline-detector-native';
+import type {
+  OfflineTheme,
+  PieceRenderProps,
+} from '@rogeriodocarmo/offline-detector-native';
 
 function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>) {
   return (
@@ -115,6 +127,39 @@ function MyToast({ message, actions, rootProps }: PieceRenderProps<OfflineTheme>
   <App />
 </OfflineDetector>;
 ```
+
+## Pieces for custom layouts
+
+`Snackbar`, `Banner`, `Indicator` and `FullScreen` can be used on their own. They take the same
+props as the web pieces:
+
+| Prop        | Notes                                                                                                                                                                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `phase`     | `offline`, `checking` or `recovered`.                                                                                                                                                                                                          |
+| `message`   | Already localised text. `FullScreen` shows it as its title.                                                                                                                                                                                    |
+| `strings`   | `OfflineStrings`, for example from `resolveStrings`.                                                                                                                                                                                           |
+| `state`     | Accepted for parity with `PieceRenderProps`; the pieces are driven by `phase`.                                                                                                                                                                 |
+| `actions`   | `{ retry?, dismiss?, continueOffline? }`. A piece is dismissible exactly when `actions.dismiss` is present.                                                                                                                                    |
+| `visible`   | `false` plays the exit animation, then renders nothing. Default `true`.                                                                                                                                                                        |
+| `rootProps` | Props from the provider (test id, live region). They win over the piece's defaults.                                                                                                                                                            |
+| `theme`     | `OfflineTheme`. Default: the light theme.                                                                                                                                                                                                      |
+| Extras      | `announce`, `reduceMotion`, `insets`, `icons`, `style`, `testID`. Banner: `position`, `overlay`, `showRetry`, `offset`. Indicator: `variant`, `position`, `offsetTop`, `offsetBottom`. Snackbar: `offsetBottom`. FullScreen: `onRestoreFocus`. |
+
+A swiped-away piece is put back at rest when `visible` turns true again.
+
+## Exports
+
+`OfflineDetector`, `Snackbar`, `Banner`, `Indicator`, `FullScreen`, `createNativeAdapter`,
+`createTheme`, `lightTheme`, `darkTheme`, `useOfflineTheme`, `useReducedMotion`, and the react API
+so one package is enough: the hooks `useNetworkStatus`, `useRecheckOnReturn`,
+`useOfflineDetector`, `useCheckingFeedback` and `useDismissals`, and the helpers `STRINGS`,
+`resolveLocale`, `resolveStrings`, `offlineMessage`, `indicatorName` and `resolveDismissible`.
+Types: `OfflineState`, `OfflineStrings`, `OfflineUiOptions`, `PieceRenderProps`,
+`DismissiblePiece`, `Locale`, `IndicatorPosition`, `RecheckOnReturnOptions`,
+`UseNetworkStatusResult`, plus the props types of each export, `PieceProps`, `Phase`, `Insets`,
+`PieceIcons`, `OfflineTheme`, `Bezier`, `ShadowStyle`, `NetInfoLike`, `AppStateLike` and
+`NativeAdapterOptions`. The swipe hook, the swipe and timing rules, the default insets and the
+accessibility helpers are internal.
 
 ## Not verified on a device
 

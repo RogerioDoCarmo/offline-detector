@@ -35,8 +35,13 @@ This is the one request the packages make, and the reason this policy exists.
 
 - **What is sent:** an HTTP request (`HEAD` by default) with no body to an address that answers with
   an empty response. In a browser it is sent in `no-cors` mode with caching off, so the page can
-  tell that an answer arrived but cannot read it. The packages add no cookies, custom headers or
-  identifiers; the platform's HTTP stack adds its normal headers, such as the user agent.
+  tell that an answer arrived but cannot read it. The packages send no cookies (credentials are
+  omitted, so even a same-origin address you configure receives none) and no `Referer` header (the
+  referrer policy is `no-referrer`), and add no custom headers or identifiers; the platform's HTTP
+  stack adds its normal headers, such as the user agent.
+- **What counts as reachable:** any completed HTTP response, whatever its status. Even a `404` or
+  `500` shows that a server answered, so the network works. Only a request that fails (no
+  connection, a TLS failure, a timeout or an abort) means unreachable. The response is never read.
 - **Where, by default:** two addresses, tried in order, the second only if the first fails:
   `https://cp.cloudflare.com/generate_204` (Cloudflare) and `https://www.gstatic.com/generate_204`
   (Google).

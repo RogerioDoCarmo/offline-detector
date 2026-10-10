@@ -1,6 +1,8 @@
 import { useRef } from 'react';
 import type { PointerEvent, ReactElement } from 'react';
 import {
+  useAnnouncedText,
+  useFocusReturn,
   useInteraction,
   usePublishHeight,
   useReducedMotion,
@@ -39,11 +41,13 @@ export function Snackbar(props: SnackbarProps): ReactElement {
   } = props;
 
   const ref = useRef(null as HTMLDivElement | null);
+  const text = useAnnouncedText(message, announce);
   const reduced = useReducedMotion(motion);
   const dismissible = actions?.dismiss !== undefined;
+  const dismissWith = useFocusReturn(ref);
   const swipe = useSwipeDismiss({
     enabled: dismissible && visible,
-    onDismiss: () => actions?.dismiss?.(),
+    onDismiss: () => dismissWith(actions?.dismiss),
     reducedMotion: reduced,
     keys: ['Escape'],
   });
@@ -95,7 +99,7 @@ export function Snackbar(props: SnackbarProps): ReactElement {
       {...rootProps}
     >
       {icon}
-      <span className="od-msg">{message}</span>
+      <span className="od-msg">{text}</span>
       {phase !== 'recovered' && retry && (
         <button
           type="button"

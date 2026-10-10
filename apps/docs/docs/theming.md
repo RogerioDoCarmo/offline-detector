@@ -22,6 +22,11 @@ design tokens, never by editing the components.
 }
 ```
 
+The package's own `--od-*` declarations sit under `:where()` selectors, which weigh nothing, so a
+`:root { ... }` rule of yours like the one above wins wherever it sits in the cascade. Under a
+Content Security Policy, pass the same nonce your other inline styles use:
+`<OfflineDetector nonce={nonce}>` (or `<OfflineTokens nonce={nonce} />`).
+
 Force a scheme with the `colorScheme` prop (`'auto'`, `'light'` or `'dark'`). Anything but
 `'auto'` wraps the tree in an element with `data-od-theme` and `display: contents`. You can also
 set `data-od-theme="light"` or `"dark"` yourself on `<html>`, on a `[data-od-root]` element or on any

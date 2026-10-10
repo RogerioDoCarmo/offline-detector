@@ -38,7 +38,9 @@ type Story = StoryObj<typeof meta>;
 export const Offline: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('status')).toHaveTextContent('No internet');
+    await waitFor(() =>
+      expect(canvas.getByRole('status')).toHaveTextContent('No internet'),
+    );
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledTimes(1);
   },
@@ -57,8 +59,8 @@ export const Checking: Story = {
 export const Recovered: Story = {
   args: { phase: 'recovered' },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
-      'Back online',
+    await waitFor(() =>
+      expect(within(canvasElement).getByRole('status')).toHaveTextContent('Back online'),
     );
   },
 };

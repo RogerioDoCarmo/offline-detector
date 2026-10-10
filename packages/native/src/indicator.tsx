@@ -1,50 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   indicatorName,
   type IndicatorPosition,
-  type OfflineStrings,
 } from '@rogeriodocarmo/offline-detector-react';
-import { dismissAccessibilityProps, isDismissible } from './a11y';
-import type { PiecePhase } from './phase';
+import { dismissAccessibilityProps, splitRootProps } from './a11y';
+import type { PieceProps } from './piece-types';
 import { StatusDot } from './glyphs';
 import { usePieceTransition } from './hooks';
-import { inlineInsets, resolveInsets, type Insets } from './insets';
-import { lightTheme, type OfflineTheme } from './theme';
+import { inlineInsets, resolveInsets } from './insets';
+import { lightTheme } from './theme';
 import { useSwipeDismiss } from './use-swipe-dismiss';
 
 /** How long the label of a pressed dot stays visible. */
 export const DOT_LABEL_MS = 2000;
 
-export interface IndicatorProps {
-  /** `recovered` shows the online state. */
-  phase: PiecePhase;
-  strings: OfflineStrings;
+export interface IndicatorProps extends PieceProps {
   /** `chip` (default) shows the label; `dot` is the 14 dp mark with a 44 dp hit area. */
   variant?: 'chip' | 'dot';
   /** Default `top-end`. `start` and `end` follow the layout direction. */
   position?: IndicatorPosition;
-  onDismiss?: () => void;
-  dismissible?: boolean;
-  /** False plays the exit fade and then renders nothing. Default true. */
-  visible?: boolean;
-  theme?: OfflineTheme;
-  reduceMotion?: boolean;
-  insets?: Partial<Insets>;
   /** Extra space on the top edge, for example the banner height or a host app bar. */
   offsetTop?: number;
   /** Extra space on the bottom edge, for example the snackbar height or a tab bar. */
   offsetBottom?: number;
-  style?: StyleProp<ViewStyle>;
-  testID?: string;
 }
 
 const STATUS = { offline: 'offline', checking: 'checking', recovered: 'online' } as const;
@@ -56,11 +35,11 @@ const STATUS = { offline: 'offline', checking: 'checking', recovered: 'online' }
 export function Indicator({
   phase,
   strings,
+  actions,
   variant = 'chip',
   position = 'top-end',
-  onDismiss,
-  dismissible: dismissibleProp,
   visible = true,
+  rootProps,
   theme = lightTheme,
   reduceMotion = false,
   insets: insetsProp,
@@ -69,13 +48,17 @@ export function Indicator({
   style,
   testID,
 }: IndicatorProps) {
-  const dismissible = isDismissible(dismissibleProp, onDismiss);
+  const onDismiss = actions?.dismiss;
+  const dismissible = typeof onDismiss === 'function';
+  // The indicator never owns a live region; the provider's choice only matters for the root.
+  const { root } = splitRootProps(rootProps, false);
   const transition = usePieceTransition({ visible, reduceMotion, theme });
   const swipe = useSwipeDismiss({
     enabled: dismissible,
     onDismiss: () => onDismiss?.(),
     reducedMotion: reduceMotion,
     theme,
+    visible,
   });
   const [labelShown, setLabelShown] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -112,7 +95,7 @@ export function Indicator({
     timer.current = setTimeout(() => setLabelShown(false), DOT_LABEL_MS);
   };
 
-  const dismissProps = dismissAccessibilityProps(strings, dismissible, onDismiss);
+  const dismissProps = dismissAccessibilityProps(strings, onDismiss);
 
   return (
     <Animated.View
@@ -126,6 +109,7 @@ export function Indicator({
         transition.style,
         style,
       ]}
+      {...root}
     >
       <Animated.View {...swipe.panHandlers} onLayout={swipe.onLayout} style={swipe.style}>
         {variant === 'dot' ? (

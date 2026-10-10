@@ -6,30 +6,41 @@ export interface ProbeDeps {
   timeoutMs: number;
   setTimeout: SetTimeoutFn;
   clearTimeout: ClearTimeoutFn;
+  /** Aborting it cancels the request in flight, clears its timer and ends the probe. */
+  signal?: AbortSignal;
 }
 
 function probeOne(url: string, deps: ProbeDeps): Promise<boolean> {
   return new Promise((resolve: (reachable: boolean) => void) => {
     const controller = new AbortController();
+    const finish = (reachable: boolean): void => {
+      deps.clearTimeout(timer);
+      deps.signal?.removeEventListener('abort', onStop);
+      resolve(reachable);
+    };
+    const onStop = (): void => {
+      controller.abort();
+      finish(false);
+    };
     const timer = deps.setTimeout(() => {
       controller.abort();
-      resolve(false);
+      finish(false);
     }, deps.timeoutMs);
+    deps.signal?.addEventListener('abort', onStop, { once: true });
     const attempt = async (): Promise<boolean> => {
       try {
-        const response = await deps.fetch(url, {
+        // Any completed response, whatever its status, means the network is reachable.
+        await deps.fetch(url, {
           method: deps.method,
           signal: controller.signal,
+          credentials: 'omit',
         });
-        return response.ok || response.type === 'opaque';
+        return true;
       } catch {
         return false;
       }
     };
-    void attempt().then((reachable) => {
-      deps.clearTimeout(timer);
-      resolve(reachable);
-    });
+    void attempt().then(finish);
   });
 }
 
@@ -39,6 +50,7 @@ export async function probeAny(
   deps: ProbeDeps,
 ): Promise<boolean> {
   for (const url of urls) {
+    if (deps.signal?.aborted === true) return false;
     if (await probeOne(url, deps)) return true;
   }
   return false;

@@ -14,7 +14,7 @@ It is **opt-in per screen**. By default the detector does not even subscribe to 
 signal, so a screen that does not care pays nothing.
 
 ```tsx
-import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-react';
+import { useRecheckOnReturn } from '@rogeriodocarmo/offline-detector-web'; // or '-native'
 
 function Checkout() {
   const online = useRecheckOnReturn({

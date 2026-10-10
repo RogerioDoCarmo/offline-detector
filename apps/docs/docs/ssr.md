@@ -51,7 +51,13 @@ is a static export.
 ## Content security policy
 
 `<OfflineDetector>` renders one inline `<style>` element with the `--od-*` tokens and the piece
-styles, and it does not take a `nonce` prop. A strict `style-src` without `unsafe-inline` therefore
-blocks it. The building blocks are exported if you need to assemble your own: `OfflineTokens`
-(accepts a `nonce`), `offlineTokensCss` and `offlineCss` (the CSS as strings). See the
+styles. Under a strict `style-src` without `unsafe-inline`, pass the nonce your other inline styles
+use:
+
+```tsx
+<OfflineDetector nonce={nonce}>{children}</OfflineDetector>
+```
+
+The building blocks are exported if you need to assemble your own: `OfflineTokens` (it accepts a
+`nonce` too) and the constants `offlineTokensCss` and `offlineCss` (the CSS as strings). See the
 [web reference](./reference/web.md). This path has not been tested against a real policy.

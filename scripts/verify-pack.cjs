@@ -4,7 +4,9 @@
 // release cannot ship source, tests, a leftover `workspace:` dependency or a missing file. The
 // checks are pure (`checkPacked`); the rest of this file only runs `pnpm pack` and reads the result.
 //
-//   node scripts/verify-pack.cjs        (run after `pnpm build`)
+//   node scripts/verify-pack.cjs              (run after `pnpm build`: packs the workspace)
+//   node scripts/verify-pack.cjs <dir>        (checks the tarballs `changeset pack --out-dir <dir>`
+//                                              wrote, which are exactly what gets published)
 
 const { execFileSync } = require('node:child_process');
 const {
@@ -102,14 +104,18 @@ function listFiles(dir) {
 function packOne(packageDir, scratch) {
   // One directory per package, so a tarball can never be mistaken for another package's.
   const out = mkdtempSync(join(scratch, 'tarball-'));
-  const extracted = mkdtempSync(join(scratch, 'extracted-'));
   const shell = process.platform === 'win32';
   execFileSync('pnpm', ['pack', '--pack-destination', out], {
     cwd: packageDir,
     shell,
     stdio: 'pipe',
   });
-  const tarball = join(out, readdirSync(out)[0]);
+  return readTarball(join(out, readdirSync(out)[0]), scratch);
+}
+
+/** Unpacks one tarball into the scratch folder and describes it for `checkPacked`. */
+function readTarball(tarball, scratch) {
+  const extracted = mkdtempSync(join(scratch, 'extracted-'));
   // The archive goes in on stdin and tar runs inside the target folder. GNU tar (Git Bash on
   // Windows) reads a path like C:\temp\x.tgz as host:file and tries to connect to a machine "C".
   execFileSync('tar', ['-xzf', '-'], {
@@ -125,28 +131,52 @@ function packOne(packageDir, scratch) {
   };
 }
 
-function main() {
-  const root = join(__dirname, '..');
-  const packagesDir = join(root, 'packages');
-  const scratch = mkdtempSync(join(tmpdir(), 'od-pack-'));
+/** Prints the verdict for one tarball and returns true when it has problems. */
+function report(packed) {
+  const problems = checkPacked(packed);
+  for (const problem of problems)
+    console.error(`::error::${packed.manifest.name}: ${problem}`);
+  if (problems.length === 0) {
+    console.log(
+      `${packed.manifest.name}@${packed.manifest.version}: ${packed.files.length} files, ${packed.bytes} bytes, ok`,
+    );
+  }
+  return problems.length > 0;
+}
+
+/** Checks the tarballs that `changeset pack --out-dir <dir>` wrote: the ones that get published. */
+function checkDirectory(dir, scratch) {
+  const tarballs = existsSync(dir)
+    ? listFiles(dir)
+        .filter((file) => file.endsWith('.tgz'))
+        .sort()
+    : [];
+  if (tarballs.length === 0) {
+    console.error(`::error::No tarballs found under ${dir}.`);
+    return true;
+  }
+  return tarballs.map((tarball) => report(readTarball(tarball, scratch))).some(Boolean);
+}
+
+/** Packs every publishable workspace package, as `pnpm publish` would, and checks the result. */
+function checkWorkspace(scratch) {
+  const packagesDir = join(__dirname, '..', 'packages');
   let failed = false;
+  for (const entry of readdirSync(packagesDir).sort()) {
+    const packageDir = join(packagesDir, entry);
+    const file = join(packageDir, 'package.json');
+    if (!existsSync(file) || JSON.parse(readFileSync(file, 'utf8')).private) continue;
+    failed = report(packOne(packageDir, scratch)) || failed;
+  }
+  return failed;
+}
+
+function main() {
+  const dir = process.argv[2];
+  const scratch = mkdtempSync(join(tmpdir(), 'od-pack-'));
+  let failed;
   try {
-    for (const entry of readdirSync(packagesDir).sort()) {
-      const packageDir = join(packagesDir, entry);
-      const file = join(packageDir, 'package.json');
-      if (!existsSync(file) || JSON.parse(readFileSync(file, 'utf8')).private) continue;
-      const packed = packOne(packageDir, scratch);
-      const problems = checkPacked(packed);
-      if (problems.length > 0) {
-        failed = true;
-        for (const problem of problems)
-          console.error(`::error::${packed.manifest.name}: ${problem}`);
-      } else {
-        console.log(
-          `${packed.manifest.name}@${packed.manifest.version}: ${packed.files.length} files, ${packed.bytes} bytes, ok`,
-        );
-      }
-    }
+    failed = dir ? checkDirectory(dir, scratch) : checkWorkspace(scratch);
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }

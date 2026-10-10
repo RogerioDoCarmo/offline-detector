@@ -15,8 +15,10 @@ el color es una tercera señal, de apoyo.
 El fallo que hay que evitar es la voz duplicada: un banner y un snackbar que aparecen a la vez y un
 lector de pantalla que lee "Sin internet" dos veces. Por eso **cada transición se anuncia una sola
 vez**. La primera pieza visible, en este orden, es dueña del anuncio y las demás quedan en silencio:
-snackbar, banner, indicador y, por último, un anunciador visualmente oculto cuando no hay ninguna
-pieza visible activada.
+snackbar, banner, indicador. Si ninguno está activado, no se anuncia nada. No existe un anunciador
+oculto de reserva. Un slot personalizado asume el anuncio de su pieza, así que debe esparcir
+`rootProps` (y, en iOS, llamar a `AccessibilityInfo.announceForAccessibility` por su cuenta);
+consulta [Slots](./slots.md).
 
 | Pieza             | Web                                              | Nativo                                                           |
 | ----------------- | ------------------------------------------------ | ---------------------------------------------------------------- |
@@ -30,6 +32,9 @@ pieza visible activada.
 - El texto anunciado es el mismo mensaje traducido que muestra la pieza ("Sin internet", "Conexión
   restablecida").
 - La recuperación se anuncia una vez. Que el snackbar desaparezca a los cuatro segundos no se anuncia.
+- En web, la región viva se monta vacía y recibe el texto un fotograma después, porque los lectores
+  de pantalla ignoran una región que aparece junto con su texto. Descartar una pieza nunca se
+  anuncia, ni tampoco el snackbar que aparece tras "Continuar sin conexión".
 - "Verificando…" no se anuncia como mensaje propio. El control Reintentar lo refleja con `aria-busy`,
   y su nombre cambia.
 - Los callbacks se disparan solo en transiciones, y por tanto los anuncios también. Una nueva
@@ -52,6 +57,9 @@ camino:
 - Indicador: recibe foco cuando es descartable; Escape o Delete lo descartan y, en nativo, expone una
   acción de accesibilidad `dismiss` descrita por el texto `dismissHint`.
 
+En web, al descartar una pieza que tenía el foco del teclado, el foco vuelve al elemento que lo
+tenía antes de que apareciera la pieza.
+
 Desactiva el deslizamiento con `dismissible={false}`. Consulta [Descartar](./dismissal.md).
 
 ## El estado de pantalla completa
@@ -64,8 +72,9 @@ un `dialog`.
 - Escape activa "Continuar sin conexión" cuando esa acción existe. Sin `continueOffline` no hay
   salida, así que úsalo salvo que la app realmente no pueda funcionar sin conexión.
 - Al salir, el foco vuelve al elemento que lo tenía antes, si todavía existe.
-- En nativo, esparce `hostContentAccessibilityProps(visible)` en tu vista raíz si renderizas tú mismo
-  la pieza de pantalla completa.
+- En nativo, `<OfflineDetector>` oculta el contenido de la app por ti, y su prop `onRestoreFocus` se
+  dispara cuando el estado de pantalla completa se va, para que devuelvas el foco del lector de
+  pantalla.
 
 ## Contraste, objetivos, tamaño del texto y dirección
 

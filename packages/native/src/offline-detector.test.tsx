@@ -238,7 +238,7 @@ describe('dismissal', () => {
 });
 
 describe('announcements', () => {
-  it('gives the live region to the snackbar, then to the banner when it is gone', async () => {
+  it('gives the live region to the snackbar and keeps it from the banner, even after a dismissal', async () => {
     const net = makeNet({ up: false });
     await mount(net);
     expect(
@@ -251,7 +251,7 @@ describe('announcements', () => {
     await fireEvent.press(within(theSnackbar()).getByRole('button', { name: 'Dismiss' }));
     expect(
       screen.getByTestId('offline-detector-banner-message').props.accessibilityLiveRegion,
-    ).toBe('polite');
+    ).toBeUndefined();
   });
 });
 

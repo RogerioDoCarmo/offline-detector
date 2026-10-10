@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type {
-  OfflineDetector,
+  OfflineDetectorInstance,
   OfflineState,
   PlatformAdapter,
 } from '@rogeriodocarmo/offline-detector-core';
@@ -26,7 +26,7 @@ export interface FeedbackRegistry {
  * exported from the package, so the adapter stays an implementation detail of the provider.
  */
 export interface ProviderCore {
-  detector: OfflineDetector;
+  detector: OfflineDetectorInstance;
   adapter: PlatformAdapter;
   store: StateStore;
   feedback: FeedbackRegistry;

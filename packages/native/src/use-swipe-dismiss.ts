@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   Animated,
   Easing,
@@ -24,6 +24,11 @@ export interface UseSwipeDismissOptions {
   /** Removes the slide: dismissal becomes an instant fade. */
   reducedMotion: boolean;
   theme?: OfflineTheme;
+  /**
+   * Whether the piece is on screen. A swipe leaves the piece slid out and transparent; when it
+   * becomes visible again (the next status, a new episode) it must start from rest. Default true.
+   */
+  visible?: boolean;
 }
 
 /**
@@ -127,6 +132,17 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): SwipeDismissRe
       onPanResponderTerminate: springBack,
     });
   }
+
+  // A swiped-away piece stays mounted (it only renders nothing), so its offset and opacity must be
+  // put back when it is shown again, or every later message would be invisible.
+  const visible = options.visible ?? true;
+  useEffect(() => {
+    if (!visible) return;
+    translateX.stopAnimation();
+    opacity.stopAnimation();
+    translateX.setValue(0);
+    opacity.setValue(1);
+  }, [visible, translateX, opacity]);
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     width.current = event.nativeEvent.layout.width;

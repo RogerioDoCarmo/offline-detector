@@ -29,10 +29,10 @@ browser's DevTools, Network tab, and choose Offline.
 
 ## Read the status anywhere
 
-Hooks from the React package work anywhere inside `<OfflineDetector>`:
+The hooks work anywhere inside `<OfflineDetector>`, and the web package exports them:
 
 ```tsx
-import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-react';
+import { useNetworkStatus } from '@rogeriodocarmo/offline-detector-web';
 
 function SaveButton() {
   const { isOnline, reason, checkNow } = useNetworkStatus();
@@ -44,8 +44,8 @@ function SaveButton() {
 }
 ```
 
-`@rogeriodocarmo/offline-detector-react` is installed with the web package. See the
-[react reference](./reference/react.md) for every hook.
+The web package re-exports the hooks of the React layer, so it is the only package to install and
+import from. See the [react reference](./reference/react.md) for every hook.
 
 ## Common options
 
@@ -61,13 +61,15 @@ function SaveButton() {
 </OfflineDetector>
 ```
 
-| Option              | What it does                                                                 |
-| ------------------- | ---------------------------------------------------------------------------- |
-| `locale`            | `en`, `pt-BR` or `es`. Variants such as `pt` and `es-MX` resolve.            |
-| `distinguishReason` | Say why: "No network connection" or "Connected, but no internet".            |
-| `fullScreen`        | An opt-in full-screen state with Try again and, optionally, an escape.       |
-| `probe`             | Probe URLs, timeout, interval, method and mode. See [Privacy](./privacy.md). |
-| `dismissible`       | Turn swipe and Dismiss off for every piece. See [Dismissal](./dismissal.md). |
+| Option              | What it does                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| `locale`            | `en`, `pt-BR` or `es`. Variants such as `pt` and `es-MX` resolve.                     |
+| `distinguishReason` | Say why: "No network connection" or "Connected, but no internet".                     |
+| `fullScreen`        | An opt-in full-screen state with Try again and, optionally, an escape.                |
+| `probe`             | Probe URLs, timeout, interval, method and mode. See [Privacy](./privacy.md).          |
+| `onContinueOffline` | Called when the user presses "Continue offline" (or Escape) on the full-screen state. |
+| `nonce`             | CSP nonce for the inline `<style>` element. See [Server rendering](./ssr.md).         |
+| `dismissible`       | Turn swipe and Dismiss off for every piece. See [Dismissal](./dismissal.md).          |
 
 The full list is in the [web reference](./reference/web.md). On Next.js, read the notes on
 [server rendering](./ssr.md): the component must live in a client component.
