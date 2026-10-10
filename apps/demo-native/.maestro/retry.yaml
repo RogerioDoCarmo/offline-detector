@@ -1,0 +1,17 @@
+appId: dev.rogeriodocarmo.offlinedetector.demo
+name: Retry checks again and stays offline while the stub is offline
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'simulate-offline'
+- extendedWaitUntil:
+    visible: 'Retry'
+    timeout: 10000
+- tapOn: 'Retry'
+# The stub still rejects, so the check ends offline again.
+- extendedWaitUntil:
+    visible: 'No internet'
+    timeout: 10000
+- assertVisible:
+    id: 'status-text'

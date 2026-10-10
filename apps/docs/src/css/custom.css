@@ -1,0 +1,219 @@
+/*
+ * Brand layer "Signal, found" (DESIGN.md). It lives only here: the --od-* defaults of the
+ * packages stay anonymous. Every text pairing below is computed by scripts/contrast.cjs and
+ * checked by tests/docs.test.ts. System font stack only; nothing is fetched.
+ */
+
+:root {
+  --sf-paper: #fafaf7;
+  --sf-paper-raised: #f0f0ea;
+  --sf-ink: #1b1f23;
+  --sf-muted: #545b64;
+  --sf-signal: #00694a;
+  --sf-on-signal: #fafaf7;
+  --sf-lost: #b3261e;
+
+  --ifm-font-family-base:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ifm-heading-font-family: var(--ifm-font-family-base);
+  --ifm-heading-font-weight: 650;
+
+  --ifm-background-color: var(--sf-paper);
+  --ifm-background-surface-color: var(--sf-paper);
+  --ifm-font-color-base: var(--sf-ink);
+  --ifm-font-color-secondary: var(--sf-muted);
+  --ifm-color-primary: var(--sf-signal);
+  --ifm-color-primary-dark: var(--sf-signal);
+  --ifm-color-primary-darker: var(--sf-signal);
+  --ifm-color-primary-darkest: var(--sf-signal);
+  --ifm-color-primary-light: var(--sf-signal);
+  --ifm-color-primary-lighter: var(--sf-signal);
+  --ifm-color-primary-lightest: var(--sf-signal);
+  --ifm-link-color: var(--sf-signal);
+  --ifm-link-hover-color: var(--sf-ink);
+  --ifm-code-background: var(--sf-paper-raised);
+  --ifm-code-font-size: 92%;
+  --ifm-navbar-background-color: var(--sf-paper);
+  --ifm-navbar-shadow: 0 1px 0 rgb(27 31 35 / 12%);
+  --ifm-toc-border-color: rgb(27 31 35 / 20%);
+  --ifm-footer-background-color: #0e1116;
+  --ifm-footer-title-color: #f2f3f5;
+  --ifm-footer-link-color: #f2f3f5;
+  --ifm-footer-link-hover-color: #2ee6a6;
+  --ifm-footer-color: #a8aeb7;
+  --docusaurus-highlighted-code-line-bg: rgb(0 105 74 / 10%);
+
+  --sf-arc-lost: var(--sf-lost);
+  --sf-arc-found: var(--sf-signal);
+}
+
+[data-theme='dark'] {
+  --sf-paper: #0e1116;
+  --sf-paper-raised: #171b22;
+  --sf-ink: #f2f3f5;
+  --sf-muted: #a8aeb7;
+  --sf-signal: #2ee6a6;
+  --sf-on-signal: #0e1116;
+  --sf-lost: #ff6b5e;
+
+  --ifm-background-color: var(--sf-paper);
+  --ifm-background-surface-color: var(--sf-paper-raised);
+  --ifm-navbar-background-color: var(--sf-paper);
+  --ifm-navbar-shadow: 0 1px 0 rgb(242 243 245 / 14%);
+  --ifm-toc-border-color: rgb(242 243 245 / 20%);
+  --ifm-link-hover-color: var(--sf-ink);
+  --docusaurus-highlighted-code-line-bg: rgb(46 230 166 / 14%);
+}
+
+/* The primary button: solid signal fill, label in the on-signal colour. */
+.button--primary {
+  --ifm-button-background-color: var(--sf-signal);
+  --ifm-button-border-color: var(--sf-signal);
+  --ifm-button-color: var(--sf-on-signal);
+  --ifm-button-hover-color: var(--sf-on-signal);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.button--secondary {
+  --ifm-button-background-color: transparent;
+  --ifm-button-border-color: var(--sf-ink);
+  --ifm-button-color: var(--sf-ink);
+  --ifm-button-hover-color: var(--sf-ink);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--sf-signal);
+  outline-offset: 2px;
+}
+
+/* Landing page */
+
+.sf-hero {
+  padding: 4rem 0 3rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.sf-hero__inner {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 997px) {
+  .sf-hero__inner {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
+
+.sf-hero__title {
+  font-size: clamp(2.25rem, 6vw, 3.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+
+.sf-hero__lead {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  max-width: 34rem;
+  color: var(--ifm-font-color-secondary);
+  margin: 0 0 1.75rem;
+}
+
+.sf-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.sf-arc {
+  width: 100%;
+  max-width: 22rem;
+  margin-inline: auto;
+}
+
+.sf-arc path,
+.sf-arc circle {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.sf-arc__lost {
+  stroke: var(--sf-arc-lost);
+  stroke-width: 6;
+}
+
+.sf-arc__found {
+  stroke: var(--sf-arc-found);
+  stroke-width: 6;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: sf-arc-complete 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+}
+
+.sf-arc__dot {
+  fill: var(--sf-arc-found);
+  stroke: none;
+}
+
+@keyframes sf-arc-complete {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-arc__found {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+.sf-states {
+  padding: 3rem 0;
+}
+
+.sf-states__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 997px) {
+  .sf-states__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.sf-state {
+  background: var(--sf-paper-raised);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  border-inline-start: 4px solid var(--sf-signal);
+}
+
+.sf-state--lost {
+  border-inline-start-color: var(--sf-lost);
+}
+
+.sf-state h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.sf-state p {
+  margin: 0;
+  color: var(--ifm-font-color-secondary);
+}
+
+.sf-states__heading {
+  margin: 0 0 1.5rem;
+  font-size: 1.75rem;
+}

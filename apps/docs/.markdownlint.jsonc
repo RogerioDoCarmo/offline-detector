@@ -1,0 +1,5 @@
+{
+  "extends": "../../.markdownlint.jsonc",
+  // Docusaurus pages carry their sidebar title in front matter and still open with a visible H1.
+  "MD025": { "front_matter_title": "" },
+}

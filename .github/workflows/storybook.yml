@@ -1,0 +1,47 @@
+name: Storybook
+
+# Cheap and free: builds the web Storybook and runs every story, with its play function, in a real
+# browser. Visual snapshots are a separate, manual, paid workflow (its own manual workflow).
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: storybook-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+  STORYBOOK_DISABLE_TELEMETRY: '1'
+
+jobs:
+  storybook:
+    name: Build Storybook and run the story tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The stories import the packages as published, through their dist.
+      - run: pnpm build
+      - name: Install the browser
+        run: pnpm --filter @offline-detector/storybook-web exec playwright install --with-deps chromium
+      # Interaction tests (play functions) and the a11y check, in Chromium.
+      - run: pnpm --filter @offline-detector/storybook-web test:stories
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: apps/storybook-web/storybook-static
+          retention-days: 7
+          if-no-files-found: warn

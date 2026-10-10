@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "pnpm",
+  "testRunner": "jest",
+  "jest": {
+    "projectType": "custom",
+    "configFile": "jest.stryker.config.cjs"
+  },
+  "coverageAnalysis": "perTest",
+  "reporters": ["html", "clear-text", "progress"],
+  "htmlReporter": {
+    "fileName": "reports/mutation/index.html"
+  },
+  "mutate": [
+    "packages/core/src/**/*.ts",
+    "packages/react/src/**/*.{ts,tsx}",
+    "!**/*.test.{ts,tsx}",
+    "!**/*.stories.{ts,tsx}",
+    "!**/index.ts"
+  ],
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": 60
+  },
+  "ignorePatterns_comment": "Stryker copies the whole project into its sandbox. Keep build output, caches and reports out of that copy; node_modules is symlinked by Stryker, not copied.",
+  "ignorePatterns": [
+    "dist",
+    ".turbo",
+    ".next",
+    ".expo",
+    "coverage",
+    "reports",
+    "storybook-static",
+    "playwright-report",
+    "test-results"
+  ],
+  "tempDirName": ".stryker-tmp",
+  "concurrency": 4,
+  "plugins": ["@stryker-mutator/jest-runner"]
+}

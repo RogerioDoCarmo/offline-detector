@@ -21,15 +21,15 @@ branding). The bare name `offline-detector` is taken on npm (v1.1.1,
 checked 7 Oct 2026), so every package is scoped. **Open owner task:** confirm
 the npm username is exactly `rogeriodocarmo` (see `NPM-SETUP.md`).
 
-| Workspace | npm name | Responsibility |
-| --- | --- | --- |
-| `packages/core` | `@rogeriodocarmo/offline-detector-core` | Framework-free state machine, probe, platform adapter interface |
-| `packages/react` | `@rogeriodocarmo/offline-detector-react` | Provider, hooks, callbacks, shared by web and native |
-| `packages/web` | `@rogeriodocarmo/offline-detector-web` | DOM UI: snackbar, banner, indicator, full-screen |
-| `packages/native` | `@rogeriodocarmo/offline-detector-native` | React Native UI, same four pieces |
-| `apps/demo-web` | private | Next.js (Turbopack) showcase |
-| `apps/demo-native` | private | Expo (Metro) showcase + on-device Storybook |
-| `apps/docs` | private | Docusaurus documentation site (en, pt-BR, es) |
+| Workspace          | npm name                                  | Responsibility                                                  |
+| ------------------ | ----------------------------------------- | --------------------------------------------------------------- |
+| `packages/core`    | `@rogeriodocarmo/offline-detector-core`   | Framework-free state machine, probe, platform adapter interface |
+| `packages/react`   | `@rogeriodocarmo/offline-detector-react`  | Provider, hooks, callbacks, shared by web and native            |
+| `packages/web`     | `@rogeriodocarmo/offline-detector-web`    | DOM UI: snackbar, banner, indicator, full-screen                |
+| `packages/native`  | `@rogeriodocarmo/offline-detector-native` | React Native UI, same four pieces                               |
+| `apps/demo-web`    | private                                   | Next.js (Turbopack) showcase                                    |
+| `apps/demo-native` | private                                   | Expo (Metro) showcase + on-device Storybook                     |
+| `apps/docs`        | private                                   | Docusaurus documentation site (en, pt-BR, es)                   |
 
 GitHub repo: `RogerioDoCarmo/offline-detector`. Package names live in one
 config value so a scope change is a single edit.
@@ -152,15 +152,15 @@ After v1, via HyperFrames, 16:9 and 9:16 cuts of about 30–40 s, **no audio**
 
 ## 11. Delivery plans
 
-| # | Plan | Depends on |
-| --- | --- | --- |
-| 1 | Foundation: monorepo, tooling, CI skeleton | — |
-| 2 | `core` (state machine, probe, adapters) | 1 |
-| 3 | Design brief (Impeccable) | 1 |
-| 4 | QA port (Sonar, Stryker, CodeQL, Playwright base) | 1 |
-| 5 | `react` package; `web` + `native` UI; i18n | 2, 3 |
-| 6 | Demos, docs site, Storybooks, E2E | 5 |
-| 7 | Review, privacy page, release setup, promo | 6 |
+| #   | Plan                                              | Depends on |
+| --- | ------------------------------------------------- | ---------- |
+| 1   | Foundation: monorepo, tooling, CI skeleton        | —          |
+| 2   | `core` (state machine, probe, adapters)           | 1          |
+| 3   | Design brief (Impeccable)                         | 1          |
+| 4   | QA port (Sonar, Stryker, CodeQL, Playwright base) | 1          |
+| 5   | `react` package; `web` + `native` UI; i18n        | 2, 3       |
+| 6   | Demos, docs site, Storybooks, E2E                 | 5          |
+| 7   | Review, privacy page, release setup, promo        | 6          |
 
 Plans 2, 3 and 4 run as parallel agents after Plan 1; 5 splits into
 parallel `react`/`web`/`native` workers once the `react` interfaces exist.

@@ -1,0 +1,62 @@
+name: Chromatic
+
+# MANUAL ONLY, AND PAID. Every run spends visual-snapshot allowance, so this workflow is never
+# triggered by a pull request, a push or a schedule, and it refuses to start unless the person
+# dispatching it types the exact word `yes` in the confirmation input.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_paid_snapshot:
+        description: 'This spends paid Chromatic snapshots. Type yes to continue.'
+        required: true
+        type: string
+        default: 'no'
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+  STORYBOOK_DISABLE_TELEMETRY: '1'
+
+jobs:
+  # Runs first, with no checkout, no install and no secret: a wrong answer fails in seconds.
+  guard:
+    name: Confirm the paid snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Refuse without confirmation
+        env:
+          CONFIRM: ${{ inputs.confirm_paid_snapshot }}
+        run: |
+          if [ "$CONFIRM" != "yes" ]; then
+            echo "::error::Chromatic spends paid snapshots. Re-run and set confirm_paid_snapshot to yes."
+            exit 1
+          fi
+
+  chromatic:
+    name: Publish to Chromatic
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Chromatic compares against the history of the branch.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Snapshot
+        uses: chromaui/action@07791f8243f4cb2698bf4d00426baf4b2d1cb7e0 # v13
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: apps/storybook-web
+          buildScriptName: build
+          exitZeroOnChanges: true

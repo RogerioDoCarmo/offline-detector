@@ -1,0 +1,66 @@
+name: Pages
+
+# One site: the docs at the root, the web demo under /demo/ and the privacy policy at
+# /privacy-policy.html. Pull requests only build it; deployment happens on pushes to main and on
+# manual dispatch from main. Pages must be set to the "GitHub Actions" source by the owner
+# (docs/OWNER-ACTIONS.md).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+  STORYBOOK_DISABLE_TELEMETRY: '1'
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@offline-detector/docs
+      # The demo is built by its own app. Until apps/demo-web exists the site is published
+      # without it, and the assemble step reports the demo as absent.
+      - run: pnpm turbo run build --filter=./apps/demo-web
+        if: hashFiles('apps/demo-web/package.json') != ''
+      - run: node apps/docs/scripts/assemble-site.cjs --docs apps/docs/build --demo apps/demo-web/out --policy docs/privacy-policy.html --out site
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

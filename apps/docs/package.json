@@ -1,0 +1,30 @@
+{
+  "name": "@offline-detector/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "offline-detector documentation site (Docusaurus, en / pt-BR / es).",
+  "license": "MIT",
+  "scripts": {
+    "build": "docusaurus build",
+    "typecheck": "tsc --noEmit",
+    "dev": "docusaurus start",
+    "contrast": "node scripts/contrast.cjs"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@mdx-js/react": "^3.1.1",
+    "clsx": "^2.1.1",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.10.2",
+    "@docusaurus/theme-classic": "3.10.2",
+    "@docusaurus/tsconfig": "3.10.2",
+    "@docusaurus/types": "3.10.2",
+    "@types/react": "^19.3.0",
+    "typescript": "^6.0.3"
+  }
+}

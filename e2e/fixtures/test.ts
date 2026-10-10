@@ -1,0 +1,60 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test as base } from '@playwright/test';
+
+type Fixtures = {
+  /** Cuts the network AND fires `offline` on the window, so the app is told as a browser would. */
+  goOffline: () => Promise<void>;
+  /** Restores the network AND fires `online` on the window. */
+  goOnline: () => Promise<void>;
+  /** Fails the test when axe finds a WCAG 2.0/2.1 A or AA violation on the current page. */
+  checkA11y: () => Promise<void>;
+};
+
+export const test = base.extend<Fixtures>({
+  // `context.setOffline` flips the browser's connectivity, but not every engine raises the window
+  // event for it (and the ones that do raise it on their own schedule), so dispatch it ourselves
+  // to make the page's view deterministic. Listeners that run twice must be idempotent, as a real
+  // app's are.
+  goOffline: async ({ context, page }, use) => {
+    await use(async () => {
+      await context.setOffline(true);
+      await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+    });
+  },
+  goOnline: async ({ context, page }, use) => {
+    await use(async () => {
+      await context.setOffline(false);
+      await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    });
+  },
+  checkA11y: async ({ page }, use) => {
+    await use(async () => {
+      // axe reads computed colours, so a CSS transition still running (a colour-scheme flip, an
+      // entrance) hands it half-way colours and a contrast failure that nobody sees once it
+      // settles. Wait for every finite animation first. Infinite ones (a spinner) are skipped: they
+      // never finish. The race is only a backstop so a stuck animation cannot hang the run.
+      await page.evaluate(async () => {
+        const running = () =>
+          document
+            .getAnimations()
+            .filter(
+              (a) => a.effect && Number.isFinite(a.effect.getComputedTiming().endTime),
+            );
+        const settled = () =>
+          Promise.all(running().map((a) => a.finished.catch(() => undefined)));
+        const backstop = new Promise((resolve) => setTimeout(resolve, 5_000));
+        // getAnimations() applies pending style changes first, so a transition that has only just
+        // been triggered is already in the list; the second pass catches ones the first started.
+        await Promise.race([settled(), backstop]);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await Promise.race([settled(), backstop]);
+      });
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    });
+  },
+});
+
+export { expect };

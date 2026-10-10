@@ -1,0 +1,18 @@
+appId: dev.rogeriodocarmo.offlinedetector.demo
+name: pt-BR strings
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'locale-pt-BR'
+- tapOn:
+    id: 'simulate-offline'
+- extendedWaitUntil:
+    visible: 'Sem internet'
+    timeout: 10000
+- assertVisible: 'Tentar novamente'
+- tapOn:
+    id: 'simulate-offline'
+- extendedWaitUntil:
+    visible: 'Conexão restabelecida'
+    timeout: 10000

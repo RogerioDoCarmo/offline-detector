@@ -1,0 +1,16 @@
+appId: dev.rogeriodocarmo.offlinedetector.demo
+name: Coming back online shows Back online
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'simulate-offline'
+- extendedWaitUntil:
+    visible: 'No internet'
+    timeout: 10000
+# The same button now reads "Go back online".
+- tapOn:
+    id: 'simulate-offline'
+- extendedWaitUntil:
+    visible: 'Back online'
+    timeout: 10000

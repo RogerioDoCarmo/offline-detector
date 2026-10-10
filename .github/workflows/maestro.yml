@@ -1,0 +1,88 @@
+name: Maestro
+
+# Device flows on an Android emulator. Slow, so a pull request runs it only when this workflow or
+# the flows themselves change (that is how a change here gets verified on its own PR).
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    paths:
+      - .github/workflows/maestro.yml
+      - apps/demo-native/.maestro/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maestro-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+  STORYBOOK_DISABLE_TELEMETRY: '1'
+  EXPO_NO_TELEMETRY: '1'
+  # Pinned: the release that passed on 2026-10-09. The checksum is the SHA-256 GitHub publishes for
+  # that release's maestro.zip. To upgrade, change both together (the digest is on the release's
+  # asset list: gh api repos/mobile-dev-inc/maestro/releases/tags/cli-<version>).
+  MAESTRO_VERSION: '2.11.0'
+  MAESTRO_SHA256: '5384593cb4e7a106489e75a821d157dd43f4e438df6bc308b72e82c685e1283a'
+
+jobs:
+  android:
+    name: Maestro on Android emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # The native project is generated here and never committed.
+      - name: Prebuild and assemble the release APK (JS bundled in)
+        working-directory: apps/demo-native
+        run: |
+          npx expo prebuild --platform android --no-install
+          cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64
+      - name: Install Maestro (pinned and checksum-verified)
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            --output "${RUNNER_TEMP}/maestro.zip" \
+            "https://github.com/mobile-dev-inc/maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip"
+          echo "${MAESTRO_SHA256}  ${RUNNER_TEMP}/maestro.zip" | sha256sum --check
+          unzip -q "${RUNNER_TEMP}/maestro.zip" -d "${HOME}/.maestro-dist"
+          BIN="$(dirname "$(find "${HOME}/.maestro-dist" -type f -path '*/bin/maestro' | head -n 1)")"
+          test -n "${BIN}"
+          echo "${BIN}" >> "${GITHUB_PATH}"
+      - name: Check the Maestro version
+        run: maestro --version | grep --fixed-strings --quiet "${MAESTRO_VERSION}"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run the flows
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb install apps/demo-native/android/app/build/outputs/apk/release/app-release.apk
+            maestro test apps/demo-native/.maestro --format junit --output maestro-report.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maestro-report
+          path: maestro-report.xml
+          if-no-files-found: ignore

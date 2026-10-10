@@ -1,0 +1,43 @@
+{
+  "name": "@offline-detector/demo-native",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Expo demo of @rogeriodocarmo/offline-detector-native with a control panel for every option.",
+  "license": "MIT",
+  "author": "Rogério do Carmo",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "expo start",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "bundle": "expo export --platform android",
+    "bundle:ios": "expo export --platform ios",
+    "storybook": "cross-env EXPO_PUBLIC_STORYBOOK=true expo start",
+    "storybook:generate": "sb-rn-get-stories --use-js --config-path .rnstorybook",
+    "bundle:storybook": "cross-env EXPO_PUBLIC_STORYBOOK=true expo export --platform android"
+  },
+  "dependencies": {
+    "@react-native-community/netinfo": "12.0.1",
+    "@rogeriodocarmo/offline-detector-core": "workspace:*",
+    "@rogeriodocarmo/offline-detector-native": "workspace:*",
+    "@rogeriodocarmo/offline-detector-react": "workspace:*",
+    "expo": "~57.0.27",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0"
+  },
+  "devDependencies": {
+    "@react-native-community/datetimepicker": "9.2.1",
+    "@react-native-community/slider": "5.2.1",
+    "@storybook/addon-ondevice-actions": "10.6.0",
+    "@storybook/addon-ondevice-controls": "10.6.0",
+    "@storybook/react-native": "10.6.0",
+    "@storybook/react-native-ui-lite": "10.6.0",
+    "@types/react": "~19.2.0",
+    "babel-preset-expo": "~57.0.14",
+    "cross-env": "10.1.0",
+    "storybook": "10.6.1",
+    "typescript": "^6.0.3"
+  }
+}
