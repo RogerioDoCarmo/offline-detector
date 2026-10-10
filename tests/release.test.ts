@@ -307,6 +307,62 @@ describe('verify-pack.cjs given a directory of tarballs', () => {
       rmSync(empty, { recursive: true, force: true });
     }
   });
+
+  // After the manual first publish every version is already on npm, so `changeset pack` writes an
+  // empty `packages/` directory and a plan with nothing to publish. That is a valid state.
+  const runWithPlan = (plan: unknown) => {
+    const out = mkdtempSync(join(tmpdir(), 'od-vp-plan-'));
+    try {
+      mkdirSync(join(out, 'packages'), { recursive: true });
+      if (plan !== undefined) {
+        writeFileSync(join(out, 'publish-plan.json'), JSON.stringify(plan));
+      }
+      return spawnSync(process.execPath, [join(root, 'scripts/verify-pack.cjs'), out], {
+        encoding: 'utf8',
+      });
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  };
+
+  it('passes with a notice when the plan has nothing to publish', () => {
+    const result = runWithPlan({ version: 1, plan: [] });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('Nothing to publish');
+  });
+
+  it('passes when the plan holds only tag-only releases', () => {
+    const result = runWithPlan({
+      version: 1,
+      plan: [[{ kind: 'tag-only', name: scoped('react'), version: '0.1.0' }]],
+    });
+    expect(result.status).toBe(0);
+  });
+
+  it('fails when the plan expects a publish but no tarball exists', () => {
+    const result = runWithPlan({
+      version: 1,
+      plan: [[{ kind: 'publish', name: scoped('react'), version: '0.1.0' }]],
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('No tarballs found');
+  });
+
+  it('fails when the plan file is unreadable', () => {
+    expect(runWithPlan(undefined).status).toBe(1);
+    const out = mkdtempSync(join(tmpdir(), 'od-vp-bad-'));
+    try {
+      writeFileSync(join(out, 'publish-plan.json'), '{not json');
+      const result = spawnSync(
+        process.execPath,
+        [join(root, 'scripts/verify-pack.cjs'), out],
+        { encoding: 'utf8' },
+      );
+      expect(result.status).toBe(1);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('release.yml', () => {
