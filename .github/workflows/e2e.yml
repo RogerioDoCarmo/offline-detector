@@ -33,7 +33,7 @@ jobs:
       # project installs only the browser it needs: the mobile ones reuse chromium and webkit.
       matrix: ${{ fromJSON(github.event_name == 'pull_request' && '{"include":[{"project":"chromium","browser":"chromium"}]}' || '{"include":[{"project":"chromium","browser":"chromium"},{"project":"firefox","browser":"firefox"},{"project":"webkit","browser":"webkit"},{"project":"mobile-chrome","browser":"chromium"},{"project":"mobile-safari","browser":"webkit"}]}') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
