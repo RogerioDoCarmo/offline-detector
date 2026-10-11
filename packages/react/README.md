@@ -206,6 +206,16 @@ indicatorName(strings, strings.indicatorLabelOffline); // 'Status da conexão: S
 `IndicatorPosition`, `DismissOptions`, `RecheckOnReturnOptions`, `UseNetworkStatusResult` and
 `OfflineDetectorProviderProps` are exported as types only.
 
+## Links
+
+- On npm:
+  - [core](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-core)
+  - [react](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-react)
+  - [web](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-web)
+  - [native](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-native)
+- [Documentation](https://rogeriodocarmo.github.io/offline-detector/) and [live demo](https://rogeriodocarmo.github.io/offline-detector/demo/)
+- [Source and issues](https://github.com/RogerioDoCarmo/offline-detector)
+
 ## Privacy
 
 This package sends nothing anywhere. The only network traffic is core's configurable

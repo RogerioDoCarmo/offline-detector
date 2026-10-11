@@ -180,6 +180,16 @@ so hydration produces the same markup as the server and nothing flashes. An `ini
 `"offline"` is only a hint for the first paint: if the first real check finds the app online, the
 pieces simply go away, with no "Back online".
 
+## Links
+
+- On npm:
+  - [core](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-core)
+  - [react](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-react)
+  - [web](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-web)
+  - [native](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-native)
+- [Documentation](https://rogeriodocarmo.github.io/offline-detector/) and [live demo](https://rogeriodocarmo.github.io/offline-detector/demo/)
+- [Source and issues](https://github.com/RogerioDoCarmo/offline-detector)
+
 ## Privacy
 
 The only network traffic is the configurable reachability probe. It is sent with

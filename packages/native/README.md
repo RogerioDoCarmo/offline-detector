@@ -165,3 +165,13 @@ accessibility helpers are internal.
 
 The behaviour is covered by Jest integration tests with the real react package. Device flows
 (Maestro) belong to the Expo demo app.
+
+## Links
+
+- On npm:
+  - [core](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-core)
+  - [react](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-react)
+  - [web](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-web)
+  - [native](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-native)
+- [Documentation](https://rogeriodocarmo.github.io/offline-detector/) and [live demo](https://rogeriodocarmo.github.io/offline-detector/demo/)
+- [Source and issues](https://github.com/RogerioDoCarmo/offline-detector)
