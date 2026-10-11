@@ -280,7 +280,47 @@ describe('demo-native: Maestro', () => {
         'reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2',
       );
       expect(text).toContain('expo prebuild');
-      expect(text).toContain('maestro test');
+      expect(text).toContain('sh scripts/maestro-ci.sh');
+    });
+
+    // The flows fail intermittently with the app not showing its first screen, and CI used to keep
+    // nothing but a junit file, so the cause could not be read. A failure now leaves a trail.
+    describe('diagnostics', () => {
+      const script = read('scripts/maestro-ci.sh');
+
+      it('runs the flows through a script that still fails the job when a flow fails', () => {
+        expect(script).toContain('maestro test apps/demo-native/.maestro');
+        expect(script).toContain('code=$?');
+        expect(script.trimEnd().endsWith('exit "$code"')).toBe(true);
+      });
+
+      it('collects the device log, the focused window, a last screenshot and Maestro debug output', () => {
+        expect(script).toContain('adb logcat -d');
+        expect(script).toContain('mCurrentFocus');
+        expect(script).toContain('screencap');
+        expect(script).toContain('.maestro/tests');
+      });
+
+      it('uploads those files even when the flows fail', () => {
+        const steps: Array<{
+          uses?: string;
+          if?: string;
+          with?: { name?: string; path?: string };
+        }> = workflow.jobs.android.steps;
+        const upload = steps.filter((step) =>
+          step.uses?.startsWith('actions/upload-artifact'),
+        );
+        expect(upload).toHaveLength(1);
+        expect(upload[0]?.if).toBe('always()');
+        expect(upload[0]?.with?.name).toBe('maestro-report');
+        expect(upload[0]?.with?.path?.split(/\r?\n/).filter(Boolean)).toEqual([
+          'maestro-report.xml',
+          'maestro-logcat.txt',
+          'maestro-focus.txt',
+          'maestro-final-screen.png',
+          'maestro-debug',
+        ]);
+      });
     });
 
     it('has read-only permissions', () => {

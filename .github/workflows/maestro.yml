@@ -79,10 +79,15 @@ jobs:
           target: google_apis
           script: |
             adb install apps/demo-native/android/app/build/outputs/apk/release/app-release.apk
-            maestro test apps/demo-native/.maestro --format junit --output maestro-report.xml
+            sh scripts/maestro-ci.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: maestro-report
-          path: maestro-report.xml
+          path: |
+            maestro-report.xml
+            maestro-logcat.txt
+            maestro-focus.txt
+            maestro-final-screen.png
+            maestro-debug
           if-no-files-found: ignore
