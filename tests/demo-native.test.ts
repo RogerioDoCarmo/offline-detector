@@ -210,22 +210,29 @@ describe('demo-native: Maestro', () => {
     expect(parse(header).appId).toBe('dev.rogeriodocarmo.offlinedetector.demo');
   });
 
-  // A cold emulator can take longer than Maestro's implicit wait to load the bundle and render the
-  // first screen, so a tap right after launchApp failed with "Element not found: simulate-offline"
-  // (on the v0.1.1 commit all five flows, on develop one of them). Every flow must first wait for
-  // the control to exist.
+  // The first screen sometimes never appears, however long the flow waits. The device log of a
+  // failing run showed why: Maestro's clearState force-stops the app, and the removal of the old
+  // task then killed the NEW process ("Killing ...: remove task", then "failed to attach" ten
+  // seconds later), leaving a blank window. Waiting cannot revive a dead process; launching again
+  // can. So the launch and the wait for the first screen are retried together, and only they: the
+  // rest of the flow must not be wrapped in a retry, which would hide real failures.
   it.each([
     'dismiss-swipe.yaml',
     'offline-banner.yaml',
     'pt-br.yaml',
     'recovery.yaml',
     'retry.yaml',
-  ])('%s waits for the first screen before it taps anything', (file) => {
+  ])('%s launches again if the first screen does not appear', (file) => {
     const body = read(`${app}/.maestro/${file}`).split(/\r?\n---\r?\n/)[1] ?? '';
     const commands = parse(body) as unknown[];
-    expect(commands[0]).toEqual({ launchApp: { clearState: true } });
-    expect(commands[1]).toEqual({
-      extendedWaitUntil: { visible: { id: 'simulate-offline' }, timeout: 30000 },
+    expect(commands[0]).toEqual({
+      retry: {
+        maxRetries: 2,
+        commands: [
+          { launchApp: { clearState: true } },
+          { extendedWaitUntil: { visible: { id: 'simulate-offline' }, timeout: 15000 } },
+        ],
+      },
     });
   });
 
