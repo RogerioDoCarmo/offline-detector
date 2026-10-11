@@ -275,6 +275,97 @@ pnpm changeset publish --no-git-tag --otp <code>
 Never loop over the package folders by hand: `changeset publish` publishes in dependency order
 and stops after a failed batch, so nothing is pinned to a version that does not exist.
 
+## npm: publishing and account commands
+
+The commands used to publish this project, kept as a reference for other projects. Run them in a
+terminal where you are logged in; anything that changes the account asks for 2FA.
+
+```bash
+npm login                                  # opens a browser; then check it took effect
+npm whoami                                 # the exact username (a scope is a user OR an org)
+npm org ls <scope>                         # members of the org; you should be listed as owner
+```
+
+### Scope, names and visibility
+
+```bash
+npm view @scope/name version               # 404 (E404) means the name is free
+npm view @scope/name dist-tags --json      # what `latest` points at
+npm view @scope/name versions --json       # every version on the registry
+npm view @scope/name@1.2.3 dependencies    # confirms workspace: ranges were rewritten
+npm access list packages <scope>           # packages you can write to (also proves they exist)
+npm access get status @scope/name          # public or private
+npm access list collaborators @scope/name
+```
+
+- A scope is a **user or an organization**; they share one namespace. If the username differs from
+  the scope you want, create a free organization with that exact name (public packages are free).
+- `npm view` caches a "not found". If you probed names before publishing, it can keep answering
+  404 for a while after the publish. Check the tarball instead
+  (`curl -sI https://registry.npmjs.org/@scope/name/-/name-1.2.3.tgz` is 200 once it exists), add
+  `--prefer-online`, or wait; do not republish.
+
+### Publishing
+
+```bash
+pnpm changeset version                     # bump versions and changelogs from the changesets
+pnpm changeset pack --out-dir <dir>        # tarballs exactly as they will be published
+pnpm changeset publish --no-git-tag --otp 123456   # one OTP token, no spaces or commas
+```
+
+- Use pnpm (via changesets) to publish, never plain `npm publish`: pnpm rewrites `workspace:`
+  ranges to real versions, plain npm uploads the placeholder and the package is uninstallable.
+- A mistyped OTP (`449,54`) is read as two arguments and the command is cancelled before
+  anything is uploaded. Codes expire in about 30 seconds: type a fresh one.
+- Versions are forever. A published version number can never be reused or changed, only
+  deprecated, so verify the tarballs first (`node scripts/verify-pack.cjs`).
+- Provenance is automatic and only exists for a publish made from GitHub Actions through trusted
+  publishing. A first publish from a laptop has none.
+
+### Trusted publishing (OIDC)
+
+Needs npm 11.5.1 or newer, a package that already exists (so the first publish is manual), and the
+GitHub environment named below to exist. Each package is configured on its own.
+
+```bash
+npm trust list @scope/name                          # type, file, repository, environment
+# create the relationship from the terminal
+npm trust github @scope/name --file release.yml --repo <owner>/<repo> --env <environment> -y
+npm trust revoke @scope/name --id=<trust-id>        # a relationship cannot be edited: revoke, recreate
+```
+
+- `npm trust` takes **no `--otp`** flag; it prints a browser link and waits. A typed code gives
+  `Unknown positional argument`.
+- On the website the field "Allowed actions" must have `npm publish` ticked for direct publishes
+  (configs made after 3 Sep 2026 default to staged publish only). The listing above does not show
+  it, so check the package's Settings page.
+- Under "Publishing access" choose "Require two-factor authentication and disallow bypass 2fa
+  tokens": trusted publishers work with every option.
+
+### Deprecating and verifying
+
+```bash
+npm deprecate "@scope/name@0.0.0-stage" "Not a release. Use 0.1.1 or later."   # asks for 2FA
+npm view @scope/name@1.2.3 deprecated
+npm view @scope/name@1.2.3 dist.attestations.provenance   # the SLSA provenance, if any
+npm audit signatures                                      # verifies registry signatures and provenance
+```
+
+- `deprecate` hides nothing and removes nothing; it warns on install. A package or version can
+  only be unpublished inside npm's policy window, so deprecate instead.
+- npm created a `0.0.0-stage` version on each package at first publish. We did not publish it;
+  it was deprecated.
+- Read what a provenance statement attests (builder, workflow, ref, commit) by fetching
+  `https://registry.npmjs.org/-/npm/v1/attestations/<name>@<version>` and base64-decoding the
+  `dsseEnvelope.payload`.
+
+### Quick install check after a release
+
+```bash
+d=$(mktemp -d) && cd "$d" && npm init -y >/dev/null
+npm i @scope/name react react-dom && node -e "console.log(Object.keys(require('@scope/name')))"
+```
+
 ## Repository settings (owner, via `gh api`)
 
 ```bash
