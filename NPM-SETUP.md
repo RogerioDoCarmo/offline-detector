@@ -21,9 +21,10 @@ Planned packages:
 
 - A scope is either an npm **user** or an **organization**. They share one
   namespace.
-- Your npm **username** is your scope. `@rogeriodocarmo/...` works **only if
-  your npm username is exactly `rogeriodocarmo`**. If it is different, the
-  scope is different, and the package names must change to match.
+- `@rogeriodocarmo/...` works only if you own a user or an organization named
+  exactly `rogeriodocarmo`. The npm user is `rogerio-do-carmo`, so the scope is
+  a free npm **organization** named `rogeriodocarmo`, created on 11 Oct 2026
+  with that user as owner (`npm org ls rogeriodocarmo` lists it).
 - Scoped packages are private by default. Publishing them publicly needs
   `--access public` (the release workflow will set this).
 
@@ -62,7 +63,8 @@ requires 2FA for publishing anyway.
   npm whoami
   ```
 
-  The output must read `rogeriodocarmo`.
+  The output must read `rogerio-do-carmo`, the owner of the `rogeriodocarmo`
+  organization.
 
 ### 4. Check that no package name is already used
 
