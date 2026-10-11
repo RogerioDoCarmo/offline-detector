@@ -196,13 +196,17 @@ describe('pages and translations', () => {
   it('links the live demo from the intro and both quick starts, in every locale', () => {
     for (const locale of LOCALES) {
       for (const id of ['intro', 'web-quick-start', 'native-quick-start']) {
-        expect({ locale, id, has: read(docPath(locale, id)).includes(DEMO_URL) }).toEqual(
-          {
-            locale,
-            id,
-            has: true,
-          },
+        // Compare whole link targets: a substring test would also accept the URL inside a longer
+        // address ("https://evil.example/?u=<demo url>").
+        const targets = [...read(docPath(locale, id)).matchAll(/\]\(([^)\s]+)\)/g)].map(
+          (match) => match[1],
         );
+        const linked = targets.some((target) => target === DEMO_URL);
+        expect({ locale, id, linked }).toEqual({
+          locale,
+          id,
+          linked: true,
+        });
       }
     }
   });
@@ -543,8 +547,8 @@ describe('pages workflow', () => {
       /configure-pages|upload-pages-artifact/.test(s.uses ?? ''),
     );
     expect(pagesSteps.map((s) => s.uses)).toEqual([
-      'actions/configure-pages@v5',
-      'actions/upload-pages-artifact@v4',
+      'actions/configure-pages@v6',
+      'actions/upload-pages-artifact@v5',
     ]);
     for (const step of pagesSteps)
       expect(step.if).toBe("github.event_name != 'pull_request'");
