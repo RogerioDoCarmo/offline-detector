@@ -201,7 +201,8 @@ describe('pages and translations', () => {
         const targets = [...read(docPath(locale, id)).matchAll(/\]\(([^)\s]+)\)/g)].map(
           (match) => match[1],
         );
-        expect({ locale, id, linked: targets.includes(DEMO_URL) }).toEqual({
+        const linked = targets.some((target) => target === DEMO_URL);
+        expect({ locale, id, linked }).toEqual({
           locale,
           id,
           linked: true,
