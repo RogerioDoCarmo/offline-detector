@@ -1,13 +1,14 @@
 name: Maestro
 
-# Device flows on an Android emulator. Slow, so a pull request runs it only when this workflow or
-# the flows themselves change (that is how a change here gets verified on its own PR).
+# Device flows on an Android emulator. Slow, so a pull request runs it only when this workflow, its
+# runner script or the flows themselves change (that is how a change here gets verified on its own PR).
 on:
   push:
     branches: [main, develop]
   pull_request:
     paths:
       - .github/workflows/maestro.yml
+      - scripts/maestro-ci.sh
       - apps/demo-native/.maestro/**
   workflow_dispatch:
 

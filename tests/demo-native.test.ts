@@ -248,7 +248,11 @@ describe('demo-native: Maestro', () => {
       // The emulator is slow, so a pull request runs it only when the workflow file or the flows
       // themselves change: that is what lets a change to this file be verified on its own PR.
       expect(workflow.on.pull_request).toEqual({
-        paths: ['.github/workflows/maestro.yml', 'apps/demo-native/.maestro/**'],
+        paths: [
+          '.github/workflows/maestro.yml',
+          'scripts/maestro-ci.sh',
+          'apps/demo-native/.maestro/**',
+        ],
       });
       expect(workflow.on).not.toHaveProperty('pull_request_target');
     });
@@ -296,7 +300,12 @@ describe('demo-native: Maestro', () => {
 
       it('collects the device log, the focused window, a last screenshot and Maestro debug output', () => {
         expect(script).toContain('adb logcat -d');
+        // On Android 14 `dumpsys window windows` printed nothing for mCurrentFocus (the focus file
+        // came back empty), so ask the whole window dump and the activity manager.
+        expect(script).toContain('adb shell dumpsys window |');
+        expect(script).not.toContain('dumpsys window windows');
         expect(script).toContain('mCurrentFocus');
+        expect(script).toContain('topResumedActivity');
         expect(script).toContain('screencap');
         expect(script).toContain('.maestro/tests');
       });
