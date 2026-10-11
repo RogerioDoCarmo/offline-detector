@@ -546,8 +546,8 @@ describe('pages workflow', () => {
       /configure-pages|upload-pages-artifact/.test(s.uses ?? ''),
     );
     expect(pagesSteps.map((s) => s.uses)).toEqual([
-      'actions/configure-pages@v5',
-      'actions/upload-pages-artifact@v4',
+      'actions/configure-pages@v6',
+      'actions/upload-pages-artifact@v5',
     ]);
     for (const step of pagesSteps)
       expect(step.if).toBe("github.event_name != 'pull_request'");
