@@ -8,7 +8,12 @@ publishing credentials are things only the account owner can do.
 already taken on npm (v1.1.1, someone else's package), so everything must be
 scoped anyway. The GitHub repo stays `RogerioDoCarmo/offline-detector`.
 
-Planned packages:
+**Status (11 Oct 2026): done.** The npm user is `rogerio-do-carmo` and the scope
+`@rogeriodocarmo` is a free npm organization it owns. All four packages are published, trusted
+publishing is configured for each, and 0.1.1 was released through it. The checklist below is kept
+as the record and as a guide for the next project.
+
+Packages:
 
 | Package                                   | Purpose                                           |
 | ----------------------------------------- | ------------------------------------------------- |

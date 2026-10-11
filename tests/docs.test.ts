@@ -898,6 +898,10 @@ describe('repository READMEs', () => {
   const NPM = 'https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-';
   const SITE = 'https://rogeriodocarmo.github.io/offline-detector/';
 
+  it('root README does not pin a version number, which would go stale at the next release', () => {
+    expect(read('README.md')).not.toMatch(/version \d+\.\d+\.\d+/i);
+  });
+
   it('root README says the packages are published, not pre-release', () => {
     const text = read('README.md');
     expect(text).not.toMatch(/pre-release/i);
