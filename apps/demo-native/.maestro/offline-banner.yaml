@@ -3,6 +3,12 @@ name: Offline shows the No internet pieces
 ---
 - launchApp:
     clearState: true
+# A cold emulator can be slow to load the bundle and render the first screen; wait for it
+# instead of tapping into a screen that is not there yet.
+- extendedWaitUntil:
+    visible:
+      id: 'simulate-offline'
+    timeout: 30000
 # Launching online shows nothing.
 - assertNotVisible: 'No internet'
 - tapOn:
