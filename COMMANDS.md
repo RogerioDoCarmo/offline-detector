@@ -329,7 +329,8 @@ GitHub environment named below to exist. Each package is configured on its own.
 
 ```bash
 npm trust list @scope/name                          # type, file, repository, environment
-npm trust github @scope/name --file release.yml   --repo <owner>/<repo> --env <environment> -y      # create the relationship from the terminal
+# create the relationship from the terminal
+npm trust github @scope/name --file release.yml --repo <owner>/<repo> --env <environment> -y
 npm trust revoke @scope/name --id=<trust-id>        # a relationship cannot be edited: revoke, recreate
 ```
 
