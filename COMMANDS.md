@@ -388,10 +388,14 @@ at `/privacy-policy.html`). Verify a deployment by **bytes**, not by a 200: comp
 - **Locales:** English, `pt-BR`, `es`. Add every new string to all three.
 - **Source of truth:** `docs/superpowers/specs/2026-10-07-offline-detector-design.md`.
 
-### Not wired up yet
+### Optional integrations
 
-- **SonarCloud** — the CI step skips itself until `SONAR_TOKEN` exists. To enable: import the
-  project (key `RogerioDoCarmo_offline-detector`), add the secret, and turn Automatic Analysis
-  off in SonarCloud, since it conflicts with CI-based analysis.
-- **Chromatic** — the workflow exists; it needs its project token.
+- **SonarCloud** — wired. The project `RogerioDoCarmo_offline-detector` is imported, Automatic
+  Analysis is off and the `SONAR_TOKEN` secret is set; the CI step runs a scan and skips itself on
+  forks and Dependabot PRs. A secret that exists but is empty looks set and skips silently, so set
+  it with `gh secret set SONAR_TOKEN` and check the "Is there a Sonar token" step's log.
+- **Chromatic** — wired, manual and paid. The `CHROMATIC_PROJECT_TOKEN` secret is set. Run it from
+  the Actions tab (Chromatic, Run workflow, type `yes`) or
+  `gh workflow run chromatic.yml --ref develop -f confirm_paid_snapshot=yes`. A run takes about 51
+  snapshots (5 components, 51 stories).
 - **Promo video** — not started.

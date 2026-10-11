@@ -132,8 +132,9 @@ next.
    `verify` prints "Nothing to publish" and passes; it still fails if the plan expects a
    package and its tarball is missing.
 
-The OIDC publish path is first exercised by the **next** version, because `0.1.0` is already on npm.
-Make that release a small patch so any problem is easy to see.
+`0.1.0` was published by hand, so the OIDC publish path was first exercised by `0.1.1`, a small
+patch (README links only). It worked: all four packages went out through trusted publishing with
+SLSA provenance. Keep the first release of any new project small for the same reason.
 
 ## Tested with
 

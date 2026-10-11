@@ -3,6 +3,10 @@
 Everything here is outward-facing: it publishes something, changes a third-party service or uses an
 account only the owner controls. Nothing in this list runs without the owner saying so.
 
+**Status (11 Oct 2026): every section below has been done** for this project (environment,
+rulesets, CodeQL, Dependabot, Pages, the first publish, trusted publishing, SonarCloud). It is kept
+as the record and as a template for the next project.
+
 The repository already exists. The first four sections are **step 0 of the first release**: do them
 before any `v*` tag is pushed (see `docs/RELEASING.md`). The commands use a POSIX shell with
 here-documents, so run them in Git Bash on Windows; PowerShell 5.1 cannot run them as written.
