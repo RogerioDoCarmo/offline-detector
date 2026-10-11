@@ -1,5 +1,13 @@
 # @rogeriodocarmo/offline-detector-core
 
+## 0.1.1
+
+### Patch Changes
+
+- The README of every package now links the four packages on npm, the documentation and the live
+  demo, so the npm pages point at each other. No code change. This is also the first version
+  published through npm trusted publishing.
+
 ## 0.1.0
 
 ### Minor Changes
