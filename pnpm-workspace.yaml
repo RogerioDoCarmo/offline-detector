@@ -9,3 +9,17 @@ packageExtensions:
   '@react-native/jest-preset':
     peerDependencies:
       react-native: '*'
+
+# Transitive dependencies with published advisories that Dependabot cannot bump inside a pnpm
+# lockfile. Caret ranges only: an open-ended range resolves to the highest major and replaces the
+# consumer's own constraint with no safety net. None of these is a dependency of the four published
+# packages; they sit in the docs, Storybook, Expo and lint tooling. node-forge and sprintf-js have no
+# patched release, so they cannot be overridden. tests/overrides.test.ts pins this list.
+overrides:
+  katex: ^0.18.2
+  qs: ^6.15.2
+  postcss-selector-parser: ^7.1.6
+  serialize-javascript: ^7.0.5
+  smol-toml: ^1.9.0
+  tinypool: ^2.1.2
+  uuid: ^11.1.1
