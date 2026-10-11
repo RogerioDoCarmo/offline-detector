@@ -1,5 +1,13 @@
 # @rogeriodocarmo/offline-detector-web
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @rogeriodocarmo/offline-detector-core@0.1.1
+  - @rogeriodocarmo/offline-detector-react@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

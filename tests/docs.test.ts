@@ -890,4 +890,37 @@ describe('repository READMEs', () => {
       '(https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/core/README.md)',
     );
   });
+
+  const NPM = 'https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-';
+  const SITE = 'https://rogeriodocarmo.github.io/offline-detector/';
+
+  it('root README says the packages are published, not pre-release', () => {
+    const text = read('README.md');
+    expect(text).not.toMatch(/pre-release/i);
+    expect(text).not.toContain('nothing has been published');
+  });
+
+  it.each(['core', 'react', 'web', 'native'])(
+    'root README links the %s package on npm',
+    (name) => {
+      expect(read('README.md')).toContain(`](${NPM}${name})`);
+    },
+  );
+
+  it('root README links the docs site and the live demo', () => {
+    const text = read('README.md');
+    expect(text).toContain(`](${SITE})`);
+    expect(text).toContain(`](${SITE}demo/)`);
+  });
+
+  it.each(['core', 'react', 'web', 'native'])(
+    'the %s package README links all four packages on npm and the docs site',
+    (name) => {
+      const text = read(`packages/${name}/README.md`);
+      for (const other of ['core', 'react', 'web', 'native']) {
+        expect(text).toContain(`](${NPM}${other})`);
+      }
+      expect(text).toContain(`](${SITE})`);
+    },
+  );
 });
