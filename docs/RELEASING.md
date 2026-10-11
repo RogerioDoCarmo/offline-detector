@@ -128,7 +128,9 @@ next.
    | Allowed actions      | tick `npm publish` (configs made after 3 Sep 2026 allow only staged publish by default, and this workflow publishes directly) |
 
 5. Tag `v0.1.0` as in step 4 above. The pipeline runs: the packed plan finds all four versions
-   already on npm and leaves them out, then the GitHub Release is created.
+   already on npm and leaves them out, then the GitHub Release is created. With nothing to pack,
+   `verify` prints "Nothing to publish" and passes; it still fails if the plan expects a
+   package and its tarball is missing.
 
 The OIDC publish path is first exercised by the **next** version, because `0.1.0` is already on npm.
 Make that release a small patch so any problem is easy to see.

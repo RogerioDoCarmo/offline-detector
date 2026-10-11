@@ -130,6 +130,16 @@ interface PlatformAdapter {
   `subscribeForeground`.
 - If `isInterfaceUp()` throws or rejects it is treated as "up" and the probe decides.
 
+## Links
+
+- On npm:
+  - [core](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-core)
+  - [react](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-react)
+  - [web](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-web)
+  - [native](https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-native)
+- [Documentation](https://rogeriodocarmo.github.io/offline-detector/) and [live demo](https://rogeriodocarmo.github.io/offline-detector/demo/)
+- [Source and issues](https://github.com/RogerioDoCarmo/offline-detector)
+
 ## Privacy
 
 The only network traffic is the configurable probe request. Nothing is collected or sent
