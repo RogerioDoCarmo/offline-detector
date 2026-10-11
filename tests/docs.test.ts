@@ -196,13 +196,16 @@ describe('pages and translations', () => {
   it('links the live demo from the intro and both quick starts, in every locale', () => {
     for (const locale of LOCALES) {
       for (const id of ['intro', 'web-quick-start', 'native-quick-start']) {
-        expect({ locale, id, has: read(docPath(locale, id)).includes(DEMO_URL) }).toEqual(
-          {
-            locale,
-            id,
-            has: true,
-          },
+        // Compare whole link targets: a substring test would also accept the URL inside a longer
+        // address ("https://evil.example/?u=<demo url>").
+        const targets = [...read(docPath(locale, id)).matchAll(/\]\(([^)\s]+)\)/g)].map(
+          (match) => match[1],
         );
+        expect({ locale, id, linked: targets.includes(DEMO_URL) }).toEqual({
+          locale,
+          id,
+          linked: true,
+        });
       }
     }
   });
@@ -890,4 +893,37 @@ describe('repository READMEs', () => {
       '(https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/core/README.md)',
     );
   });
+
+  const NPM = 'https://www.npmjs.com/package/@rogeriodocarmo/offline-detector-';
+  const SITE = 'https://rogeriodocarmo.github.io/offline-detector/';
+
+  it('root README says the packages are published, not pre-release', () => {
+    const text = read('README.md');
+    expect(text).not.toMatch(/pre-release/i);
+    expect(text).not.toContain('nothing has been published');
+  });
+
+  it.each(['core', 'react', 'web', 'native'])(
+    'root README links the %s package on npm',
+    (name) => {
+      expect(read('README.md')).toContain(`](${NPM}${name})`);
+    },
+  );
+
+  it('root README links the docs site and the live demo', () => {
+    const text = read('README.md');
+    expect(text).toContain(`](${SITE})`);
+    expect(text).toContain(`](${SITE}demo/)`);
+  });
+
+  it.each(['core', 'react', 'web', 'native'])(
+    'the %s package README links all four packages on npm and the docs site',
+    (name) => {
+      const text = read(`packages/${name}/README.md`);
+      for (const other of ['core', 'react', 'web', 'native']) {
+        expect(text).toContain(`](${NPM}${other})`);
+      }
+      expect(text).toContain(`](${SITE})`);
+    },
+  );
 });

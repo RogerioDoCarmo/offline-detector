@@ -170,8 +170,8 @@ pnpm changeset publish --no-git-tag
 
 It publishes in dependency order, skips a version already on npm and stops after a failed batch, so
 nothing is ever published pinned to a version that does not exist. Do not loop over the four
-package folders by hand: a failed `core` would not stop the other three. Confirm your npm username
-is exactly `rogeriodocarmo` first (`NPM-SETUP.md`).
+package folders by hand: a failed `core` would not stop the other three. Confirm first that
+`npm org ls rogeriodocarmo` lists you as owner (`NPM-SETUP.md`).
 
 ## Configure npm trusted publishing
 
