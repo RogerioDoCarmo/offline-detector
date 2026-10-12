@@ -1,14 +1,18 @@
 appId: dev.rogeriodocarmo.offlinedetector.demo
 name: Coming back online shows Back online
 ---
-- launchApp:
-    clearState: true
-# A cold emulator can be slow to load the bundle and render the first screen; wait for it
-# instead of tapping into a screen that is not there yet.
-- extendedWaitUntil:
-    visible:
-      id: 'simulate-offline'
-    timeout: 30000
+# Launch, and launch again if the first screen never appears. On CI the device log showed
+# clearState's force-stop killing the freshly started process ("remove task", then "failed to
+# attach"), leaving a blank window that no wait can fix. Only the launch and this wait are retried.
+- retry:
+    maxRetries: 2
+    commands:
+      - launchApp:
+          clearState: true
+      - extendedWaitUntil:
+          visible:
+            id: 'simulate-offline'
+          timeout: 15000
 - tapOn:
     id: 'simulate-offline'
 - extendedWaitUntil:
