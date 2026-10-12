@@ -210,6 +210,32 @@ describe('demo-native: Maestro', () => {
     expect(parse(header).appId).toBe('dev.rogeriodocarmo.offlinedetector.demo');
   });
 
+  // The first screen sometimes never appears, however long the flow waits. The device log of a
+  // failing run showed why: Maestro's clearState force-stops the app, and the removal of the old
+  // task then killed the NEW process ("Killing ...: remove task", then "failed to attach" ten
+  // seconds later), leaving a blank window. Waiting cannot revive a dead process; launching again
+  // can. So the launch and the wait for the first screen are retried together, and only they: the
+  // rest of the flow must not be wrapped in a retry, which would hide real failures.
+  it.each([
+    'dismiss-swipe.yaml',
+    'offline-banner.yaml',
+    'pt-br.yaml',
+    'recovery.yaml',
+    'retry.yaml',
+  ])('%s launches again if the first screen does not appear', (file) => {
+    const body = read(`${app}/.maestro/${file}`).split(/\r?\n---\r?\n/)[1] ?? '';
+    const commands = parse(body) as unknown[];
+    expect(commands[0]).toEqual({
+      retry: {
+        maxRetries: 2,
+        commands: [
+          { launchApp: { clearState: true } },
+          { extendedWaitUntil: { visible: { id: 'simulate-offline' }, timeout: 15000 } },
+        ],
+      },
+    });
+  });
+
   it('asserts the real copy', () => {
     expect(read(`${app}/.maestro/offline-banner.yaml`)).toContain('No internet');
     expect(read(`${app}/.maestro/recovery.yaml`)).toContain('Back online');
@@ -229,7 +255,11 @@ describe('demo-native: Maestro', () => {
       // The emulator is slow, so a pull request runs it only when the workflow file or the flows
       // themselves change: that is what lets a change to this file be verified on its own PR.
       expect(workflow.on.pull_request).toEqual({
-        paths: ['.github/workflows/maestro.yml', 'apps/demo-native/.maestro/**'],
+        paths: [
+          '.github/workflows/maestro.yml',
+          'scripts/maestro-ci.sh',
+          'apps/demo-native/.maestro/**',
+        ],
       });
       expect(workflow.on).not.toHaveProperty('pull_request_target');
     });
@@ -261,7 +291,52 @@ describe('demo-native: Maestro', () => {
         'reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2',
       );
       expect(text).toContain('expo prebuild');
-      expect(text).toContain('maestro test');
+      expect(text).toContain('sh scripts/maestro-ci.sh');
+    });
+
+    // The flows fail intermittently with the app not showing its first screen, and CI used to keep
+    // nothing but a junit file, so the cause could not be read. A failure now leaves a trail.
+    describe('diagnostics', () => {
+      const script = read('scripts/maestro-ci.sh');
+
+      it('runs the flows through a script that still fails the job when a flow fails', () => {
+        expect(script).toContain('maestro test apps/demo-native/.maestro');
+        expect(script).toContain('code=$?');
+        expect(script.trimEnd().endsWith('exit "$code"')).toBe(true);
+      });
+
+      it('collects the device log, the focused window, a last screenshot and Maestro debug output', () => {
+        expect(script).toContain('adb logcat -d');
+        // On Android 14 `dumpsys window windows` printed nothing for mCurrentFocus (the focus file
+        // came back empty), so ask the whole window dump and the activity manager.
+        expect(script).toContain('adb shell dumpsys window |');
+        expect(script).not.toContain('dumpsys window windows');
+        expect(script).toContain('mCurrentFocus');
+        expect(script).toContain('topResumedActivity');
+        expect(script).toContain('screencap');
+        expect(script).toContain('.maestro/tests');
+      });
+
+      it('uploads those files even when the flows fail', () => {
+        const steps: Array<{
+          uses?: string;
+          if?: string;
+          with?: { name?: string; path?: string };
+        }> = workflow.jobs.android.steps;
+        const upload = steps.filter((step) =>
+          step.uses?.startsWith('actions/upload-artifact'),
+        );
+        expect(upload).toHaveLength(1);
+        expect(upload[0]?.if).toBe('always()');
+        expect(upload[0]?.with?.name).toBe('maestro-report');
+        expect(upload[0]?.with?.path?.split(/\r?\n/).filter(Boolean)).toEqual([
+          'maestro-report.xml',
+          'maestro-logcat.txt',
+          'maestro-focus.txt',
+          'maestro-final-screen.png',
+          'maestro-debug',
+        ]);
+      });
     });
 
     it('has read-only permissions', () => {

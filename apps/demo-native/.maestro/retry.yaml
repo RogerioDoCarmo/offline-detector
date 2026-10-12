@@ -1,8 +1,18 @@
 appId: dev.rogeriodocarmo.offlinedetector.demo
 name: Retry checks again and stays offline while the stub is offline
 ---
-- launchApp:
-    clearState: true
+# Launch, and launch again if the first screen never appears. On CI the device log showed
+# clearState's force-stop killing the freshly started process ("remove task", then "failed to
+# attach"), leaving a blank window that no wait can fix. Only the launch and this wait are retried.
+- retry:
+    maxRetries: 2
+    commands:
+      - launchApp:
+          clearState: true
+      - extendedWaitUntil:
+          visible:
+            id: 'simulate-offline'
+          timeout: 15000
 - tapOn:
     id: 'simulate-offline'
 - extendedWaitUntil:

@@ -1,13 +1,14 @@
 name: Maestro
 
-# Device flows on an Android emulator. Slow, so a pull request runs it only when this workflow or
-# the flows themselves change (that is how a change here gets verified on its own PR).
+# Device flows on an Android emulator. Slow, so a pull request runs it only when this workflow, its
+# runner script or the flows themselves change (that is how a change here gets verified on its own PR).
 on:
   push:
     branches: [main, develop]
   pull_request:
     paths:
       - .github/workflows/maestro.yml
+      - scripts/maestro-ci.sh
       - apps/demo-native/.maestro/**
   workflow_dispatch:
 
@@ -79,10 +80,15 @@ jobs:
           target: google_apis
           script: |
             adb install apps/demo-native/android/app/build/outputs/apk/release/app-release.apk
-            maestro test apps/demo-native/.maestro --format junit --output maestro-report.xml
+            sh scripts/maestro-ci.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: maestro-report
-          path: maestro-report.xml
+          path: |
+            maestro-report.xml
+            maestro-logcat.txt
+            maestro-focus.txt
+            maestro-final-screen.png
+            maestro-debug
           if-no-files-found: ignore
