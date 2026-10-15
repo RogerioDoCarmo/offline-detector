@@ -33,7 +33,7 @@
     "@storybook/addon-ondevice-actions": "10.6.0",
     "@storybook/addon-ondevice-controls": "10.6.0",
     "@storybook/react-native": "10.6.0",
-    "@storybook/react-native-ui-lite": "10.6.0",
+    "@storybook/react-native-ui-lite": "10.6.2",
     "@types/react": "~19.2.0",
     "babel-preset-expo": "~57.0.14",
     "cross-env": "10.1.0",
