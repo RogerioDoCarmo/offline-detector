@@ -81,7 +81,7 @@ jobs:
           script: |
             adb install apps/demo-native/android/app/build/outputs/apk/release/app-release.apk
             sh scripts/maestro-ci.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: maestro-report
