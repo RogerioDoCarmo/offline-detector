@@ -116,7 +116,7 @@ describe('every workflow', () => {
     const wanted: Record<string, string> = {
       'SonarSource/sonarqube-scan-action':
         'd209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8',
-      'chromaui/action': '07791f8243f4cb2698bf4d00426baf4b2d1cb7e0 # v13',
+      'chromaui/action': '38afd264ef2241136f12d039093c2724748bec08 # v18.11.0',
       'reactivecircus/android-emulator-runner':
         'a421e43855164a8197daf9d8d40fe71c6996bb0d # v2',
     };
@@ -156,6 +156,7 @@ describe('dependabot', () => {
       expect.arrayContaining([
         'expo',
         'expo-*',
+        'babel-preset-expo',
         'react',
         'react-dom',
         'react-native',
