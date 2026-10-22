@@ -12,6 +12,8 @@ updates:
       # The Expo and React Native family moves together via `expo install`, never one at a time.
       - dependency-name: expo
       - dependency-name: expo-*
+      # Versioned with the Expo SDK (57 pairs with 57.x), so a major bump belongs to an SDK upgrade.
+      - dependency-name: babel-preset-expo
       - dependency-name: react
       - dependency-name: react-dom
       - dependency-name: react-native
