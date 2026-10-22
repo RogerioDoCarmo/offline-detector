@@ -67,7 +67,7 @@ jobs:
           github.event.pull_request.head.repo.fork != true &&
           steps.sonar.outputs.present == 'true'
         uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage
@@ -134,7 +134,7 @@ jobs:
 
       - name: Upload mutation report
         if: always() && steps.scope.outputs.run == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mutation-report
           path: reports/mutation/
