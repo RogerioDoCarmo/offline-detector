@@ -13,6 +13,7 @@ const lockfile = readFileSync(join(root, 'pnpm-lock.yaml'), 'utf8');
 // deliberately absent: an override cannot fix what has no fix.
 const EXPECTED: Record<string, string> = {
   katex: '^0.18.2',
+  'markdown-it': '^15.0.3',
   qs: '^6.15.2',
   'postcss-selector-parser': '^7.1.6',
   'serialize-javascript': '^7.0.5',
@@ -34,6 +35,7 @@ describe('pnpm overrides for vulnerable transitive dependencies', () => {
 
   it.each([
     ['katex', '0.16.47'],
+    ['markdown-it', '15.0.1'],
     ['qs', '6.15.1'],
     ['serialize-javascript', '6.0.2'],
     ['smol-toml', '1.8.0'],

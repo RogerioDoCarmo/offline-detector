@@ -17,6 +17,7 @@ packageExtensions:
 # patched release, so they cannot be overridden. tests/overrides.test.ts pins this list.
 overrides:
   katex: ^0.18.2
+  markdown-it: ^15.0.3
   qs: ^6.15.2
   postcss-selector-parser: ^7.1.6
   serialize-javascript: ^7.0.5
