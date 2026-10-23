@@ -34,7 +34,7 @@ describe('demo-native storybook: dependencies', () => {
     expect(dev()['@storybook/react-native-ui-lite']).toBe('10.7.0');
     expect(dev()['@storybook/addon-ondevice-controls']).toBe('10.7.0');
     expect(dev()['@storybook/addon-ondevice-actions']).toBe('10.7.0');
-    expect(dev().storybook).toBe('10.6.1');
+    expect(dev().storybook).toBe('10.6.3');
   });
 
   it('adds the controls addon peers that are plain JS or Expo Go modules', () => {
