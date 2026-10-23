@@ -18,7 +18,7 @@ export const phaseControl = {
 
 /** What the toolbar globals say. Stories read them in `render`, so a toolbar change re-renders. */
 export function environment(globals: Record<string, unknown>) {
-  const locale = String(globals.locale ?? 'en');
+  const locale = typeof globals.locale === 'string' ? globals.locale : 'en';
   const motion: Motion = globals.motion === 'reduced' ? 'reduced' : 'auto';
   return { locale, motion, strings: resolveStrings(locale) };
 }

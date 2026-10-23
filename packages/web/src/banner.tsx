@@ -20,7 +20,7 @@ export interface BannerProps extends PieceProps {
 }
 
 /** Full-width strip at the top while offline. Sticky, in the flow, square corners. */
-export function Banner(props: BannerProps): ReactElement {
+export function Banner(props: Readonly<BannerProps>): ReactElement {
   const {
     phase,
     message,
@@ -58,12 +58,9 @@ export function Banner(props: BannerProps): ReactElement {
   usePublishHeight('--od-banner-height', ref, visible);
 
   const retry = actions?.retry;
-  const icon =
-    phase === 'recovered'
-      ? (icons?.online ?? <CheckIcon />)
-      : checking
-        ? (icons?.checking ?? <Spinner />)
-        : (icons?.offline ?? <WifiOffIcon />);
+  let icon = icons?.offline ?? <WifiOffIcon />;
+  if (phase === 'recovered') icon = icons?.online ?? <CheckIcon />;
+  else if (checking) icon = icons?.checking ?? <Spinner />;
 
   // The banner announces unless the snackbar already does; then it is a labelled landmark.
   const roleProps = announce

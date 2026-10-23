@@ -23,11 +23,11 @@ export function Glyph({
   name,
   color,
   size,
-}: {
+}: Readonly<{
   name: keyof typeof GLYPHS;
   color: string;
   size: number;
-}) {
+}>) {
   return (
     <Text
       {...HIDDEN_FROM_ACCESSIBILITY}
@@ -43,10 +43,10 @@ export function Glyph({
 export function Spinner({
   color,
   reduceMotion,
-}: {
+}: Readonly<{
   color: string;
   reduceMotion: boolean;
-}) {
+}>) {
   if (reduceMotion) return null;
   return (
     <ActivityIndicator
@@ -67,11 +67,11 @@ export function StatusDot({
   status,
   theme,
   reduceMotion,
-}: {
+}: Readonly<{
   status: 'offline' | 'checking' | 'online';
   theme: OfflineTheme;
   reduceMotion: boolean;
-}) {
+}>) {
   const pulse = usePulse(status === 'checking', reduceMotion, theme.durationPulse);
   const color = {
     offline: theme.colorStatusOffline,

@@ -50,20 +50,17 @@ describe('probeAny', () => {
     expect(fetch.calls).toEqual([]);
   });
 
-  it('treats a non-ok HTTP response as reachable: any completed response counts', async () => {
-    const { run } = setup(() => 'http-error');
-    await expect(run(['https://a.test'])).resolves.toBe(true);
-  });
-
-  it('treats an opaque (no-cors) response as reachable', async () => {
-    const { run } = setup(() => 'opaque');
-    await expect(run(['https://a.test'])).resolves.toBe(true);
-  });
-
-  it('treats a fetch that resolves with nothing at all as reachable', async () => {
-    const { run } = setup(() => 'empty');
-    await expect(run(['https://a.test'])).resolves.toBe(true);
-  });
+  it.each([
+    ['a non-ok HTTP response', 'http-error'],
+    ['an opaque (no-cors) response', 'opaque'],
+    ['a fetch that resolves with nothing at all', 'empty'],
+  ] as const)(
+    'treats %s as reachable: any completed response counts',
+    async (_, kind) => {
+      const { run } = setup(() => kind);
+      await expect(run(['https://a.test'])).resolves.toBe(true);
+    },
+  );
 
   it('passes the method and an abort signal to fetch', async () => {
     const { fetch, run } = setup(() => 'ok');

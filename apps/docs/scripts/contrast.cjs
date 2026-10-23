@@ -53,7 +53,7 @@ function channel(value) {
 }
 
 function luminance(hex) {
-  const n = parseInt(hex.slice(1), 16);
+  const n = Number.parseInt(hex.slice(1), 16);
   return (
     0.2126 * channel((n >> 16) & 255) +
     0.7152 * channel((n >> 8) & 255) +

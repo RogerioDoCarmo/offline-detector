@@ -21,7 +21,7 @@ export interface IndicatorProps extends PieceProps {
 }
 
 /** A small, always-labelled status marker. Never a live region: state is read on focus. */
-export function Indicator(props: IndicatorProps): ReactElement | null {
+export function Indicator(props: Readonly<IndicatorProps>): ReactElement | null {
   const {
     phase,
     strings,
@@ -53,16 +53,17 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
     checkingMinMs,
   );
 
-  const shown = phase === 'checking' ? (checking ? 'checking' : idlePhase) : phase;
+  let shown: typeof phase | null = phase;
+  if (phase === 'checking' && !checking) shown = idlePhase;
   if (shown === null) return null;
 
   const dot = shown === 'recovered' ? 'online' : shown;
-  const label =
-    dot === 'online'
-      ? strings.indicatorLabelOnline
-      : dot === 'checking'
-        ? strings.indicatorLabelChecking
-        : strings.indicatorLabelOffline;
+  const labels = {
+    online: strings.indicatorLabelOnline,
+    checking: strings.indicatorLabelChecking,
+    offline: strings.indicatorLabelOffline,
+  };
+  const label = labels[dot];
   const name = indicatorName(strings, label);
 
   const labelled = {
@@ -75,7 +76,9 @@ export function Indicator(props: IndicatorProps): ReactElement | null {
   return (
     <div
       ref={ref}
-      className={`od-indicator od-pos-${position}${className ? ` ${className}` : ''}`}
+      className={['od-indicator', `od-pos-${position}`, className]
+        .filter(Boolean)
+        .join(' ')}
       data-od-phase={shown}
       data-od-motion={motion}
       data-od-state={visible ? undefined : 'exit'}
