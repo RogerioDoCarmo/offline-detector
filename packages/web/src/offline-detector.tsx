@@ -68,26 +68,11 @@ function pick(
   return Slot ? <Slot {...slotProps} /> : render();
 }
 
-function Pieces(props: UiProps): ReactElement {
-  const { slots, recoveryMs, motion } = props;
-  const network = useNetworkStatus();
-  const feedback = useCheckingFeedback();
-  const dismissals = useDismissals(props);
-  const strings = useMemo(
-    () => resolveStrings(props.locale, props.strings),
-    [props.locale, props.strings],
-  );
-  const { status, reason, checking, lastChecked, lastOnlineAt, checkNow } = network;
-  const state: OfflineState = useMemo(
-    () => ({ status, reason, checking, lastChecked, lastOnlineAt }),
-    [status, reason, checking, lastChecked, lastOnlineAt],
-  );
-
-  // Transition bookkeeping, done while rendering so no frame shows a stale piece: a real
-  // offline -> online change opens the recovery window, any change ends "continued offline".
-  // An `initialStatus` hint is not a result: until a real check lands, nothing has been observed,
-  // so a hint of offline followed by an online result is a launch, not a recovery.
-  const observed = lastChecked === null ? 'unknown' : status;
+/**
+ * Transition bookkeeping, done while rendering so no frame shows a stale piece: a real offline ->
+ * online change opens the recovery window, any change ends "continued offline".
+ */
+function useTransitions(observed: string, recoveryMs: number) {
   const [seen, setSeen] = useState(observed);
   const [recovering, setRecovering] = useState(false);
   const [continued, setContinued] = useState(false);
@@ -112,8 +97,10 @@ function Pieces(props: UiProps): ReactElement {
       left.current -= Date.now() - startedAt;
     };
   }, [recovering, paused]);
+  return { recovering, setPaused, continued, setContinued };
+}
 
-  // A pressed Retry shows the checking state at once; background checks only when asked for.
+function useUserRetry(checkNow: ReturnType<typeof useNetworkStatus>['checkNow']) {
   const [pressed, setPressed] = useState(0);
   const retry = useCallback(() => {
     setPressed((count) => count + 1);
@@ -123,31 +110,83 @@ function Pieces(props: UiProps): ReactElement {
     return result;
   }, [checkNow]);
   const userChecking = pressed > 0;
+  return { retry, userChecking };
+}
 
+/** A dismissed piece stays hidden; the banner has no recovery state of its own. */
+function visiblePieces(
+  recovering: boolean,
+  offlineShown: boolean,
+  isDismissed: (piece: DismissiblePiece) => boolean,
+) {
+  const active = recovering || offlineShown;
+  return {
+    snackbar: active && !isDismissed('snackbar'),
+    banner: offlineShown && !isDismissed('banner'),
+    indicator: active && !isDismissed('indicator'),
+  };
+}
+
+function currentPhase(recovering: boolean, showChecking: boolean): Phase {
+  if (recovering) return 'recovered';
+  return showChecking ? 'checking' : 'offline';
+}
+
+/** The "Continue offline" action exists only when the host asked for it. */
+function continueAction(
+  fullScreenOption: UiProps['fullScreen'],
+  onContinue: () => void,
+): (() => void) | undefined {
+  const asked =
+    typeof fullScreenOption === 'object' && fullScreenOption.continueOffline === true;
+  return asked ? onContinue : undefined;
+}
+
+function Pieces(props: UiProps): ReactElement {
+  const { slots, recoveryMs, motion } = props;
+  const network = useNetworkStatus();
+  const feedback = useCheckingFeedback();
+  const dismissals = useDismissals(props);
+  const strings = useMemo(
+    () => resolveStrings(props.locale, props.strings),
+    [props.locale, props.strings],
+  );
+  const { status, reason, checking, lastChecked, lastOnlineAt, checkNow } = network;
+  const state: OfflineState = useMemo(
+    () => ({ status, reason, checking, lastChecked, lastOnlineAt }),
+    [status, reason, checking, lastChecked, lastOnlineAt],
+  );
+
+  // An `initialStatus` hint is not a result: until a real check lands, nothing has been observed,
+  // so a hint of offline followed by an online result is a launch, not a recovery.
+  const observed = lastChecked === null ? 'unknown' : status;
+  const { recovering, setPaused, continued, setContinued } = useTransitions(
+    observed,
+    recoveryMs,
+  );
+
+  // A pressed Retry shows the checking state at once; background checks only when asked for.
+  const { retry, userChecking } = useUserRetry(checkNow);
+
+  // A pressed Retry shows the checking state at once; background checks only when asked for.
   const offline = status === 'offline';
   const fullScreenOption = props.fullScreen;
   const fullScreenOn = fullScreenOption !== undefined && fullScreenOption !== false;
   const showFullScreen = fullScreenOn && offline && !continued;
   const onContinueOffline = props.onContinueOffline;
-  const continueOffline =
-    typeof fullScreenOption === 'object' && fullScreenOption.continueOffline === true
-      ? () => {
-          setContinued(true);
-          onContinueOffline?.();
-        }
-      : undefined;
+  const continueOffline = continueAction(fullScreenOption, () => {
+    setContinued(true);
+    onContinueOffline?.();
+  });
 
-  const showSnackbar =
-    (recovering || (offline && !showFullScreen)) && !dismissals.isDismissed('snackbar');
-  const showBanner = offline && !showFullScreen && !dismissals.isDismissed('banner');
-  const showIndicator =
-    (recovering || (offline && !showFullScreen)) && !dismissals.isDismissed('indicator');
+  const {
+    snackbar: showSnackbar,
+    banner: showBanner,
+    indicator: showIndicator,
+  } = visiblePieces(recovering, offline && !showFullScreen, dismissals.isDismissed);
 
-  const phase: Phase = recovering
-    ? 'recovered'
-    : userChecking || (checking && feedback === 'brief')
-      ? 'checking'
-      : 'offline';
+  const showChecking = userChecking || (checking && feedback === 'brief');
+  const phase = currentPhase(recovering, showChecking);
   const offlineText = offlineMessage(state, strings, props.distinguishReason);
   const message = recovering ? strings.online : offlineText;
   // The full-screen title is its own string, unless the reason-aware message was asked for.
@@ -267,7 +306,7 @@ function Pieces(props: UiProps): ReactElement {
  * Drop-in offline UI for the web: wraps your app (or sits beside it), watches the connection and
  * shows a snackbar, banner and indicator (and, opt-in, a full-screen state). No provider needed.
  */
-export function OfflineDetector(props: OfflineDetectorProps): ReactElement {
+export function OfflineDetector(props: Readonly<OfflineDetectorProps>): ReactElement {
   const {
     adapter,
     fetch,

@@ -17,8 +17,8 @@ export function useOfflineTheme(
   overrides?: Partial<OfflineTheme>,
 ): OfflineTheme {
   const system = useColorScheme();
-  const scheme =
-    colorScheme === 'auto' ? (system === 'dark' ? 'dark' : 'light') : colorScheme;
+  const systemScheme = system === 'dark' ? 'dark' : 'light';
+  const scheme = colorScheme === 'auto' ? systemScheme : colorScheme;
   return useMemo(() => createTheme(overrides, scheme), [overrides, scheme]);
 }
 

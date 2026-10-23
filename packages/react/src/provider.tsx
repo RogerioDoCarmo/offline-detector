@@ -94,7 +94,7 @@ function createCore(props: OfflineDetectorProviderProps): ProviderCore {
  * once; the callback props are always the latest.
  */
 export function OfflineDetectorProvider(
-  props: OfflineDetectorProviderProps,
+  props: Readonly<OfflineDetectorProviderProps>,
 ): ReactElement {
   const [core] = useState(() => createCore(props));
 

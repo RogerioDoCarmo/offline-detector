@@ -6,11 +6,62 @@ import { Glyph, Spinner } from './glyphs';
 import { useIosAnnouncement, usePieceTransition } from './hooks';
 import { inlineInsets, resolveInsets } from './insets';
 import { lightTheme } from './theme';
+import type { OfflineTheme } from './theme';
 import { useSwipeDismiss } from './use-swipe-dismiss';
 
 export interface SnackbarProps extends PieceProps {
   /** Extra space under the snackbar, for example a tab bar. Default 0. */
   offsetBottom?: number;
+}
+
+function RetryAction({
+  theme,
+  label,
+  checking,
+  reduceMotion,
+  onRetry,
+}: Readonly<{
+  theme: OfflineTheme;
+  label: string;
+  checking: boolean;
+  reduceMotion: boolean;
+  onRetry: (() => unknown) | undefined;
+}>) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ busy: checking, disabled: checking }}
+      onPress={checking ? undefined : () => void onRetry?.()}
+      style={({ pressed }) => [
+        styles.action,
+        {
+          minHeight: theme.sizeTouchTarget,
+          minWidth: theme.sizeTouchTarget,
+          marginStart: theme.spaceSm,
+          paddingHorizontal: theme.spaceSm,
+          borderRadius: theme.radiusSm,
+          backgroundColor: pressed ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+        },
+      ]}
+    >
+      <Spinner color={theme.colorActionInverse} reduceMotion={reduceMotion} />
+      <Text
+        maxFontSizeMultiplier={2}
+        style={{
+          marginStart: checking && !reduceMotion ? theme.spaceSm : 0,
+          color: theme.colorActionInverse,
+          fontFamily: theme.fontFamily,
+          fontSize: theme.fontSizeLabel,
+          lineHeight: theme.lineHeightLabel,
+          fontWeight: theme.fontWeightSemibold,
+          letterSpacing: theme.fontSizeLabel * 0.02,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
 }
 
 /** The bottom-anchored message surface. Offline persists; recovery is timed by the provider. */
@@ -29,7 +80,7 @@ export function Snackbar({
   icons,
   style,
   testID,
-}: SnackbarProps) {
+}: Readonly<SnackbarProps>) {
   const onRetry = actions?.retry;
   const onDismiss = actions?.dismiss;
   const dismissible = typeof onDismiss === 'function';
@@ -122,39 +173,13 @@ export function Snackbar({
           </Text>
         </View>
         {showRetry ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={retryLabel}
-            accessibilityState={{ busy: checking, disabled: checking }}
-            onPress={checking ? undefined : () => void onRetry?.()}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                minHeight: theme.sizeTouchTarget,
-                minWidth: theme.sizeTouchTarget,
-                marginStart: theme.spaceSm,
-                paddingHorizontal: theme.spaceSm,
-                borderRadius: theme.radiusSm,
-                backgroundColor: pressed ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              },
-            ]}
-          >
-            <Spinner color={theme.colorActionInverse} reduceMotion={reduceMotion} />
-            <Text
-              maxFontSizeMultiplier={2}
-              style={{
-                marginStart: checking && !reduceMotion ? theme.spaceSm : 0,
-                color: theme.colorActionInverse,
-                fontFamily: theme.fontFamily,
-                fontSize: theme.fontSizeLabel,
-                lineHeight: theme.lineHeightLabel,
-                fontWeight: theme.fontWeightSemibold,
-                letterSpacing: theme.fontSizeLabel * 0.02,
-              }}
-            >
-              {retryLabel}
-            </Text>
-          </Pressable>
+          <RetryAction
+            theme={theme}
+            label={retryLabel}
+            checking={checking}
+            reduceMotion={reduceMotion}
+            onRetry={onRetry}
+          />
         ) : null}
         {dismissible ? (
           <Pressable

@@ -117,11 +117,8 @@ function styleFor(view: View, reducedMotion: boolean): CSSProperties {
     ...base,
     transform: `translateX(${view.offset}px)`,
     opacity: 1 - share * 0.5,
-    transition: view.dragging
-      ? 'none'
-      : reducedMotion
-        ? 'none'
-        : `transform ${SETTLE}, opacity ${SETTLE}`,
+    transition:
+      view.dragging || reducedMotion ? 'none' : `transform ${SETTLE}, opacity ${SETTLE}`,
   };
 }
 
@@ -189,7 +186,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
 
   const finish = (end: { pointerId: number; clientX: number }, cancelled: boolean) => {
     const g = gesture.current;
-    if (!g || g.pointerId !== end.pointerId) return;
+    if (g?.pointerId !== end.pointerId) return;
     gesture.current = null;
     stopListening.current?.();
     stopListening.current = null;
@@ -237,7 +234,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     };
     props.onPointerMove = (event) => {
       const g = gesture.current;
-      if (!g || g.pointerId !== event.pointerId) return;
+      if (g?.pointerId !== event.pointerId) return;
       // A move with nothing pressed means the release was missed: the gesture is over.
       if (event.buttons === 0) {
         finish(event, true);

@@ -15,7 +15,7 @@ export function SelectField<T extends string>({
   options,
   onChange,
   hint,
-}: ChoiceProps<T>) {
+}: Readonly<ChoiceProps<T>>) {
   const id = useId();
   return (
     <div className="field">
@@ -46,12 +46,12 @@ export function CheckField({
   checked,
   onChange,
   hint,
-}: {
+}: Readonly<{
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   hint?: string;
-}) {
+}>) {
   const id = useId();
   return (
     <div className="field field-check">
@@ -79,14 +79,14 @@ export function NumberField({
   min = 0,
   step = 100,
   hint,
-}: {
+}: Readonly<{
   label: string;
   value: number;
   onChange: (value: number) => void;
   min?: number;
   step?: number;
   hint?: string;
-}) {
+}>) {
   const id = useId();
   return (
     <div className="field">
@@ -120,14 +120,14 @@ export function TextField({
   multiline = false,
   hint,
   placeholder,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   onChange: (value: string) => void;
   multiline?: boolean;
   hint?: string;
   placeholder?: string;
-}) {
+}>) {
   const id = useId();
   const common = {
     id,
@@ -168,14 +168,14 @@ export function RadioGroup<T extends string>({
   options,
   onChange,
   hint,
-}: {
+}: Readonly<{
   legend: string;
   name: string;
   value: T;
   options: ReadonlyArray<{ value: T; label: string }>;
   onChange: (value: T) => void;
   hint?: ReactNode;
-}) {
+}>) {
   const id = useId();
   return (
     <fieldset className="radios" aria-describedby={hint ? `${id}-hint` : undefined}>

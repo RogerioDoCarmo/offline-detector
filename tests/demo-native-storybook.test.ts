@@ -113,7 +113,7 @@ describe('demo-native storybook: metro', () => {
     }
     expect(metro).toContain('disableHierarchicalLookup: true');
     expect(metro).toContain("'/@storybook/react-native-ui/'");
-    expect(metro).toContain("replace(/\\\\/g, '/')");
+    expect(metro).toContain("replaceAll('\\\\', '/')");
   });
 
   it('keeps every monorepo setting of the demo', () => {
