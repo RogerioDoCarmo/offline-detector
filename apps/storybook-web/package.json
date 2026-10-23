@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@storybook/addon-a11y": "^10.6.1",
-    "@storybook/addon-vitest": "^10.6.1",
+    "@storybook/addon-vitest": "^10.6.2",
     "@storybook/react-vite": "^10.6.1",
     "@types/node": "^24.19.1",
     "@types/react": "^19.3.0",
