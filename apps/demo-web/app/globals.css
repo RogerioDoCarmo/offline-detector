@@ -343,6 +343,6 @@ button.secondary {
 
 @media (prefers-reduced-motion: reduce) {
   * {
-    scroll-behavior: auto !important;
+    scroll-behavior: auto;
   }
 }
