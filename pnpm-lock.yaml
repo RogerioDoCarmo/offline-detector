@@ -250,8 +250,8 @@ importers:
         version: link:../../packages/web
     devDependencies:
       '@storybook/addon-a11y':
-        specifier: ^10.6.1
-        version: 10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))
+        specifier: ^10.6.3
+        version: 10.6.3(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))
       '@storybook/addon-vitest':
         specifier: ^10.6.1
         version: 10.6.1(@vitest/browser-playwright@5.0.3)(@vitest/browser@5.0.3(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.51.2)(yaml@2.9.1))(vitest@5.0.3))(react@19.3.0)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))(vitest@5.0.3)
@@ -4364,10 +4364,10 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@storybook/addon-a11y@10.6.1':
-    resolution: {integrity: sha512-73wx4xyOMBbFIF4DnlfHy5o/c5sWjawn/tb+zq/GAKXkYCuBziE5aa3WDzRDhdxN259p5kTDyJcRi1SlUEUexg==}
+  '@storybook/addon-a11y@10.6.3':
+    resolution: {integrity: sha512-nqvjpmu5g+PPtEKwgE0qAi4wfuQ9yngOb/1Gm24pBBZOuRsd3UMEBjKORSuAGrIAz9X3LCFfQi7sCcBFXvFbwg==}
     peerDependencies:
-      storybook: ^10.6.1
+      storybook: ^10.6.3
 
   '@storybook/addon-ondevice-actions@10.7.0':
     resolution: {integrity: sha512-YC0t82HL5YGjBJxx+72SZUDhxziJScYJl7v3N4+4fIU2WCm+lml1UXuyVJ8lYF+LxG9u5c0AKtE4x3faqlM38w==}
@@ -9440,6 +9440,9 @@ packages:
 
   react-is@19.3.0:
     resolution: {integrity: sha512-UpMYezM4v5/18F28aC66AEsjXIgE02kyEMH6yLdgLXu/UTfa1Ntwck/nNLrbqJsEXW7gPb0coNO9FQse9WTovA==}
+
+  react-is@19.3.1:
+    resolution: {integrity: sha512-RRieF6IyxQBkcK6pP8xOHprLTPW6QjRkbGdImtqNme+/hYVwCZkLQLdlZGOhUqXwkS9IEynaGvPJtv6XB/cz0Q==}
 
   react-json-view-lite@2.5.0:
     resolution: {integrity: sha512-tk7o7QG9oYyELWHL8xiMQ8x4WzjCzbWNyig3uexmkLb54r8jO0yH3WCWx8UZS0c49eSA4QUmG5caiRJ8fAn58g==}
@@ -16602,7 +16605,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@storybook/addon-a11y@10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))':
+  '@storybook/addon-a11y@10.6.3(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))':
     dependencies:
       '@storybook/global': 5.0.0
       axe-core: 4.14.0
@@ -22950,7 +22953,7 @@ snapshots:
   pretty-format@30.5.1:
     dependencies:
       '@jest/react-is-18': react-is@18.3.1
-      '@jest/react-is-19': react-is@19.3.0
+      '@jest/react-is-19': react-is@19.3.1
       '@jest/schemas': 30.5.0
       ansi-styles: 5.2.0
 
@@ -23093,6 +23096,8 @@ snapshots:
   react-is@18.3.1: {}
 
   react-is@19.3.0: {}
+
+  react-is@19.3.1: {}
 
   react-json-view-lite@2.5.0(react@19.3.0):
     dependencies:

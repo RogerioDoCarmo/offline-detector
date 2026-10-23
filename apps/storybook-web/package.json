@@ -13,7 +13,7 @@
     "test:stories": "vitest run --project=storybook"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.6.1",
+    "@storybook/addon-a11y": "^10.6.3",
     "@storybook/addon-vitest": "^10.6.1",
     "@storybook/react-vite": "^10.6.1",
     "@types/node": "^24.19.1",
