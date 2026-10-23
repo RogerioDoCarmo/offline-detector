@@ -207,7 +207,9 @@ describe('focus restoration', () => {
 
   it('is fine without onRestoreFocus', async () => {
     const view = await render(<FullScreen {...base} />);
+    expect(screen.getByText('No internet')).toBeTruthy();
     await view.unmount();
+    expect(screen.queryByText('No internet')).toBeNull();
   });
 });
 

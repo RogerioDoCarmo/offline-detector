@@ -19,12 +19,14 @@ import { createStubProbe } from './src/stub-probe';
 
 type Screen = 'panel' | 'recheck';
 
-function Content(props: {
-  settings: Settings;
-  update: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
-  onToggleSimulation: () => void;
-  simulating: boolean;
-}) {
+function Content(
+  props: Readonly<{
+    settings: Settings;
+    update: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
+    onToggleSimulation: () => void;
+    simulating: boolean;
+  }>,
+) {
   const [screen, setScreen] = useState<Screen>('panel');
   return (
     <>
@@ -49,11 +51,13 @@ function Content(props: {
 }
 
 /** Lives inside the detector so the simulate button can ask for an immediate re-check. */
-function SimulationBridge(props: {
-  stub: ReturnType<typeof createStubProbe>;
-  settings: Settings;
-  update: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
-}) {
+function SimulationBridge(
+  props: Readonly<{
+    stub: ReturnType<typeof createStubProbe>;
+    settings: Settings;
+    update: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
+  }>,
+) {
   const { checkNow } = useNetworkStatus();
   const [simulating, setSimulating] = useState(props.stub.isOffline());
   const toggle = useCallback(() => {
@@ -85,11 +89,9 @@ function Root() {
 
   const probe = useMemo(() => buildProbeOptions(settings), [settings]);
   const fullScreen =
-    settings.fullScreen === 'off'
-      ? false
-      : settings.fullScreen === 'on'
-        ? true
-        : { continueOffline: true };
+    settings.fullScreen === 'off' || settings.fullScreen === 'on'
+      ? settings.fullScreen === 'on'
+      : { continueOffline: true };
 
   return (
     <OfflineDetector

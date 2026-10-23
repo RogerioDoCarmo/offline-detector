@@ -535,7 +535,7 @@ describe('pages workflow', () => {
       name: 'github-pages',
       url: '${{ steps.deployment.outputs.page_url }}',
     });
-    expect(deploy.steps.map((s: Step) => s.uses)).toEqual(['actions/deploy-pages@v4']);
+    expect(deploy.steps.map((s: Step) => s.uses)).toEqual(['actions/deploy-pages@v5']);
     expect(deploy.steps[0].id).toBe('deployment');
   });
 

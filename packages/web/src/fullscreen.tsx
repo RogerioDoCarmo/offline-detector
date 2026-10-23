@@ -69,7 +69,7 @@ function inertHost(root: HTMLElement): () => void {
  * Page-level replacement for hosts whose screens are useless offline. Not a dialog: it takes
  * focus (title first) and makes the host inert, and gives focus back when it goes away.
  */
-export function FullScreen(props: PieceProps): ReactElement {
+export function FullScreen(props: Readonly<PieceProps>): ReactElement {
   const {
     phase,
     message,

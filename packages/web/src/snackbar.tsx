@@ -22,7 +22,7 @@ export interface SnackbarProps extends PieceProps {
 }
 
 /** Bottom-anchored message with Retry and, when dismissible, a dismiss button and swipe. */
-export function Snackbar(props: SnackbarProps): ReactElement {
+export function Snackbar(props: Readonly<SnackbarProps>): ReactElement {
   const {
     phase,
     message,
@@ -60,12 +60,9 @@ export function Snackbar(props: SnackbarProps): ReactElement {
   usePublishHeight('--od-snackbar-height', ref, visible, 8);
 
   const retry = actions?.retry;
-  const icon =
-    phase === 'recovered'
-      ? (icons?.online ?? <CheckIcon />)
-      : checking
-        ? (icons?.checking ?? <WifiOffIcon />)
-        : (icons?.offline ?? <WifiOffIcon />);
+  let icon = icons?.offline ?? <WifiOffIcon />;
+  if (phase === 'recovered') icon = icons?.online ?? <CheckIcon />;
+  else if (checking) icon = icons?.checking ?? <WifiOffIcon />;
 
   const withTouch =
     (

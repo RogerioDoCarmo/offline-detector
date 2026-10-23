@@ -484,7 +484,7 @@ describe('useSwipeDismiss: a release the piece never hears', () => {
       const { piece, unmount } = setup();
       pointer(piece, 'pointerdown', { x: 100, y: 100 });
       unmount();
-      expect(remove.mock.calls.filter(([name]) => name === 'pointerup').length).toBe(1);
+      expect(remove.mock.calls.filter(([name]) => name === 'pointerup')).toHaveLength(1);
     } finally {
       remove.mockRestore();
     }

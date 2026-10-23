@@ -30,10 +30,10 @@ describe('demo-native storybook: dependencies', () => {
   const dev = () => pkg().devDependencies;
 
   it('pins Storybook for React Native 10 with matching addon versions', () => {
-    expect(dev()['@storybook/react-native']).toBe('10.6.0');
-    expect(dev()['@storybook/react-native-ui-lite']).toBe('10.6.0');
-    expect(dev()['@storybook/addon-ondevice-controls']).toBe('10.6.0');
-    expect(dev()['@storybook/addon-ondevice-actions']).toBe('10.6.0');
+    expect(dev()['@storybook/react-native']).toBe('10.7.0');
+    expect(dev()['@storybook/react-native-ui-lite']).toBe('10.7.0');
+    expect(dev()['@storybook/addon-ondevice-controls']).toBe('10.7.0');
+    expect(dev()['@storybook/addon-ondevice-actions']).toBe('10.7.0');
     expect(dev().storybook).toBe('10.6.1');
   });
 
@@ -113,7 +113,7 @@ describe('demo-native storybook: metro', () => {
     }
     expect(metro).toContain('disableHierarchicalLookup: true');
     expect(metro).toContain("'/@storybook/react-native-ui/'");
-    expect(metro).toContain("replace(/\\\\/g, '/')");
+    expect(metro).toContain("replaceAll('\\\\', '/')");
   });
 
   it('keeps every monorepo setting of the demo', () => {

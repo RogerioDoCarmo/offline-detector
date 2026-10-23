@@ -10,7 +10,10 @@ export const colors = {
   surface: '#f4f6fa',
 };
 
-export function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({
+  title,
+  children,
+}: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <View style={styles.section}>
       <Text accessibilityRole="header" style={styles.sectionTitle}>
@@ -21,13 +24,15 @@ export function Section({ title, children }: { title: string; children: ReactNod
   );
 }
 
-export function Segmented<T extends string | number>(props: {
-  id: string;
-  label: string;
-  value: T;
-  options: readonly T[];
-  onChange: (value: T) => void;
-}) {
+export function Segmented<T extends string | number>(
+  props: Readonly<{
+    id: string;
+    label: string;
+    value: T;
+    options: readonly T[];
+    onChange: (value: T) => void;
+  }>,
+) {
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{props.label}</Text>
@@ -54,12 +59,14 @@ export function Segmented<T extends string | number>(props: {
   );
 }
 
-export function Toggle(props: {
-  id: string;
-  label: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-}) {
+export function Toggle(
+  props: Readonly<{
+    id: string;
+    label: string;
+    value: boolean;
+    onChange: (value: boolean) => void;
+  }>,
+) {
   return (
     <Pressable
       testID={props.id}
@@ -77,12 +84,14 @@ export function Toggle(props: {
   );
 }
 
-export function Field(props: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
+export function Field(
+  props: Readonly<{
+    id: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+  }>,
+) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{props.label}</Text>
@@ -100,12 +109,14 @@ export function Field(props: {
   );
 }
 
-export function Button(props: {
-  id: string;
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-}) {
+export function Button(
+  props: Readonly<{
+    id: string;
+    label: string;
+    onPress: () => void;
+    primary?: boolean;
+  }>,
+) {
   return (
     <Pressable
       testID={props.id}

@@ -56,7 +56,7 @@ export function FullScreen({
   icons,
   style,
   testID,
-}: FullScreenProps) {
+}: Readonly<FullScreenProps>) {
   const onRetry = actions?.retry;
   const onContinueOffline = actions?.continueOffline;
   const transition = usePieceTransition({

@@ -23,7 +23,7 @@ export function CustomSnackbar({
   visible,
   actions,
   rootProps,
-}: PieceRenderProps<OfflineTheme>) {
+}: Readonly<PieceRenderProps<OfflineTheme>>) {
   if (!visible) return null;
   return (
     <Pressable
@@ -40,15 +40,15 @@ export function CustomSnackbar({
 export function StatusBox({
   onToggleSimulation,
   simulating,
-}: {
+}: Readonly<{
   onToggleSimulation: () => void;
   simulating: boolean;
-}) {
+}>) {
   const { status, reason, checkNow } = useNetworkStatus();
   return (
     <Section title="Status">
       <Text testID="status-text" style={styles.status}>
-        {`status: ${status}${reason ? ` (${reason})` : ''}`}
+        {reason ? `status: ${status} (${reason})` : `status: ${status}`}
       </Text>
       <View style={styles.buttons}>
         <Button
@@ -71,9 +71,9 @@ export function StatusBox({
 
 export function RecheckScreen({
   checkingFeedback,
-}: {
+}: Readonly<{
   checkingFeedback: CheckingFeedback;
-}) {
+}>) {
   const online = useRecheckOnReturn({ checkingFeedback });
   return (
     <Section title="useRecheckOnReturn screen">
@@ -94,7 +94,7 @@ export interface PanelProps {
   update: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
 }
 
-export function Panel({ settings, update }: PanelProps) {
+export function Panel({ settings, update }: Readonly<PanelProps>) {
   return (
     <>
       <Section title="Language">

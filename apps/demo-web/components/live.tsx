@@ -45,10 +45,10 @@ export function StatusReadout() {
 export function RecheckScreen({
   checkingFeedback,
   onResult,
-}: {
+}: Readonly<{
   checkingFeedback: 'brief' | 'none';
   onResult: (isOnline: boolean) => void;
-}) {
+}>) {
   const online = useRecheckOnReturn({ checkingFeedback, onResult });
   return (
     <div className="screen" data-testid="recheck-screen">
@@ -74,7 +74,12 @@ export function RecheckScreen({
 }
 
 /** A slot: replaces the bundled snackbar entirely and gets the render-props contract. */
-export function DemoToast({ message, phase, actions, rootProps }: PieceRenderProps) {
+export function DemoToast({
+  message,
+  phase,
+  actions,
+  rootProps,
+}: Readonly<PieceRenderProps>) {
   return (
     <div {...rootProps} className="demo-toast" data-phase={phase}>
       <span className="demo-toast-dot" aria-hidden="true" />

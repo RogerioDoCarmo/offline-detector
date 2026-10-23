@@ -9,9 +9,9 @@ const common = {
 /** Glyphs from docs/design/prototype.html. All are direction-neutral and decorative. */
 export function WifiOffIcon({
   className = 'od-icon',
-}: {
+}: Readonly<{
   className?: string;
-}): ReactElement {
+}>): ReactElement {
   return (
     <svg className={className} {...common}>
       <path d="M3 3l18 18" />
@@ -27,9 +27,9 @@ export function WifiOffIcon({
 
 export function CheckIcon({
   className = 'od-icon',
-}: {
+}: Readonly<{
   className?: string;
-}): ReactElement {
+}>): ReactElement {
   return (
     <svg className={className} {...common}>
       <path d="M5 12.5l4.5 4.5L19 7.5" />
@@ -52,9 +52,9 @@ export function Spinner(): ReactElement {
 /** Inside the status dot: a slash (offline), a ring (checking) or a tick (online). */
 export function DotGlyph({
   phase,
-}: {
+}: Readonly<{
   phase: 'offline' | 'checking' | 'online';
-}): ReactElement {
+}>): ReactElement {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       {phase === 'offline' && <path d="M5 5l14 14" />}

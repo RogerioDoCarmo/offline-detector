@@ -47,7 +47,7 @@ export function Indicator({
   offsetBottom = 0,
   style,
   testID,
-}: IndicatorProps) {
+}: Readonly<IndicatorProps>) {
   const onDismiss = actions?.dismiss;
   const dismissible = typeof onDismiss === 'function';
   // The indicator never owns a live region; the provider's choice only matters for the root.

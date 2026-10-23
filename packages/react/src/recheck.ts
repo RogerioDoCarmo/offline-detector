@@ -49,7 +49,7 @@ export function useRecheckOnReturn(options: RecheckOnReturnOptions = {}): boolea
     return () => {
       mounted = false;
       unsubscribe();
-      for (const release of [...releases]) release();
+      for (const release of releases) release();
       releases.clear();
     };
   }, [core, brief]);

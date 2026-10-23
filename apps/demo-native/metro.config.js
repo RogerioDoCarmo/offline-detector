@@ -56,7 +56,7 @@ module.exports = withStorybook(config, {
 // lets `@storybook/react-native-ui` through and Metro then compiles Reanimated code. Repeat the
 // check on a normalised path; the lite and common UI packages are kept.
 const isDefaultStorybookUi = (filePath) => {
-  const normalised = String(filePath).replace(/\\/g, '/');
+  const normalised = String(filePath).replaceAll('\\', '/');
   return (
     normalised.includes('/@storybook/react-native-ui/') ||
     normalised.endsWith('/@storybook/react-native-ui')
@@ -68,15 +68,15 @@ const storybookResolveRequest = module.exports.resolver.resolveRequest;
 // store, where Metro would find them from inside `@storybook/*`. This app must not bundle them
 // (see README: no Reanimated), so they are made unresolvable. The controls addon requires
 // bottom-sheet inside try/catch and falls back to plain inputs, which is what this relies on.
-const unavailable = [
+const unavailable = new Set([
   '@gorhom/bottom-sheet',
   'react-native-reanimated',
   'react-native-worklets',
   'react-native-gesture-handler',
-];
+]);
 
 module.exports.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (storybookEnabled && unavailable.includes(moduleName)) {
+  if (storybookEnabled && unavailable.has(moduleName)) {
     return storybookResolveRequest(
       { ...context, nodeModulesPaths: [], disableHierarchicalLookup: true },
       moduleName,

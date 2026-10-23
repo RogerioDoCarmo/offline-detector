@@ -22,7 +22,7 @@ const startingAt = (initial: Parameters<typeof createFakeNetwork>[0]) => ({
   loaders: [() => ({ network: createFakeNetwork(initial) })],
 });
 
-function Host({ network }: { network: FakeNetwork }) {
+function Host({ network }: Readonly<{ network: FakeNetwork }>) {
   return (
     <main>
       <h2>Checkout</h2>
