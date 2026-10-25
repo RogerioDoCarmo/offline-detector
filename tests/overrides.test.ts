@@ -12,14 +12,17 @@ const lockfile = readFileSync(join(root, 'pnpm-lock.yaml'), 'utf8');
 // a pnpm lockfile on its own. node-forge and sprintf-js have no patched release, so they are
 // deliberately absent: an override cannot fix what has no fix.
 const EXPECTED: Record<string, string> = {
+  'body-parser@1': '^1.20.9',
+  'fast-uri': '^3.1.9',
   katex: '^0.18.2',
   'markdown-it': '^15.0.3',
   qs: '^6.15.2',
   'postcss-selector-parser': '^7.1.6',
-  'serialize-javascript': '^7.0.5',
+  'serialize-javascript': '^7.1.3',
   'smol-toml': '^1.9.0',
   tinypool: '^2.1.2',
   uuid: '^11.1.1',
+  'zod@4': '^4.6.6',
 };
 
 describe('pnpm overrides for vulnerable transitive dependencies', () => {
@@ -42,6 +45,10 @@ describe('pnpm overrides for vulnerable transitive dependencies', () => {
     ['tinypool', '1.1.1'],
     ['uuid', '7.0.3'],
     ['uuid', '8.3.2'],
+    ['body-parser', '1.20.8'],
+    ['fast-uri', '3.1.8'],
+    ['serialize-javascript', '7.1.2'],
+    ['zod', '4.6.5'],
   ])('the lockfile no longer resolves %s@%s', (name, version) => {
     expect(lockfile).not.toContain(`\n  ${name}@${version}`);
   });
