@@ -9,6 +9,7 @@ import { DEFAULT_OPTIONS, buildDetectorProps, mountKey } from '../lib/options';
 import type { DemoOptions } from '../lib/options';
 import { CheckField, NumberField, RadioGroup, SelectField, TextField } from './fields';
 import { Bridge, DemoToast, RecheckScreen, StatusReadout } from './live';
+import { PwaCheck } from './pwa';
 
 const LOG_LIMIT = 12;
 
@@ -409,6 +410,7 @@ export function Demo() {
             </div>
           )}
         </section>
+        <PwaCheck />
       </main>
 
       <footer className="footer">

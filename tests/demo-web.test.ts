@@ -88,6 +88,46 @@ describe('apps/demo-web client boundary', () => {
   });
 });
 
+describe('apps/demo-web installed app (PWA)', () => {
+  const manifest = JSON.parse(read('apps/demo-web/public/manifest.webmanifest'));
+  const worker = read('apps/demo-web/public/sw.js');
+
+  it('ships an installable manifest scoped to the Pages base path', () => {
+    expect(manifest.start_url).toBe('/offline-detector/demo/');
+    expect(manifest.scope).toBe('/offline-detector/demo/');
+    expect(manifest.display).toBe('standalone');
+    expect(manifest.theme_color).toBe('#0b5fd1');
+    expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual([
+      '192x192',
+      '512x512',
+    ]);
+    for (const icon of manifest.icons) {
+      expect(existsSync(join(root, 'apps/demo-web/public', icon.src))).toBe(true);
+    }
+  });
+
+  it('links the manifest from the layout under the base path', () => {
+    expect(read('apps/demo-web/app/layout.tsx')).toContain(
+      "manifest: '/offline-detector/demo/manifest.webmanifest'",
+    );
+  });
+
+  it('keeps the probe out of the worker: GET, same-origin, page and static files only', () => {
+    expect(worker).toContain("request.method !== 'GET'");
+    expect(worker).toContain('url.origin !== self.location.origin');
+    expect(worker).toContain("request.mode === 'navigate'");
+    expect(worker).toContain('url.pathname.startsWith(STATIC)');
+    expect(worker).not.toMatch(/generate_204|cp\.cloudflare|gstatic/);
+  });
+
+  it('registers the worker in production builds only, within its scope', () => {
+    const check = read('apps/demo-web/components/pwa.tsx');
+    expect(check).toContain("process.env.NODE_ENV !== 'production'");
+    expect(check).toContain('`${SCOPE}sw.js`');
+    expect(check).toContain("const SCOPE = '/offline-detector/demo/'");
+  });
+});
+
 describe('playwright server for the exported demo', () => {
   it('keeps the single fixture server entry and gives it time for a cold demo build', () => {
     const config = read('playwright.config.ts');
