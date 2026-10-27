@@ -63,6 +63,15 @@ Without it, only the probe decides.
 The core has no DOM or React Native imports and takes injectable `fetch`, `now` and timers, which
 is how its own tests run. The UI packages need a React renderer.
 
+## Does it work in a PWA?
+
+Yes. An installed PWA runs the same browser engine, so the web package behaves as in a tab. The
+one thing to check is your service worker: it must not answer the reachability probe, or the app
+reports "online" while the network is gone. Let the probe URLs pass through (the default ones are
+cross-origin, so a worker that only handles same-origin requests already does), or point
+`probe.urls` at an endpoint the worker leaves alone. The [web demo](https://rogeriodocarmo.github.io/offline-detector/demo/)
+is installable and shows this working.
+
 ## Is the Portuguese and Spanish text reviewed by native speakers?
 
 The bundled strings follow the design notes for Brazilian and neutral international Spanish. The

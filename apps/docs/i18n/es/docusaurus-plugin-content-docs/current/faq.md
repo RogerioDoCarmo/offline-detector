@@ -66,6 +66,16 @@ El core no tiene importaciones de DOM ni de React Native y acepta `fetch`, `now`
 inyectables, que es como se ejecutan sus propias pruebas. Los paquetes de interfaz necesitan un
 renderizador de React.
 
+## ¿Funciona en una PWA?
+
+Sí. Una PWA instalada usa el mismo motor del navegador, así que el paquete web se comporta como en
+una pestaña. Lo único que hay que comprobar es el service worker: no debe responder a la sonda de
+conectividad, o la app dirá "en línea" sin red. Deja pasar las URL de la sonda (las
+predeterminadas son de otro origen, así que un worker que solo atiende el mismo origen ya lo
+hace) o apunta `probe.urls` a un endpoint que el worker no toque. La
+[demo web](https://rogeriodocarmo.github.io/offline-detector/demo/) es instalable y lo muestra
+funcionando.
+
 ## ¿Los textos en portugués y español fueron revisados por hablantes nativos?
 
 Los textos incluidos siguen las notas de diseño para el portugués de Brasil y el español
