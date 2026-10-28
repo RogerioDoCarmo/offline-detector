@@ -6,6 +6,9 @@ engine](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/co
 provider, hooks, dismissal state, bundled strings
 and the shared types that the web and native UI packages build on.
 
+> **Early development (0.x).** The API may still change before 1.0; breaking changes are listed in the
+> [changelog](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/react/CHANGELOG.md) and, while the version starts with 0, ship in a minor release.
+
 It has no DOM and no React Native imports, so one copy works on both. A **platform adapter**
 (from `@rogeriodocarmo/offline-detector-web` or `-native`) supplies the platform signals.
 Requires React 18 or newer.

@@ -5,6 +5,9 @@ web app has no internet: a snackbar with Retry, a banner and a status indicator,
 full-screen state. Accessible, themable, translated (English, Portuguese, Spanish) and safe to
 render on the server.
 
+> **Early development (0.x).** The API may still change before 1.0; breaking changes are listed in the
+> [changelog](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/web/CHANGELOG.md) and, while the version starts with 0, ship in a minor release.
+
 ## Quick start
 
 ```bash

@@ -1,7 +1,7 @@
 {
   "name": "@rogeriodocarmo/offline-detector-core",
   "version": "0.1.1",
-  "description": "offline-detector: core package.",
+  "description": "Framework-free state machine and reachability probe that tells you whether the app has real internet. Early development (0.x).",
   "license": "MIT",
   "author": "Rogério do Carmo",
   "repository": {
