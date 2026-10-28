@@ -1,7 +1,7 @@
 {
   "name": "@rogeriodocarmo/offline-detector-react",
-  "version": "0.1.1",
-  "description": "offline-detector: react package.",
+  "version": "0.1.2",
+  "description": "React provider, hooks and callbacks for detecting real internet. Early development (0.x).",
   "license": "MIT",
   "author": "Rogério do Carmo",
   "repository": {

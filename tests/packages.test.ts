@@ -20,6 +20,17 @@ describe.each(names)('package %s', (name) => {
     expect(manifest().publishConfig).toEqual({ access: 'public' });
   });
 
+  it('says it is in early development in its npm description and README', () => {
+    expect(manifest().version).toMatch(/^0\./);
+    expect(manifest().description).toMatch(/ Early development \(0\.x\)\.$/);
+    expect(read(`${dir}/README.md`)).toContain(
+      '> **Early development (0.x).** The API may still change before 1.0;',
+    );
+    expect(read(`${dir}/README.md`)).toContain(
+      'https://img.shields.io/badge/status-early%20development%20(0.x)-orange',
+    );
+  });
+
   it('ships ESM, CJS and types through a dual exports map', () => {
     expect(manifest().type).toBe('module');
     expect(manifest().exports).toEqual({

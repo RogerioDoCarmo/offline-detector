@@ -1,10 +1,16 @@
 # @rogeriodocarmo/offline-detector-core
 
+[![status: early development (0.x)](<https://img.shields.io/badge/status-early%20development%20(0.x)-orange>)](https://github.com/RogerioDoCarmo/offline-detector#readme)
+
 Part of [offline-detector](https://github.com/RogerioDoCarmo/offline-detector). The
 framework-free detection engine: a small state machine that tells you whether the app has
 **real internet**. It has no runtime dependencies and never touches the DOM, `window`,
 `navigator` or React Native. Platforms plug in through a `PlatformAdapter`; the React,
 web and native packages build on this.
+
+> **Early development (0.x).** The API may still change before 1.0; breaking changes are listed in the
+> [changelog](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/core/CHANGELOG.md)
+> and, while the version starts with 0, ship in a minor release.
 
 "Offline" means no real internet. Wi-Fi, Ethernet or cellular that is connected but carries
 no data counts as offline.

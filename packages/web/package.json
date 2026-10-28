@@ -1,7 +1,7 @@
 {
   "name": "@rogeriodocarmo/offline-detector-web",
-  "version": "0.1.1",
-  "description": "offline-detector: web package.",
+  "version": "0.1.2",
+  "description": "Snackbar, banner and indicator that show when a React web app has no internet. Early development (0.x).",
   "license": "MIT",
   "author": "Rogério do Carmo",
   "repository": {

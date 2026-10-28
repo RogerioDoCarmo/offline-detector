@@ -1,9 +1,13 @@
 # offline-detector
 
+[![status: early development (0.x)](<https://img.shields.io/badge/status-early%20development%20(0.x)-orange>)](https://github.com/RogerioDoCarmo/offline-detector#readme)
+
 Detect and show when a React or React Native app has no internet: a headless hook, callbacks, and
 ready-made snackbar, banner, indicator and full-screen UI. Web and mobile, no native code.
 
-> Status: published on npm; the current version is on the
+> Status: **early development (0.x)**. Published on npm and usable, but the API may still change
+> before 1.0; while the version starts with 0, breaking changes ship in a minor release. The current
+> version is on the
 > [releases page](https://github.com/RogerioDoCarmo/offline-detector/releases). The design is in
 > [`docs/superpowers/specs/2026-10-07-offline-detector-design.md`](docs/superpowers/specs/2026-10-07-offline-detector-design.md).
 

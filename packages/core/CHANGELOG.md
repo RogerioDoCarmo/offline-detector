@@ -1,5 +1,11 @@
 # @rogeriodocarmo/offline-detector-core
 
+## 0.1.2
+
+### Patch Changes
+
+- 7d93e55: State the early-development (0.x) status in each package's npm description and README.
+
 ## 0.1.1
 
 ### Patch Changes
