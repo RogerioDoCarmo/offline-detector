@@ -1,5 +1,7 @@
 # @rogeriodocarmo/offline-detector-web
 
+[![status: early development (0.x)](<https://img.shields.io/badge/status-early%20development%20(0.x)-orange>)](https://github.com/RogerioDoCarmo/offline-detector#readme)
+
 Part of [offline-detector](https://github.com/RogerioDoCarmo/offline-detector). Shows when a React
 web app has no internet: a snackbar with Retry, a banner and a status indicator, with an opt-in
 full-screen state. Accessible, themable, translated (English, Portuguese, Spanish) and safe to

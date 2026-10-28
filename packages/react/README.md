@@ -1,5 +1,7 @@
 # @rogeriodocarmo/offline-detector-react
 
+[![status: early development (0.x)](<https://img.shields.io/badge/status-early%20development%20(0.x)-orange>)](https://github.com/RogerioDoCarmo/offline-detector#readme)
+
 Part of [offline-detector](https://github.com/RogerioDoCarmo/offline-detector). The React layer
 over the [core
 engine](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/core/README.md): a

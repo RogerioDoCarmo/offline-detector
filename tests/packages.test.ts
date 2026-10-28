@@ -26,6 +26,9 @@ describe.each(names)('package %s', (name) => {
     expect(read(`${dir}/README.md`)).toContain(
       '> **Early development (0.x).** The API may still change before 1.0;',
     );
+    expect(read(`${dir}/README.md`)).toContain(
+      'https://img.shields.io/badge/status-early%20development%20(0.x)-orange',
+    );
   });
 
   it('ships ESM, CJS and types through a dual exports map', () => {
