@@ -1,9 +1,15 @@
 # @rogeriodocarmo/offline-detector-native
 
+[![status: early development (0.x)](<https://img.shields.io/badge/status-early%20development%20(0.x)-orange>)](https://github.com/RogerioDoCarmo/offline-detector#readme)
+
 Part of [offline-detector](https://github.com/RogerioDoCarmo/offline-detector). Shows when a React
 Native app has no internet: a snackbar with Retry, a banner and an indicator by default, plus an
 opt-in full-screen state. "Offline" means no real internet: Wi-Fi that is connected but carries no
 data counts as offline.
+
+> **Early development (0.x).** The API may still change before 1.0; breaking changes are listed in the
+> [changelog](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/native/CHANGELOG.md)
+> and, while the version starts with 0, ship in a minor release.
 
 No native code, no Reanimated, no gesture-handler. Requires React 18+ and React Native 0.73+.
 

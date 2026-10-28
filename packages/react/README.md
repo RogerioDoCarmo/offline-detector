@@ -1,10 +1,16 @@
 # @rogeriodocarmo/offline-detector-react
 
+[![status: early development (0.x)](<https://img.shields.io/badge/status-early%20development%20(0.x)-orange>)](https://github.com/RogerioDoCarmo/offline-detector#readme)
+
 Part of [offline-detector](https://github.com/RogerioDoCarmo/offline-detector). The React layer
 over the [core
 engine](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/core/README.md): a
 provider, hooks, dismissal state, bundled strings
 and the shared types that the web and native UI packages build on.
+
+> **Early development (0.x).** The API may still change before 1.0; breaking changes are listed in the
+> [changelog](https://github.com/RogerioDoCarmo/offline-detector/blob/main/packages/react/CHANGELOG.md)
+> and, while the version starts with 0, ship in a minor release.
 
 It has no DOM and no React Native imports, so one copy works on both. A **platform adapter**
 (from `@rogeriodocarmo/offline-detector-web` or `-native`) supplies the platform signals.
