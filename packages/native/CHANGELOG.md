@@ -1,5 +1,14 @@
 # @rogeriodocarmo/offline-detector-native
 
+## 0.1.2
+
+### Patch Changes
+
+- 7d93e55: State the early-development (0.x) status in each package's npm description and README.
+- Updated dependencies [7d93e55]
+  - @rogeriodocarmo/offline-detector-core@0.1.2
+  - @rogeriodocarmo/offline-detector-react@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
