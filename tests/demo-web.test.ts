@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 import {
   DEFAULT_OPTIONS,
   buildDetectorProps,
@@ -118,6 +119,39 @@ describe('apps/demo-web installed app (PWA)', () => {
     expect(worker).toContain("request.mode === 'navigate'");
     expect(worker).toContain('url.pathname.startsWith(STATIC)');
     expect(worker).not.toMatch(/generate_204|cp\.cloudflare|gstatic/);
+  });
+
+  it('on activate deletes every other cache, keeps its own and takes control of open pages', async () => {
+    const listeners: Record<
+      string,
+      (event: { waitUntil: (p: Promise<unknown>) => void }) => void
+    > = {};
+    const deleted: string[] = [];
+    let claimed = 0;
+    runInNewContext(worker, {
+      self: {
+        addEventListener: (type: string, fn: (typeof listeners)[string]) => {
+          listeners[type] = fn;
+        },
+        clients: {
+          claim: async () => {
+            claimed += 1;
+          },
+        },
+      },
+      caches: {
+        keys: async () => ['od-demo-v0', 'od-demo-v1', 'other'],
+        delete: async (key: string) => {
+          deleted.push(key);
+          return true;
+        },
+      },
+    });
+    let finished: Promise<unknown> = Promise.resolve();
+    listeners.activate?.({ waitUntil: (p) => (finished = p) });
+    await finished;
+    expect(deleted).toEqual(['od-demo-v0', 'other']);
+    expect(claimed).toBe(1);
   });
 
   it('registers the worker in production builds only, within its scope', () => {
