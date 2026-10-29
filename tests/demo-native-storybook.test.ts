@@ -38,8 +38,8 @@ describe('demo-native storybook: dependencies', () => {
   });
 
   it('adds the controls addon peers that are plain JS or Expo Go modules', () => {
-    expect(dev()['@react-native-community/slider']).toBe('5.2.1');
-    expect(dev()['@react-native-community/datetimepicker']).toBe('9.2.1');
+    expect(dev()['@react-native-community/slider']).toBe('5.2.2');
+    expect(dev()['@react-native-community/datetimepicker']).toBe('9.2.2');
   });
 
   it('keeps the no-Reanimated, no-gesture-handler, no-web rules', () => {
