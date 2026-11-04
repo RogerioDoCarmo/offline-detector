@@ -31,6 +31,11 @@ Install the one for your platform: `web` or `native` already include the React l
 The libraries collect no data. They make one small connectivity request that you can change or
 switch off; see the [privacy policy](PRIVACY.md).
 
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and the quality
+bar.
+
 ## License
 
 MIT
