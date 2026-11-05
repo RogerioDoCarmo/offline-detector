@@ -13,6 +13,7 @@ ready-made snackbar, banner, indicator and full-screen UI. Web and mobile, no na
 
 - [Documentation](https://rogeriodocarmo.github.io/offline-detector/) in English, Portuguese and Spanish
 - [Live demo](https://rogeriodocarmo.github.io/offline-detector/demo/)
+- [Launch post on LinkedIn](https://lnkd.in/p/dFQrxwYq) (in Portuguese)
 - [Privacy policy](https://rogeriodocarmo.github.io/offline-detector/privacy-policy.html)
 
 ## Packages
