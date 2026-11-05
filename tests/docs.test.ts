@@ -921,6 +921,10 @@ describe('repository READMEs', () => {
     expect(text).toContain(`](${SITE}demo/)`);
   });
 
+  it('root README links the launch post on LinkedIn', () => {
+    expect(read('README.md')).toContain('](https://lnkd.in/p/dFQrxwYq)');
+  });
+
   it.each(['core', 'react', 'web', 'native'])(
     'the %s package README links all four packages on npm and the docs site',
     (name) => {
