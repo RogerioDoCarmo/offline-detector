@@ -13,8 +13,30 @@ ready-made snackbar, banner, indicator and full-screen UI. Web and mobile, no na
 
 - [Documentation](https://rogeriodocarmo.github.io/offline-detector/) in English, Portuguese and Spanish
 - [Live demo](https://rogeriodocarmo.github.io/offline-detector/demo/)
+- [Compared with the alternatives](https://rogeriodocarmo.github.io/offline-detector/compare)
+- [30 second promo video](docs/media/offline-detector-promo-30s-16x9.mp4)
 - [Launch post on LinkedIn](https://lnkd.in/p/dFQrxwYq) (in Portuguese)
 - [Privacy policy](https://rogeriodocarmo.github.io/offline-detector/privacy-policy.html)
+
+## Quick start
+
+Render the component once, near the root. It needs no provider and no adapter.
+
+```tsx
+import { OfflineDetector } from '@rogeriodocarmo/offline-detector-web'; // or '-native'
+
+export function Root() {
+  return (
+    <OfflineDetector>
+      <App />
+    </OfflineDetector>
+  );
+}
+```
+
+The app launches online and shows nothing. When the connection really drops, a snackbar, a banner and
+an indicator appear; when it returns, a "Back online" snackbar shows briefly. On React Native, also
+pass NetInfo; see the [native quick start](https://rogeriodocarmo.github.io/offline-detector/native-quick-start).
 
 ## Packages
 

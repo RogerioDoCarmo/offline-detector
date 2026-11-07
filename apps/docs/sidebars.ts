@@ -3,6 +3,7 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   docs: [
     'intro',
+    'compare',
     'install',
     'web-quick-start',
     'native-quick-start',
