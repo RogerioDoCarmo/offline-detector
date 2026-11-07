@@ -3,6 +3,22 @@
   "version": "0.1.2",
   "description": "Framework-free state machine and reachability probe that tells you whether the app has real internet. Early development (0.x).",
   "license": "MIT",
+  "homepage": "https://rogeriodocarmo.github.io/offline-detector/",
+  "bugs": {
+    "url": "https://github.com/RogerioDoCarmo/offline-detector/issues"
+  },
+  "keywords": [
+    "offline",
+    "online",
+    "network",
+    "connectivity",
+    "internet",
+    "reachability",
+    "network-status",
+    "offline-detector",
+    "typescript",
+    "state-machine"
+  ],
   "author": "Rogério do Carmo",
   "repository": {
     "type": "git",

@@ -3,6 +3,25 @@
   "version": "0.1.2",
   "description": "Snackbar, banner and indicator that show when a React web app has no internet. Early development (0.x).",
   "license": "MIT",
+  "homepage": "https://rogeriodocarmo.github.io/offline-detector/",
+  "bugs": {
+    "url": "https://github.com/RogerioDoCarmo/offline-detector/issues"
+  },
+  "keywords": [
+    "offline",
+    "online",
+    "network",
+    "connectivity",
+    "internet",
+    "reachability",
+    "network-status",
+    "offline-detector",
+    "react",
+    "pwa",
+    "snackbar",
+    "banner",
+    "offline-ui"
+  ],
   "author": "Rogério do Carmo",
   "repository": {
     "type": "git",
