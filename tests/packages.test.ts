@@ -31,6 +31,26 @@ describe.each(names)('package %s', (name) => {
     );
   });
 
+  it('carries search keywords, a homepage and a bug tracker for npm', () => {
+    const m = manifest();
+    expect(m.homepage).toBe('https://rogeriodocarmo.github.io/offline-detector/');
+    expect(m.bugs).toEqual({
+      url: 'https://github.com/RogerioDoCarmo/offline-detector/issues',
+    });
+    for (const word of [
+      'offline',
+      'network-status',
+      'reachability',
+      'offline-detector',
+    ]) {
+      expect(m.keywords).toContain(word);
+    }
+    expect(m.keywords).toContain(
+      { core: 'state-machine', react: 'hooks', web: 'pwa', native: 'react-native' }[name],
+    );
+    expect(new Set(m.keywords).size).toBe(m.keywords.length);
+  });
+
   it('ships ESM, CJS and types through a dual exports map', () => {
     expect(manifest().type).toBe('module');
     expect(manifest().exports).toEqual({

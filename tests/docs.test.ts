@@ -25,6 +25,7 @@ const PROBE_URLS = [
 
 const DOC_IDS = [
   'intro',
+  'compare',
   'install',
   'web-quick-start',
   'native-quick-start',
@@ -879,6 +880,28 @@ describe('guides follow the one-package rule and the new behaviour', () => {
     const native = read(docPath(locale, 'reference/native'));
     expect(native).toContain('`onRestoreFocus`');
     expect(native).toContain('actions.dismiss');
+  });
+});
+
+describe('compare page', () => {
+  it('is the second page of the sidebar, right after the introduction', () => {
+    expect(read('apps/docs/sidebars.ts')).toMatch(/'intro',\s+'compare',/);
+  });
+
+  it.each(LOCALES)('states the NetInfo reachability defaults in %s', (locale) => {
+    const text = read(docPath(locale, 'compare'));
+    expect(text).toContain('https://clients3.google.com/generate_204');
+    expect(text).toMatch(/\b5\s+(seconds|segundos)/);
+    expect(text).toMatch(/\b60\s+(seconds|segundos)/);
+    expect(text).toContain('`interface-only`');
+    expect(text).toContain('./slots.md');
+    expect(text).toContain('./native-quick-start.md');
+  });
+
+  it('is linked from the root README', () => {
+    expect(read('README.md')).toContain(
+      '](https://rogeriodocarmo.github.io/offline-detector/compare)',
+    );
   });
 });
 
