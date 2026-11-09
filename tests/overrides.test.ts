@@ -9,13 +9,15 @@ const workspace = parse(readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf8'))
 const lockfile = readFileSync(join(root, 'pnpm-lock.yaml'), 'utf8');
 
 // Each entry is the first patched release of a published advisory that Dependabot cannot fix in
-// a pnpm lockfile on its own. node-forge and sprintf-js have no patched release, so they are
-// deliberately absent: an override cannot fix what has no fix.
+// a pnpm lockfile on its own. sprintf-js has no patched release, so it is deliberately absent: an override cannot fix what has no fix.
 const EXPECTED: Record<string, string> = {
   'body-parser@1': '^1.20.9',
   'fast-uri': '^3.1.9',
+  'follow-redirects': '^1.16.2',
+  'joi@17': '^17.13.9',
   katex: '^0.18.2',
   'markdown-it': '^15.0.3',
+  'node-forge': '^1.4.1',
   qs: '^6.16.1',
   'postcss-selector-parser': '^7.1.6',
   'serialize-javascript': '^7.1.3',
@@ -50,6 +52,9 @@ describe('pnpm overrides for vulnerable transitive dependencies', () => {
     ['fast-uri', '3.1.8'],
     ['serialize-javascript', '7.1.2'],
     ['zod', '4.6.5'],
+    ['node-forge', '1.4.0'],
+    ['joi', '17.13.8'],
+    ['follow-redirects', '1.16.1'],
   ])('the lockfile no longer resolves %s@%s', (name, version) => {
     expect(lockfile).not.toContain(`\n  ${name}@${version}`);
   });
