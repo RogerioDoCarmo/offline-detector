@@ -13,13 +13,16 @@ packageExtensions:
 # Transitive dependencies with published advisories that Dependabot cannot bump inside a pnpm
 # lockfile. Caret ranges only: an open-ended range resolves to the highest major and replaces the
 # consumer's own constraint with no safety net. None of these is a dependency of the four published
-# packages; they sit in the docs, Storybook, Expo and lint tooling. node-forge and sprintf-js have no
-# patched release, so they cannot be overridden. tests/overrides.test.ts pins this list.
+# packages; they sit in the docs, Storybook, Expo and lint tooling. sprintf-js has no patched
+# release, so it cannot be overridden. tests/overrides.test.ts pins this list.
 overrides:
   body-parser@1: ^1.20.9
   fast-uri: ^3.1.9
+  follow-redirects: ^1.16.2
+  joi@17: ^17.13.9
   katex: ^0.18.2
   markdown-it: ^15.0.3
+  node-forge: ^1.4.1
   qs: ^6.16.1
   postcss-selector-parser: ^7.1.6
   serialize-javascript: ^7.1.3
