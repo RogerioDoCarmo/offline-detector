@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Text,
   View,
-  findNodeHandle,
 } from 'react-native';
 import type { PieceProps } from './piece-types';
 import { Glyph, Spinner } from './glyphs';
@@ -76,8 +75,8 @@ export function FullScreen({
   useEffect(() => {
     if (!visible) return undefined;
     const frame = requestAnimationFrame(() => {
-      const handle = findNodeHandle(titleRef.current);
-      if (typeof handle === 'number') AccessibilityInfo.setAccessibilityFocus(handle);
+      const title = titleRef.current;
+      if (title) AccessibilityInfo.sendAccessibilityEvent(title, 'focus');
     });
     return () => {
       cancelAnimationFrame(frame);
