@@ -1,11 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import {
-  AccessibilityInfo,
-  BackHandler,
-  I18nManager,
-  Text,
-  findNodeHandle,
-} from 'react-native';
+import { AccessibilityInfo, BackHandler, I18nManager, Text } from 'react-native';
 import { flatStyle, mockTiming } from '../test-utils/animated';
 import { EN } from '../test-utils/fixtures';
 import {
@@ -14,12 +8,6 @@ import {
   type FullScreenProps,
 } from './full-screen';
 import { darkTheme } from './theme';
-
-jest.mock('react-native/Libraries/ReactNative/RendererProxy', () => ({
-  ...jest.requireActual('react-native/Libraries/ReactNative/RendererProxy'),
-  findNodeHandle: jest.fn(() => 42),
-}));
-const mockedHandle = findNodeHandle as jest.Mock;
 
 const HIDDEN = { includeHiddenElements: true };
 
@@ -37,7 +25,7 @@ let timing: ReturnType<typeof mockTiming>;
 let setFocus: jest.SpyInstance;
 beforeEach(() => {
   timing = mockTiming();
-  setFocus = jest.spyOn(AccessibilityInfo, 'setAccessibilityFocus').mockImplementation();
+  setFocus = jest.spyOn(AccessibilityInfo, 'sendAccessibilityEvent').mockImplementation();
 });
 afterEach(() => {
   jest.useRealTimers();
@@ -140,17 +128,7 @@ describe('accessibility', () => {
       jest.advanceTimersByTime(32);
     });
     expect(setFocus).toHaveBeenCalledTimes(1);
-    expect(setFocus).toHaveBeenCalledWith(42);
-  });
-
-  it('skips the focus move when the title has no native node', async () => {
-    jest.useFakeTimers();
-    mockedHandle.mockReturnValueOnce(null);
-    await render(<FullScreen {...base} />);
-    await act(async () => {
-      jest.advanceTimersByTime(32);
-    });
-    expect(setFocus).not.toHaveBeenCalled();
+    expect(setFocus).toHaveBeenCalledWith(expect.any(Object), 'focus');
   });
 
   it('does not move focus when it unmounts before the frame', async () => {
