@@ -115,8 +115,8 @@ describe('every workflow', () => {
     // Resolved with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`, dereferencing annotated tags.
     const wanted: Record<string, string> = {
       'SonarSource/sonarqube-scan-action':
-        'd209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8',
-      'chromaui/action': '5bcadb5104b09e360e210c54f95a7437c2d82bab # v18.13.3',
+        'e805d875275f728fac1885b413934be6d7c63f65 # v8',
+      'chromaui/action': '2b75e3340bcec86b4ae38c6a10f14831114e8137 # v18.14.3',
       'reactivecircus/android-emulator-runner':
         'a421e43855164a8197daf9d8d40fe71c6996bb0d # v2',
     };

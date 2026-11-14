@@ -68,7 +68,7 @@ describe('sonarcloud', () => {
       s.uses?.startsWith('SonarSource/sonarqube-scan-action'),
     );
     expect(steps[index].uses).toBe(
-      'SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9',
+      'SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65',
     );
     expect(steps[index]['continue-on-error']).toBe(true);
     expect(steps[index].if).toBe(
