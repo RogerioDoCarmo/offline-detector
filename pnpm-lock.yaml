@@ -256,8 +256,8 @@ importers:
         version: link:../../packages/web
     devDependencies:
       '@storybook/addon-a11y':
-        specifier: ^10.6.3
-        version: 10.6.3(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))
+        specifier: ^10.6.7
+        version: 10.6.7(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))
       '@storybook/addon-vitest':
         specifier: ^10.6.3
         version: 10.6.3(@vitest/browser-playwright@5.0.5)(@vitest/browser@5.0.5(vite@8.3.5(@types/node@24.19.1)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.51.2)(yaml@2.9.1))(vitest@5.0.5))(react@19.3.0)(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))(vitest@5.0.5)
@@ -4428,10 +4428,10 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@storybook/addon-a11y@10.6.3':
-    resolution: {integrity: sha512-nqvjpmu5g+PPtEKwgE0qAi4wfuQ9yngOb/1Gm24pBBZOuRsd3UMEBjKORSuAGrIAz9X3LCFfQi7sCcBFXvFbwg==}
+  '@storybook/addon-a11y@10.6.7':
+    resolution: {integrity: sha512-ARd+bjfOYoICe00+svRgFsCVqV7RbN+wgi8yfRhk31kESR7NnTMBGiZD8vWv/r3xqul/Ddr1uR6mUK4lpH7sqw==}
     peerDependencies:
-      storybook: ^10.6.3
+      storybook: ^10.6.7
 
   '@storybook/addon-ondevice-actions@10.7.0':
     resolution: {integrity: sha512-YC0t82HL5YGjBJxx+72SZUDhxziJScYJl7v3N4+4fIU2WCm+lml1UXuyVJ8lYF+LxG9u5c0AKtE4x3faqlM38w==}
@@ -18181,7 +18181,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@storybook/addon-a11y@10.6.3(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))':
+  '@storybook/addon-a11y@10.6.7(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))':
     dependencies:
       '@storybook/global': 5.0.0
       axe-core: 4.14.0
