@@ -326,13 +326,13 @@ importers:
         version: 0.87.1(@babel/core@8.0.7)(react-native@0.87.1(@babel/core@8.0.7)(@react-native/metro-config@0.87.1(@babel/core@8.0.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       '@testing-library/react-native':
         specifier: ^14.1.0
-        version: 14.1.0(jest@30.5.2(@types/node@24.19.1)(esbuild-register@3.6.0(esbuild@0.28.2)))(react-native@0.87.1(@babel/core@8.0.7)(@react-native/metro-config@0.87.1(@babel/core@8.0.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(test-renderer@1.3.0(@types/react@19.3.0)(react@19.3.0))
+        version: 14.1.0(jest@30.5.2(@types/node@24.19.1)(esbuild-register@3.6.0(esbuild@0.28.2)))(react-native@0.87.1(@babel/core@8.0.7)(@react-native/metro-config@0.87.1(@babel/core@8.0.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(test-renderer@1.3.1(@types/react@19.3.0)(react@19.3.0))
       '@types/react':
         specifier: ^19.3.0
         version: 19.3.0
       test-renderer:
-        specifier: ^1.3.0
-        version: 1.3.0(@types/react@19.3.0)(react@19.3.0)
+        specifier: ^1.3.1
+        version: 1.3.1(@types/react@19.3.0)(react@19.3.0)
 
   packages/react:
     dependencies:
@@ -4963,8 +4963,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
 
-  '@types/react-reconciler@0.33.1':
-    resolution: {integrity: sha512-0kF59ji2mKuHUd5wytHSpmORybMYVerJvq0K10pz9ZFoOlJ3e+w1LBjLshWpCrokeyQOioRodNbO4PH4ddvRfg==}
+  '@types/react-reconciler@0.34.1':
+    resolution: {integrity: sha512-XAzeH3rARrfApMETpkcFmfJQRS3rPpXsSR/XA8H3sV8WgA0bp6UE7sLNM92l1ZbCclUKmrH28Ik2fSejh9UxRg==}
     peerDependencies:
       '@types/react': '*'
 
@@ -10474,8 +10474,8 @@ packages:
     resolution: {integrity: sha512-u9E6A+ZDYdp7a4WnarkXPZOx8Ilz46+kby6p1yZ8zsGTz9gYa6FIS7lj2oezzNKmtdyyJNNmmXDppga5GB7kSw==}
     engines: {node: '>=18'}
 
-  test-renderer@1.3.0:
-    resolution: {integrity: sha512-DXyHv7JrVmDc5dKpfVHFhJ0Evo/EFY3TqlNt8CR65ua3SCsI09K/mQDJmYUOnZz36GANYqjp0ApeRER/mOxktQ==}
+  test-renderer@1.3.1:
+    resolution: {integrity: sha512-jL/PxpZJhKuryZkvsWdRRX8Fez229amt6CnoxC+Fs4lbuIbWqMtZBPfBM/FMjg1ovv7ZyGef2ltQD64f/RxkbA==}
     peerDependencies:
       react: ^19.0.0
 
@@ -18658,7 +18658,7 @@ snapshots:
     optionalDependencies:
       vitest: 5.0.5(@types/node@24.19.1)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(jsdom@26.1.0)(vite@8.3.5(@types/node@24.19.1)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.51.2)(yaml@2.9.1))
 
-  '@testing-library/react-native@14.1.0(jest@30.5.2(@types/node@24.19.1)(esbuild-register@3.6.0(esbuild@0.28.2)))(react-native@0.87.1(@babel/core@8.0.7)(@react-native/metro-config@0.87.1(@babel/core@8.0.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(test-renderer@1.3.0(@types/react@19.3.0)(react@19.3.0))':
+  '@testing-library/react-native@14.1.0(jest@30.5.2(@types/node@24.19.1)(esbuild-register@3.6.0(esbuild@0.28.2)))(react-native@0.87.1(@babel/core@8.0.7)(@react-native/metro-config@0.87.1(@babel/core@8.0.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(test-renderer@1.3.1(@types/react@19.3.0)(react@19.3.0))':
     dependencies:
       jest-matcher-utils: 30.5.2
       picocolors: 1.1.1
@@ -18666,7 +18666,7 @@ snapshots:
       react: 19.3.0
       react-native: 0.87.1(@babel/core@8.0.7)(@react-native/metro-config@0.87.1(@babel/core@8.0.7))(@types/react@19.3.0)(react@19.3.0)
       redent: 3.0.0
-      test-renderer: 1.3.0(@types/react@19.3.0)(react@19.3.0)
+      test-renderer: 1.3.1(@types/react@19.3.0)(react@19.3.0)
     optionalDependencies:
       jest: 30.5.2(@types/node@24.19.1)(esbuild-register@3.6.0(esbuild@0.28.2))
 
@@ -18882,7 +18882,7 @@ snapshots:
     dependencies:
       '@types/react': 19.3.0
 
-  '@types/react-reconciler@0.33.1(@types/react@19.3.0)':
+  '@types/react-reconciler@0.34.1(@types/react@19.3.0)':
     dependencies:
       '@types/react': 19.3.0
 
@@ -25998,9 +25998,9 @@ snapshots:
       glob: 10.5.0
       minimatch: 10.2.6
 
-  test-renderer@1.3.0(@types/react@19.3.0)(react@19.3.0):
+  test-renderer@1.3.1(@types/react@19.3.0)(react@19.3.0):
     dependencies:
-      '@types/react-reconciler': 0.33.1(@types/react@19.3.0)
+      '@types/react-reconciler': 0.34.1(@types/react@19.3.0)
       react: 19.3.0
       react-reconciler: 0.34.0(react@19.3.0)
     transitivePeerDependencies:
